@@ -2,30 +2,22 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Pages;
-use Filament\Panel;
-use App\Models\User;
-use Filament\Widgets;
-use Filament\PanelProvider;
-use App\Filament\Pages\Settings;
-use Filament\Support\Colors\Color;
-use Filament\Navigation\NavigationItem;
-// use App\Filament\Resources\RoleResource;
-use App\Filament\Resources\UserResource;
-use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
-use Filament\Navigation\NavigationBuilder;
-// use App\Filament\Resources\PermissionResource;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Session\Middleware\AuthenticateSession;
-
-use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Filament\Pages\Dashboard;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -37,71 +29,17 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => "#3cc0c2",
+                'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                Dashboard::class,
             ])
-
-             ->navigationItems([
-                NavigationItem::make('Orders')
-        ->url('/admin/orders')
-        ->icon('heroicon-o-receipt-refund')
-        ->sort(1),
-                        NavigationItem::make('User')
-                        ->url(fn (): string => UserResource::getUrl())
-                        ->icon('heroicon-o-user-group')
-                        ->group('Settings')
-                        ->sort(1)
-                        // ->visible(fn(): bool => auth()->user()->can('User List')),
-                        // NavigationItem::make('Roles')
-                        // // ->url(fn (): string => RoleResource::getUrl())
-                        // ->icon('heroicon-o-rectangle-stack')
-                        // ->group('Settings')
-                        // ->sort(1)
-                        // ->visible(fn(): bool => auth()->user()->can('Role List')),
-                        // NavigationItem::make('Permissons')
-                        // ->url(fn (): string => PermissionResource::getUrl())
-                        // ->icon('heroicon-o-key')
-                        // ->group('Settings')
-                        // ->sort(1)
-                        // ->visible(fn(): bool => auth()->user()->can('Permission List')),
-
-
-                        // UserResource::getNavigationItems()
-             ])
-            //  ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
-            //     return $builder->groups([
-            //         NavigationGroup::make('Master')
-            //             ->items([
-            //                 ...UserResource::getNavigationItems(
-
-            //                         ->visible(fn(): bool => auth()->user()->can('User List')),
-
-            //                 )
-
-            //                 ...RoleResource::getNavigationItems(),
-            //                 ...PermissionResource::getNavigationItems(),
-            //             ]),
-            //     ]);
-            // })
-
-            // ->userMenuItems([
-
-            //                 MenuItem::make()
-            //                 ->label('User')
-            //                 ->icon('heroicon-o-cog-6-tooth')
-            //                 ->visible(fn(): bool => auth()->user()->can('User List')),
-            //                 UserResource::getNavigationItems(),
-
-            // ])
-
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                AccountWidget::class,
+                FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -116,8 +54,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-
-
             ]);
     }
 }
