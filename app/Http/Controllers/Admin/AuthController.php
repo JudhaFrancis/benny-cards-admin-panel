@@ -19,6 +19,9 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        $credentials['status'] = 'active';
+        $credentials['role'] = 'admin';
+
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
@@ -65,6 +68,37 @@ class AuthController extends Controller
             'success' => true,
             'data' => [
                 'user' => $request->user(),
+            ]
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's profile.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+
+        if (!empty($data['password'])) {
+            $user->password = $data['password'];
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully',
+            'data' => [
+                'user' => $user,
             ]
         ]);
     }

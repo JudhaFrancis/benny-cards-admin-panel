@@ -1,6 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../views/auth/Login.vue';
 import OrderList from '../views/orders/OrderList.vue';
+import Dashboard from '../views/dashboard/Dashboard.vue';
+import Profile from '../views/profile/Profile.vue';
+import AdminLayout from '../layouts/AdminLayout.vue';
+import PlaceholderView from '../views/PlaceholderView.vue';
 
 const routes = [
     {
@@ -10,15 +14,56 @@ const routes = [
         meta: { guest: true }
     },
     {
-        path: '/orders',
-        name: 'Orders',
-        component: OrderList,
-        meta: { requiresAuth: true }
+        path: '/',
+        component: AdminLayout,
+        meta: { requiresAuth: true },
+        children: [
+            {
+                path: '',
+                name: 'Dashboard',
+                component: Dashboard
+            },
+            {
+                path: 'profile',
+                name: 'Profile',
+                component: Profile
+            },
+            {
+                path: 'orders',
+                name: 'Orders',
+                component: OrderList
+            },
+            {
+                path: 'invoices',
+                name: 'Invoices',
+                component: PlaceholderView
+            },
+            {
+                path: 'payments',
+                name: 'Payments',
+                component: PlaceholderView
+            },
+            {
+                path: 'reports/payments',
+                name: 'PaymentReports',
+                component: PlaceholderView
+            },
+            {
+                path: 'reports/invoices',
+                name: 'InvoiceReports',
+                component: PlaceholderView
+            },
+            {
+                path: 'reports/orders',
+                name: 'OrderReports',
+                component: PlaceholderView
+            }
+        ]
     },
     {
         // Default redirect
         path: '/:pathMatch(.*)*',
-        redirect: '/orders'
+        redirect: '/'
     }
 ];
 
@@ -39,7 +84,7 @@ router.beforeEach((to, from, next) => {
         }
     } else if (to.matched.some(record => record.meta.guest)) {
         if (token) {
-            next({ name: 'Orders' });
+            next({ name: 'Dashboard' });
         } else {
             next();
         }

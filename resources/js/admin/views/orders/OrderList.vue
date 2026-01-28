@@ -1,195 +1,189 @@
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen">
-    <div class="mb-6 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-800">Order Management</h1>
-      <div class="flex gap-4">
-        <!-- Search -->
-        <input
-          v-model="filters.search"
-          @input="fetchOrders"
-          type="text"
-          placeholder="Search Order # or Customer..."
-          class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <!-- Status Filter -->
-        <select
-          v-model="filters.status"
-          @change="fetchOrders"
-          class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+  <div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Orders</h1>
+        <p class="text-sm text-slate-500 mt-1">Manage and track your customer orders.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="flex items-center gap-2 px-4 py-2 bg-primary hover:opacity-90 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20 active:scale-95">
+          <PlusIcon class="h-4 w-4" />
+          Create Order
+        </button>
       </div>
     </div>
 
-    <!-- Table -->
-    <div
-      class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"
-    >
-      <table class="w-full text-left border-collapse">
-        <thead
-          class="bg-gray-50 text-gray-600 text-sm font-semibold uppercase tracking-wider"
-        >
-          <tr>
-            <th class="px-6 py-4">Order #</th>
-            <th class="px-6 py-4">Customer</th>
-            <th class="px-6 py-4">Date</th>
-            <th class="px-6 py-4">Status</th>
-            <th class="px-6 py-4">Total</th>
-            <th class="px-6 py-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-          <tr v-if="loading" class="animate-pulse">
-            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-              Loading orders...
-            </td>
-          </tr>
-          <tr
-            v-else
-            v-for="order in orders"
-            :key="order.id"
-            class="hover:bg-gray-50 transition-colors"
+    <!-- Filters & Search -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3 flex-1">
+          <!-- Search Inner -->
+          <div class="relative w-full md:w-72 group">
+            <SearchIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+            <input 
+              v-model="filters.search"
+              type="text" 
+              placeholder="Search orders, customers..."
+              class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            >
+          </div>
+
+          <!-- Status Select -->
+          <select 
+            v-model="filters.status"
+            class="bg-slate-50 border-slate-200 rounded-xl py-2 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-600"
           >
-            <td class="px-6 py-4 font-medium text-gray-900">
-              {{ order.order_number }}
-            </td>
-            <td class="px-6 py-4">
-              <div class="text-sm font-medium text-gray-900">
-                {{ order.customer?.name || "N/A" }}
-              </div>
-              <div class="text-xs text-gray-500">
-                {{ order.customer?.email }}
-              </div>
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-600">
-              {{ formatDate(order.placed_at) }}
-            </td>
-            <td class="px-6 py-4">
-              <span
-                :class="statusClasses(order.status)"
-                class="px-3 py-1 text-xs font-semibold rounded-full"
-              >
-                {{ order.status }}
-              </span>
-            </td>
-            <td class="px-6 py-4 font-medium text-gray-900">
-              ${{ order.total_amount }}
-            </td>
-            <td class="px-6 py-4 text-right">
-              <button
-                class="text-blue-600 hover:text-blue-800 font-medium text-sm"
-              >
-                View Details
-              </button>
-            </td>
-          </tr>
-          <tr v-if="!loading && orders.length === 0">
-            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-              No orders found.
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          Showing {{ filteredOrders.length }} orders
+        </div>
+      </div>
     </div>
 
-    <!-- Pagination (Simple Example) -->
-    <div class="mt-4 flex justify-between items-center text-sm text-gray-600">
-      <button
-        :disabled="pagination.current_page === 1"
-        @click="changePage(pagination.current_page - 1)"
-        class="disabled:opacity-50 hover:text-blue-600"
-      >
-        &larr; Previous
-      </button>
-      <span
-        >Page {{ pagination.current_page }} of {{ pagination.last_page }}</span
-      >
-      <button
-        :disabled="pagination.current_page === pagination.last_page"
-        @click="changePage(pagination.current_page + 1)"
-        class="disabled:opacity-50 hover:text-blue-600"
-      >
-        Next &rarr;
-      </button>
+    <!-- Main Table Container -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-soft-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+      <div v-if="loading" class="p-20 flex flex-col items-center justify-center">
+        <div class="h-10 w-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+        <p class="text-sm font-medium text-slate-400 animate-pulse">Fetching orders...</p>
+      </div>
+      
+      <OrdersTable 
+        v-else
+        :orders="filteredOrders" 
+        @view-info="handleView"
+        @edit="handleEdit"
+        @delete="handleDelete"
+      />
+
+      <!-- Pagination -->
+      <div v-if="!loading && orders.length > 0" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+        <p class="text-xs text-slate-500 font-medium">
+          Showing 1 to {{ filteredOrders.length }} of {{ filteredOrders.length }} results
+        </p>
+        <div class="flex items-center gap-2">
+          <button class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none transition-colors">
+            <SearchIcon class="h-4 w-4 text-slate-600 rotate-180" /> <!-- Placeholder icon for prev -->
+          </button>
+          <button class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none transition-colors">
+            <SearchIcon class="h-4 w-4 text-slate-600" /> <!-- Placeholder icon for next -->
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from "vue";
-// import axios from 'axios'; // Assumed axios is configured
+import { ref, onMounted, reactive, computed } from 'vue';
+import { 
+  Plus as PlusIcon, 
+  Search as SearchIcon
+} from 'lucide-vue-next';
+import OrdersTable from '../../components/OrdersTable.vue';
 
 const orders = ref([]);
-const loading = ref(false);
-const pagination = ref({ current_page: 1, last_page: 1 });
+const loading = ref(true);
 const filters = reactive({
-  search: "",
-  status: "",
+  search: '',
+  status: ''
 });
 
-const fetchOrders = async (page = 1) => {
+function cn(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
+
+const fetchOrders = async () => {
   loading.value = true;
-  try {
-    // Mock API call structure
-    // const response = await axios.get('/api/admin/v1/orders', { params: { ...filters, page } });
-    // orders.value = response.data.data.data;
-    // pagination.value = response.data.data; // Paginator meta
-
-    // MOCK DATA FOR DEMO
-    setTimeout(() => {
-      orders.value = [
-        {
-          id: 1,
-          order_number: "ORD-001",
-          customer: { name: "John Doe", email: "john@example.com" },
-          placed_at: "2023-10-27 10:00:00",
-          status: "completed",
-          total_amount: "120.50",
-        },
-        {
-          id: 2,
-          order_number: "ORD-002",
-          customer: { name: "Jane Smith", email: "jane@example.com" },
-          placed_at: "2023-10-28 14:30:00",
-          status: "pending",
-          total_amount: "45.00",
-        },
-      ];
-      pagination.value = { current_page: page, last_page: 5 };
-      loading.value = false;
-    }, 500);
-  } catch (error) {
-    console.error("Failed to fetch orders", error);
+  // Simulate API delay
+  setTimeout(() => {
+    orders.value = [
+      {
+        id: '10254',
+        customer: 'Johnathan Wick',
+        orderDate: 'Oct 24, 2023',
+        itemsCount: 3,
+        orderStatus: 'delivered',
+        amount: 1540.00,
+        paidAmount: 1540.00,
+        paymentStatus: 'paid'
+      },
+      {
+        id: '10255',
+        customer: 'Sara Connor',
+        orderDate: 'Oct 25, 2023',
+        itemsCount: 1,
+        orderStatus: 'pending',
+        amount: 120.50,
+        paidAmount: 0.00,
+        paymentStatus: 'unpaid'
+      },
+      {
+        id: '10256',
+        customer: 'Tony Stark',
+        orderDate: 'Oct 26, 2023',
+        itemsCount: 5,
+        orderStatus: 'processing',
+        amount: 12450.00,
+        paidAmount: 5000.00,
+        paymentStatus: 'partial'
+      },
+      {
+        id: '10257',
+        customer: 'Bruce Wayne',
+        orderDate: 'Oct 27, 2023',
+        itemsCount: 2,
+        orderStatus: 'shipped',
+        amount: 890.00,
+        paidAmount: 890.00,
+        paymentStatus: 'paid'
+      },
+      {
+        id: '10258',
+        customer: 'Peter Parker',
+        orderDate: 'Oct 27, 2023',
+        itemsCount: 4,
+        orderStatus: 'cancelled',
+        amount: 45.00,
+        paidAmount: 0.00,
+        paymentStatus: 'unpaid'
+      }
+    ];
     loading.value = false;
+  }, 800);
+};
+
+const filteredOrders = computed(() => {
+  return orders.value.filter(order => {
+    const matchesSearch = order.customer.toLowerCase().includes(filters.search.toLowerCase()) || 
+                         order.id.includes(filters.search);
+    const matchesStatus = !filters.status || order.orderStatus === filters.status;
+    return matchesSearch && matchesStatus;
+  });
+});
+
+const handleView = (order) => {
+  console.log('Viewing order:', order.id);
+  alert(`Viewing Order #${order.id}`);
+};
+
+const handleEdit = (order) => {
+  console.log('Editing order:', order.id);
+  alert(`Editing Order #${order.id}`);
+};
+
+const handleDelete = (order) => {
+  if(confirm(`Are you sure you want to delete order #${order.id}?`)) {
+    orders.value = orders.value.filter(o => o.id !== order.id);
   }
-};
-
-const changePage = (page) => {
-  fetchOrders(page);
-};
-
-const formatDate = (dateString) => {
-  return (
-    new Date(dateString).toLocaleDateString() +
-    " " +
-    new Date(dateString).toLocaleTimeString()
-  );
-};
-
-const statusClasses = (status) => {
-  const map = {
-    pending: "bg-yellow-100 text-yellow-800",
-    processing: "bg-blue-100 text-blue-800",
-    completed: "bg-green-100 text-green-800",
-    cancelled: "bg-red-100 text-red-800",
-    refunded: "bg-gray-100 text-gray-800",
-  };
-  return map[status] || "bg-gray-100 text-gray-800";
 };
 
 onMounted(() => {

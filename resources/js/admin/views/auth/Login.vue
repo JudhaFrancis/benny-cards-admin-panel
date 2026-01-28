@@ -1,109 +1,142 @@
-
 <template>
-    <div class="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Sign in to your account
-            </h2>
-        </div>
-
-        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                <form class="space-y-6" @submit.prevent="login">
-                    <div v-if="errorMessage" class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-red-700">
-                                    {{ errorMessage }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">
-                            Email address
-                        </label>
-                        <div class="mt-1">
-                            <input id="email" name="email" type="email" autocomplete="email" required v-model="form.email"
-                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">
-                            Password
-                        </label>
-                        <div class="mt-1">
-                            <input id="password" name="password" type="password" autocomplete="current-password" required
-                                v-model="form.password"
-                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                    </div>
-
-                    <div>
-                        <button type="submit" :disabled="loading"
-                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-                            {{ loading ? 'Signing in...' : 'Sign in' }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  <div class="min-h-screen flex items-center justify-center p-4 bg-slate-50 text-slate-900 overflow-hidden relative">
+    <!-- Abstract Background Ornaments -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-primary/5 opacity-40" />
+      <div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-primary/5 opacity-40" />
     </div>
+
+    <div class="w-full max-w-[440px] relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <!-- Login Card -->
+      <div class="rounded-[32px] border p-8 md:p-10 shadow-2xl bg-white border-slate-100 transition-all duration-500">
+        <div class="flex flex-col items-center mb-10">
+          <div class="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/30 mb-6 group transition-transform hover:scale-105 duration-300">
+            <CreditCardIcon class="h-8 w-8 text-white" />
+          </div>
+          <h1 class="text-3xl font-bold tracking-tight text-center mb-2">Welcome Back</h1>
+          <p class="text-slate-500 text-center text-sm">Enter your credentials to access the admin portal</p>
+        </div>
+
+        <form @submit.prevent="handleLogin" class="space-y-5">
+          <div v-if="errorMessage" class="bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs py-3 px-4 rounded-xl text-center animate-in fade-in slide-in-from-top-2">
+            {{ errorMessage }}
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Email Address</label>
+            <div class="relative group">
+              <MailIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+              <input
+                v-model="form.email"
+                type="email"
+                required
+                placeholder="name@example.com"
+                class="w-full rounded-2xl py-3.5 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex justify-between items-center ml-1">
+              <label class="text-xs font-bold uppercase tracking-widest text-slate-500">Password</label>
+            </div>
+            <div class="relative group">
+              <LockIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+              <input
+                v-model="form.password"
+                type="password"
+                required
+                placeholder="••••••••"
+                class="w-full rounded-2xl py-3.5 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
+              />
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button
+              type="submit"
+              :disabled="loading"
+              class="w-full bg-primary hover:opacity-90 text-white h-14 rounded-2xl font-bold text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+            >
+              <Loader2Icon v-if="loading" class="h-5 w-5 animate-spin" />
+              <span>{{ loading ? 'Authenticating...' : 'Sign In' }}</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="mt-10 text-center">
+          <p class="text-xs text-slate-400">
+            &copy; 2026 Benny Cards Admin Panel. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
+<script setup>
+import { reactive, ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { 
+  CreditCard as CreditCardIcon, 
+  Mail as MailIcon, 
+  Lock as LockIcon,
+  Loader2 as Loader2Icon
+} from 'lucide-vue-next';
 
-export default {
-    data() {
-        return {
-            form: {
-                email: '',
-                password: '',
-            },
-            loading: false,
-            errorMessage: null,
-        }
-    },
-    methods: {
-        async login() {
-            this.loading = true;
-            this.errorMessage = null;
+const router = useRouter();
+const loading = ref(false);
+const errorMessage = ref(null);
 
-            try {
-                // Initialize CSRF protection
-                await axios.get('/sanctum/csrf-cookie');
+const form = reactive({
+  email: '',
+  password: ''
+});
 
-                const response = await axios.post('/api/v1/login', this.form);
+onMounted(() => {
+    document.documentElement.classList.remove('dark');
+});
 
-                if (response.data.success) {
-                    localStorage.setItem('auth_token', response.data.data.token);
-                    // Update axios defaults with new token
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.token}`;
-                    this.$router.push('/orders');
-                }
-            } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    this.errorMessage = 'Invalid credentials. Please try again.';
-                } else if (error.response && error.response.data.message) {
-                    this.errorMessage = error.response.data.message;
-                } else {
-                    this.errorMessage = 'An error occurred. Please try again.';
-                }
-                console.error('Login error:', error);
-            } finally {
-                this.loading = false;
-            }
-        }
+const handleLogin = async () => {
+  loading.value = true;
+  errorMessage.value = null;
+
+  try {
+    await axios.get('/sanctum/csrf-cookie');
+    const response = await axios.post('/api/v1/login', form);
+
+    if (response.data.success) {
+      localStorage.setItem('auth_token', response.data.data.token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.token}`;
+      router.push('/orders');
     }
-}
+  } catch (error) {
+    if (error.response?.status === 401) {
+      errorMessage.value = 'Invalid credentials. Please try again.';
+    } else {
+      errorMessage.value = error.response?.data?.message || 'Login failed. Please check your connection.';
+    }
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
+
+<style scoped>
+.animate-in {
+  animation: animate-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes animate-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

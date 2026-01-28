@@ -13,20 +13,24 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
-        $data=array(
+        $data = array(
             array(
-                'name'=>'Admin',
-                'email'=>'admin@gmail.com',
-                'password'=>Hash::make('1111'),
-                'role'=>'admin',
-                'status'=>'active'
+                'name' => 'Admin',
+                'email' => 'admin@gmail.com',
+                'password' => Hash::make('1111'),
+                'role' => 'admin',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ),
             array(
-                'name'=>'User',
-                'email'=>'user@gmail.com',
-                'password'=>Hash::make('1111'),
-                'role'=>'user',
-                'status'=>'active'
+                'name' => 'User',
+                'email' => 'user@gmail.com',
+                'password' => Hash::make('1111'),
+                'role' => 'user',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ),
         );
 
