@@ -15,9 +15,8 @@
         <div @click="open = !open" class="flex items-center justify-between w-full px-4 py-3
                border border-gray-300 rounded-lg bg-white cursor-pointer">
             <div class="flex items-center gap-3 text-gray-800">
-                                <x-filament::dropdown.list.item icon="heroicon-m-clipboard-document-list" icon-color="primary"
->
-                       <span x-text="sectionLabel"></span>
+                <x-filament::dropdown.list.item icon="heroicon-m-clipboard-document-list" icon-color="primary">
+                    <span x-text="sectionLabel"></span>
                 </x-filament::dropdown.list.item>
 
             </div>
@@ -89,12 +88,12 @@
         </div>
 
         <!-- Buttons -->
-       
+
 
         <!-- Form -->
-       <form wire:submit.prevent="save">
-    {{ $this->form }}
-</form>
+        <form wire:submit.prevent="save">
+            {{ $this->form }}
+        </form>
 
     </div>
 </x-filament::page>
