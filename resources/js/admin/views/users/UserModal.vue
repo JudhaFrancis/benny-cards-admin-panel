@@ -201,7 +201,7 @@
                   form="userForm"
                   type="submit"
                   :disabled="loading"
-                  class="px-8 py-3.5 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200 flex items-center gap-2"
+                  class="px-8 py-3.5 rounded-2xl bg-primary text-white font-bold hover:opacity-90 transition-all active:scale-95 shadow-xl shadow-primary/20 flex items-center gap-2 disabled:opacity-50"
                 >
                   <Loader2Icon v-if="loading" class="h-5 w-5 animate-spin" />
                   {{

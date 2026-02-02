@@ -33,6 +33,18 @@
   .dark body {
     @apply text-slate-100 bg-[#0D1117];
   }
+
+  /* Global input field styling for bright, readable text */
+  input,
+  textarea,
+  select {
+    @apply text-slate-100 !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-slate-400 !important;
+  }
 }
 
 .sidebar-glass {

@@ -304,7 +304,7 @@
       <template #footer>
         <button
           @click="isModalOpen = false"
-          class="px-8 py-3.5 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200"
+          class="px-8 py-3.5 rounded-2xl bg-primary text-white font-bold hover:opacity-90 transition-all active:scale-95 shadow-xl shadow-primary/20"
         >
           Confirm Details
         </button>

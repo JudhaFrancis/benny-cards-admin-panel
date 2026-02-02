@@ -110,24 +110,6 @@
                   />
                 </div>
               </div>
-
-              <!-- Footer -->
-              <div
-                class="px-8 py-5 border-t border-slate-50 bg-white flex justify-end gap-3"
-              >
-                <button
-                  @click="$emit('openChange', false)"
-                  class="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  @click="handleSave"
-                  class="px-8 py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
-                >
-                  Save All Changes
-                </button>
-              </div>
             </DialogPanel>
           </TransitionChild>
         </div>

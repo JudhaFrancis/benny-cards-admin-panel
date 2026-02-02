@@ -88,14 +88,6 @@
       @close="isInfoModalOpen = false"
     />
 
-    <OrderEditDialog
-      v-if="isEditModalOpen"
-      :open="isEditModalOpen"
-      :order="selectedOrder"
-      @open-change="isEditModalOpen = $event"
-      @save="handleSaveEdit"
-    />
-
     <ConfirmationModal
       :is-open="isDeleteModalOpen"
       title="Delete Order"
@@ -116,12 +108,12 @@ import {
   Activity as ActivityIcon,
   CreditCard as CreditCardIcon,
 } from "lucide-vue-next";
+import { useRouter } from "vue-router";
 import { mockOrders } from "../../data/mockOrders";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 import OrdersTable from "../../components/orders/OrdersTable.vue";
 import OrderInfoDialog from "../../components/orders/OrderInfoDialog.vue";
-import OrderEditDialog from "../../components/orders/OrderEditDialog.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import FilterDropdown from "../../components/ui/FilterDropdown.vue";
 import FilterSectionHelper from "../../components/ui/FilterSection.vue";
@@ -130,6 +122,7 @@ import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 
 const { canCreate } = usePermissions();
 const toast = useToast();
+const router = useRouter();
 
 const orders = ref([...mockOrders]);
 const searchQuery = ref("");
@@ -137,7 +130,6 @@ const statusFilter = ref("all");
 const paymentFilter = ref("all");
 
 const isInfoModalOpen = ref(false);
-const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedOrder = ref(null);
 
@@ -241,22 +233,12 @@ const handleViewInfo = (order) => {
 };
 
 const handleEdit = (order) => {
-  selectedOrder.value = order;
-  isEditModalOpen.value = true;
+  router.push(`/orders/${order.id}/edit`);
 };
 
 const handleConfirmDelete = (order) => {
   selectedOrder.value = order;
   isDeleteModalOpen.value = true;
-};
-
-const handleSaveEdit = (updatedOrder) => {
-  const index = orders.value.findIndex((o) => o.id === updatedOrder.id);
-  if (index !== -1) {
-    orders.value[index] = updatedOrder;
-    toast.success("Order updated successfully");
-    isEditModalOpen.value = false;
-  }
 };
 
 const handleDelete = () => {

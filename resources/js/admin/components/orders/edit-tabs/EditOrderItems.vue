@@ -158,12 +158,23 @@
       </div>
     </div>
 
-    <button
-      @click="$emit('save')"
-      class="w-full bg-primary text-white hover:opacity-90 py-4 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+    <!-- Section Footer -->
+    <div
+      class="px-8 py-5 border-t border-slate-50 bg-slate-50/30 flex justify-end gap-3"
     >
-      Save Changes
-    </button>
+      <button
+        @click="$emit('cancel')"
+        class="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all"
+      >
+        Cancel
+      </button>
+      <button
+        @click="handleSaveSection"
+        class="px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98]"
+      >
+        Save Changes
+      </button>
+    </div>
   </div>
 </template>
 
@@ -184,7 +195,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:order", "save"]);
+const emit = defineEmits(["update:order", "save", "cancel"]);
 
 const searchTerm = ref("");
 

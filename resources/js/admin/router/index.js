@@ -34,6 +34,11 @@ const routes = [
                 component: OrderList
             },
             {
+                path: 'orders/:id/edit',
+                name: 'OrderEdit',
+                component: () => import('../views/orders/OrderEdit.vue')
+            },
+            {
                 path: 'invoices',
                 name: 'Invoices',
                 component: PlaceholderView
