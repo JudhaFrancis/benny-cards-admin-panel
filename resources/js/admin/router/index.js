@@ -57,6 +57,16 @@ const routes = [
                 path: 'reports/orders',
                 name: 'OrderReports',
                 component: PlaceholderView
+            },
+            {
+                path: 'settings',
+                name: 'Settings',
+                component: () => import('../views/settings/CompanySettings.vue')
+            },
+            {
+                path: 'users',
+                name: 'Users',
+                component: () => import('../views/users/UserList.vue')
             }
         ]
     },

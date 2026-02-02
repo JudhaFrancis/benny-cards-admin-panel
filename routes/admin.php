@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +18,7 @@ Route::prefix('v1')->group(function () {
 
     // Public Routes
     Route::post('login', [AuthController::class, 'login']);
+    Route::get('settings/logo', [\App\Http\Controllers\Admin\SettingController::class, 'getPublicLogo']);
 
     // Protected Routes
     Route::middleware(['auth:sanctum', 'is_admin'])->group(function () {
@@ -29,7 +32,11 @@ Route::prefix('v1')->group(function () {
         Route::get('orders/{id}', [OrderController::class, 'show']);
         Route::patch('orders/{id}/status', [OrderController::class, 'updateStatus']);
 
-        // Dashboard & Reports (Placeholders)
-        // Route::get('dashboard', [DashboardController::class, 'index']);
+        // Settings
+        Route::get('settings', [SettingController::class, 'show']);
+        Route::put('settings', [SettingController::class, 'update']);
+
+        // Users
+        Route::apiResource('users', UserController::class);
     });
 });

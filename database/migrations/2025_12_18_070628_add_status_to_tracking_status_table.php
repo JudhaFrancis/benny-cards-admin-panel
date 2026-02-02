@@ -4,15 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::table('tracking_status', function (Blueprint $table) {
-            $table->renameColumn('name', 'title');
+            // name -> title
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE `tracking_status` CHANGE `name` `title` VARCHAR(255) NOT NULL");
         });
     }
 
@@ -22,7 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tracking_status', function (Blueprint $table) {
-             $table->renameColumn('title', 'name');
+            // title -> name
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE `tracking_status` CHANGE `title` `name` VARCHAR(255) NOT NULL");
         });
     }
 };

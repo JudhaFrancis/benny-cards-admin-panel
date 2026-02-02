@@ -1,9 +1,9 @@
 <template>
   <div class="min-h-screen flex overflow-hidden bg-slate-50 text-slate-900">
     <AppSidebar />
-    <div class="flex-1 flex flex-col min-w-0">
-      <AdminHeader />
-      <main class="flex-1 overflow-auto custom-scrollbar">
+    <div class="flex-1 min-w-0">
+      <main class="h-screen overflow-auto custom-scrollbar">
+        <AdminHeader />
         <div class="p-8">
           <router-view v-slot="{ Component }">
             <transition name="page" mode="out-in">
@@ -12,23 +12,25 @@
           </router-view>
         </div>
       </main>
+      <ToastContainer />
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
-import AppSidebar from '../components/AppSidebar.vue';
-import AdminHeader from '../components/AdminHeader.vue';
+import { onMounted } from "vue";
+import AppSidebar from "../components/layout/AppSidebar.vue";
+import AdminHeader from "../components/layout/AdminHeader.vue";
+import ToastContainer from "../components/notifications/ToastContainer.vue";
 
 function cn(...classes) {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(" ");
 }
 
 onMounted(() => {
   // Ensure dark mode class is removed
-  document.documentElement.classList.remove('dark');
-  localStorage.removeItem('theme');
+  document.documentElement.classList.remove("dark");
+  localStorage.removeItem("theme");
 });
 </script>
 

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -20,13 +22,20 @@ class AuthController extends Controller
         ]);
 
         $credentials['status'] = 'active';
-        $credentials['role'] = 'admin';
+        // Remove hardcoded admin check to allow staff/moderators
+        // $credentials['role'] = 'admin';
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // Optional: Check if user has admin permissions
-            // if (!$user->hasRole('admin')) { ... }
+            // Prevent standard users from logging into admin panel
+            if ($user->role === 'user') {
+                Auth::guard('web')->logout();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied. Standard users cannot access the admin portal.',
+                ], 403);
+            }
 
             $token = $user->createToken('admin-token')->plainTextToken;
 
@@ -83,10 +92,32 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'photo' => ['nullable', 'string'],
         ]);
 
         $user->name = $data['name'];
         $user->email = $data['email'];
+
+        // Handle photo upload if present
+        if (!empty($data['photo']) && str_starts_with($data['photo'], 'data:image')) {
+            // Delete old photo if it exists and is a file
+            if ($user->photo && File::exists(public_path($user->photo))) {
+                File::delete(public_path($user->photo));
+            }
+
+            // Process Base64
+            $image_service_str = $data['photo'];
+            $extension = explode('/', explode(':', substr($image_service_str, 0, strpos($image_service_str, ';')))[1])[1];
+            $replace = substr($image_service_str, 0, strpos($image_service_str, ',') + 1);
+            $image = str_replace($replace, '', $image_service_str);
+            $image = str_replace(' ', '+', $image);
+            $imageName = Str::random(20) . '.' . $extension;
+
+            $path = 'uploads/profiles/' . $imageName;
+            File::put(public_path($path), base64_decode($image));
+
+            $user->photo = $path;
+        }
 
         if (!empty($data['password'])) {
             $user->password = $data['password'];
