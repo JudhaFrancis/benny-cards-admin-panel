@@ -1,33 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Section Selector -->
-    <div class="space-y-3">
-      <label
-        class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] block"
-      >
-        Select Tracking Phase
-      </label>
-      <div class="relative">
-        <select
-          v-model="selectedSection"
-          class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary appearance-none transition-all cursor-pointer shadow-sm"
-        >
-          <option
-            v-for="section in trackingSections"
-            :key="section.id"
-            :value="section.id"
-          >
-            {{ section.label }}
-          </option>
-        </select>
-        <div
-          class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"
-        >
-          <ChevronDownIcon class="h-4 w-4" />
-        </div>
-      </div>
-    </div>
-
     <!-- Section Content Container -->
     <div
       class="bg-white rounded-[2rem] border border-slate-100 shadow-soft-xl overflow-hidden animate-in fade-in duration-500"
