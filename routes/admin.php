@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +19,7 @@ Route::prefix('v1')->group(function () {
 
     // Public Routes
     Route::post('login', [AuthController::class, 'login']);
-    Route::get('settings/logo', [\App\Http\Controllers\Admin\SettingController::class, 'getPublicLogo']);
+    Route::get('settings/logo', [SettingController::class, 'getPublicLogo']);
 
     // Protected Routes
     Route::middleware(['auth:sanctum', 'is_admin'])->group(function () {
@@ -38,5 +39,8 @@ Route::prefix('v1')->group(function () {
 
         // Users
         Route::apiResource('users', UserController::class);
+
+        // Categories
+        Route::apiResource('categories', CategoryController::class);
     });
 });

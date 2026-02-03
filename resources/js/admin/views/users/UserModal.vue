@@ -11,7 +11,7 @@
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" />
+        <div class="fixed inset-0 bg-[#475569]/40 backdrop-blur-sm" />
       </TransitionChild>
 
       <div class="fixed inset-0 overflow-y-auto">
@@ -37,7 +37,7 @@
               >
                 <DialogTitle
                   as="h3"
-                  class="text-2xl font-bold text-slate-900 tracking-tight"
+                  class="text-2xl font-bold text-[#475569] tracking-tight"
                 >
                   {{ isEdit ? "Edit User" : "Add New User" }}
                 </DialogTitle>
@@ -87,7 +87,8 @@
                             type="text"
                             required
                             placeholder="John Doe"
-                            class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 rounded-xl outline-none transition-all text-sm font-semibold text-slate-900"
+                            class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 rounded-xl outline-none transition-all text-sm font-medium"
+                            style="color: #000000"
                           />
                         </div>
                       </div>
@@ -107,7 +108,8 @@
                             type="email"
                             required
                             placeholder="john@example.com"
-                            class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 rounded-xl outline-none transition-all text-sm font-semibold text-slate-900"
+                            class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 rounded-xl outline-none transition-all text-sm font-medium"
+                            style="color: #000000"
                           />
                         </div>
                       </div>
@@ -158,7 +160,8 @@
                           type="password"
                           :required="!isEdit || !!form.password_confirmation"
                           placeholder="••••••••"
-                          class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 rounded-xl outline-none transition-all text-sm font-semibold text-slate-900"
+                          class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 rounded-xl outline-none transition-all text-sm font-medium"
+                          style="color: #000000"
                         />
                       </div>
                     </div>
@@ -178,7 +181,8 @@
                           type="password"
                           :required="!isEdit || !!form.password"
                           placeholder="••••••••"
-                          class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 rounded-xl outline-none transition-all text-sm font-semibold text-slate-900"
+                          class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 rounded-xl outline-none transition-all text-sm font-medium"
+                          style="color: #000000"
                         />
                       </div>
                     </div>
@@ -398,5 +402,30 @@ const statusOptions = [
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 20px;
+}
+
+/* Fix autofill text color visibility */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #475569 !important;
+  -webkit-box-shadow: 0 0 0 30px #f8fafc inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:focus:-webkit-autofill,
+input:focus:-webkit-autofill:hover,
+input:focus:-webkit-autofill:focus,
+input:focus:-webkit-autofill:active {
+  -webkit-text-fill-color: #475569 !important;
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+}
+
+/* Force input text color */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  color: #475569 !important;
 }
 </style>

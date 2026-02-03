@@ -23,56 +23,42 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Card Size</label
-        >
+        <label class="text-sm font-medium text-slate-700">Card Size</label>
         <input
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="e.g., 5x7 inches"
         />
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Quantity</label
-        >
+        <label class="text-sm font-medium text-slate-700">Quantity</label>
         <input
           type="number"
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="100"
         />
       </div>
     </div>
 
     <div class="space-y-2">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-        >Specifications</label
-      >
+      <label class="text-sm font-medium text-slate-700">Specifications</label>
       <textarea
-        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[100px]"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[100px]"
         placeholder="Enter specifications..."
       ></textarea>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Inner GSM</label
-        >
+        <label class="text-sm font-medium text-slate-700">Inner GSM</label>
         <input
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="300"
         />
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Envelope GSM</label
-        >
+        <label class="text-sm font-medium text-slate-700">Envelope GSM</label>
         <input
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="120"
         />
       </div>
@@ -80,12 +66,11 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+        <label class="text-sm font-medium text-slate-700"
           >Card Lamination</label
         >
         <select
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         >
           <option value="">Select</option>
           <option value="matt">Matt</option>
@@ -93,12 +78,11 @@
         </select>
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+        <label class="text-sm font-medium text-slate-700"
           >Envelope Lamination</label
         >
         <select
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         >
           <option value="">Select</option>
           <option value="matt">Matt</option>
@@ -108,9 +92,7 @@
     </div>
 
     <div class="space-y-4">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-        >Options</label
-      >
+      <label class="text-sm font-medium text-slate-700">Options</label>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         <label
           v-for="option in cardOptions"

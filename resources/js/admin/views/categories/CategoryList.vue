@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <!-- Page Header -->
     <PageHeader
-      title="User Management"
-      subtitle="Manage portal access, roles, and status for all members."
+      title="Category Management"
+      subtitle="Manage product categories, hierarchies, and organization."
     >
       <template #actions>
         <button
@@ -11,8 +11,8 @@
           @click="openCreateModal"
           class="flex items-center gap-2 px-4 py-2 bg-primary hover:opacity-90 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20 active:scale-95"
         >
-          <UserPlusIcon class="h-4 w-4" />
-          Add New User
+          <PlusIcon class="h-4 w-4" />
+          Add New Category
         </button>
       </template>
     </PageHeader>
@@ -25,7 +25,7 @@
         class="flex flex-col md:flex-row md:items-center justify-between gap-4"
       >
         <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search Inner -->
+          <!-- Search -->
           <div class="relative w-full md:w-72 group">
             <SearchIcon
               class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
@@ -33,7 +33,7 @@
             <input
               v-model="filters.search"
               type="text"
-              placeholder="Search by name or email..."
+              placeholder="Search by title or slug..."
               class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-700"
               style="color: #475569 !important"
               @input="debounceSearch"
@@ -44,23 +44,23 @@
           <FilterDropdown
             :isActive="activeFiltersCount > 0"
             @reset="resetFilters"
-            @apply="fetchUsers"
+            @apply="fetchCategories"
           >
-            <FilterSectionHelper label="Member Role">
-              <ContextDropdown
-                v-model="filters.role"
-                :options="roleFilterOptions"
-                :icon="ShieldIcon"
-              />
-            </FilterSectionHelper>
-
-            <FilterSectionHelper label="Account Status" last>
+            <FilterSection label="Category Status">
               <ContextDropdown
                 v-model="filters.status"
                 :options="statusFilterOptions"
                 :icon="ActivityIcon"
               />
-            </FilterSectionHelper>
+            </FilterSection>
+
+            <FilterSection label="Category Type" last>
+              <ContextDropdown
+                v-model="filters.is_parent"
+                :options="typeFilterOptions"
+                :icon="FolderTreeIcon"
+              />
+            </FilterSection>
           </FilterDropdown>
 
           <button
@@ -75,7 +75,7 @@
         <div
           class="text-xs font-semibold text-slate-400 uppercase tracking-widest"
         >
-          Showing {{ meta.total || 0 }} members
+          Showing {{ meta.total || 0 }} categories
         </div>
       </div>
     </div>
@@ -83,76 +83,88 @@
     <!-- Main Table Container -->
     <DataTable
       :columns="columns"
-      :items="users"
+      :items="categories"
       :loading="loading"
-      empty-text="No users found matching your criteria."
+      empty-text="No categories found matching your criteria."
     >
-      <!-- Custom User Cell -->
-      <template #cell-user="{ item: user }">
+      <!-- Custom Category Cell -->
+      <template #cell-category="{ item: category }">
         <div class="flex items-center gap-4">
           <div
             class="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden shrink-0"
           >
             <img
-              v-if="user.photo"
-              :src="getImageSource(user.photo)"
+              v-if="category.photo"
+              :src="getImageSource(category.photo)"
               class="w-full h-full object-cover"
             />
-            <span v-else>{{ userInitials(user.name) }}</span>
+            <FolderIcon v-else class="h-5 w-5" />
           </div>
           <div class="flex flex-col min-w-0">
             <span class="text-sm font-semibold text-slate-700 truncate">{{
-              user.name
+              category.title
             }}</span>
             <span class="text-[11px] text-slate-500 truncate">{{
-              user.email
+              category.slug
             }}</span>
           </div>
         </div>
       </template>
 
-      <!-- Custom Role Cell -->
-      <template #cell-role="{ item: user }">
+      <!-- Custom Parent Cell -->
+      <template #cell-parent="{ item: category }">
         <span
-          :class="
-            cn(
-              'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors duration-200',
-              roleStyles[user.role.toLowerCase()] ||
-                'bg-slate-100 text-slate-800 border-slate-200',
-            )
-          "
+          v-if="category.parent"
+          class="text-xs text-slate-600 font-medium"
+          >{{ category.parent.title }}</span
         >
-          {{ user.role }}
-        </span>
+        <span v-else class="text-xs text-slate-400 italic">—</span>
       </template>
 
       <!-- Custom Status Cell -->
-      <template #cell-status="{ item: user }">
+      <template #cell-status="{ item: category }">
         <div class="flex items-center gap-2">
           <span
             class="h-1.5 w-1.5 rounded-full"
             :class="
-              user.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'
+              category.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'
             "
           ></span>
           <span class="text-xs font-medium text-slate-700 capitalize">{{
-            user.status
+            category.status
           }}</span>
         </div>
       </template>
 
-      <!-- Custom Date Cell -->
-      <template #cell-joined="{ item: user }">
-        <span class="text-xs text-slate-500">{{
-          formatDate(user.created_at)
-        }}</span>
+      <!-- Custom Created Cell -->
+      <template #cell-created="{ item: category }">
+        <div class="flex flex-col">
+          <span class="text-xs text-slate-500">{{
+            formatDate(category.created_at)
+          }}</span>
+          <span v-if="category.added_by" class="text-[10px] text-slate-400"
+            >by {{ category.added_by?.name || "Unknown" }}</span
+          >
+        </div>
+      </template>
+
+      <!-- Custom Modified Cell -->
+      <template #cell-modified="{ item: category }">
+        <div class="flex flex-col">
+          <span class="text-xs text-slate-500">{{
+            formatDate(category.updated_at)
+          }}</span>
+          <span v-if="category.modified_by" class="text-[10px] text-slate-400"
+            >by {{ category.modified_by?.name || "Unknown" }}</span
+          >
+        </div>
       </template>
 
       <!-- Custom Actions Cell -->
-      <template #cell-actions="{ item: user }">
+      <template #cell-actions="{ item: category }">
         <div class="flex justify-end gap-1.5 transition-opacity duration-200">
           <button
-            @click="handleView(user)"
+            @click="handleView(category)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
             title="View Info"
           >
@@ -160,17 +172,17 @@
           </button>
           <button
             v-if="canEdit"
-            @click="openEditModal(user)"
+            @click="openEditModal(category)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-all duration-200"
-            title="Edit User"
+            title="Edit Category"
           >
             <Edit3Icon class="h-4 w-4" />
           </button>
           <button
             v-if="canDelete"
-            @click="confirmDelete(user)"
+            @click="confirmDelete(category)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
-            title="Delete User"
+            title="Delete Category"
           >
             <Trash2Icon class="h-4 w-4" />
           </button>
@@ -180,7 +192,7 @@
       <!-- Pagination Section -->
       <template #pagination>
         <div
-          v-if="!loading && users.length > 0"
+          v-if="!loading && categories.length > 0"
           class="px-6 py-4 border-t border-slate-100 flex items-center justify-between"
         >
           <p class="text-[11px] text-slate-500 font-medium">
@@ -193,14 +205,14 @@
           <div class="flex items-center gap-2">
             <button
               :disabled="!links.prev"
-              @click="fetchUsers(links.prev)"
+              @click="fetchCategories(links.prev)"
               class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <ChevronLeftIcon class="h-4 w-4 text-slate-600" />
             </button>
             <button
               :disabled="!links.next"
-              @click="fetchUsers(links.next)"
+              @click="fetchCategories(links.next)"
               class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <ChevronRightIcon class="h-4 w-4 text-slate-600" />
@@ -211,17 +223,17 @@
     </DataTable>
 
     <!-- Modals -->
-    <!-- Premium Info Modal -->
+    <!-- Info Modal -->
     <InfoModal
-      v-if="selectedUser && isViewMode"
+      v-if="selectedCategory && isViewMode"
       :isOpen="isModalOpen"
-      :title="selectedUser.name"
-      subtitle="Complete member profile and system access details."
-      :icon="UserIcon"
+      :title="selectedCategory.title"
+      subtitle="Complete category details and hierarchy information."
+      :icon="FolderIcon"
       @close="isModalOpen = false"
     >
       <div class="space-y-10">
-        <!-- Visual ID Card -->
+        <!-- Visual Card -->
         <div
           class="flex flex-col items-center justify-center p-8 bg-slate-50/50 rounded-[2.5rem] border border-slate-100 relative overflow-hidden group"
         >
@@ -233,70 +245,102 @@
           ></div>
 
           <div
-            class="w-24 h-24 rounded-[2rem] bg-primary flex items-center justify-center text-white text-3xl font-bold shadow-2xl relative z-10 overflow-hidden ring-4 ring-white"
+            class="w-24 h-24 rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold shadow-2xl relative z-10 overflow-hidden ring-4 ring-white"
           >
             <img
-              v-if="selectedUser.photo"
-              :src="getImageSource(selectedUser.photo)"
+              v-if="selectedCategory.photo"
+              :src="getImageSource(selectedCategory.photo)"
               class="w-full h-full object-cover"
             />
-            <span v-else>{{ userInitials(selectedUser.name) }}</span>
+            <FolderIcon v-else class="h-12 w-12" />
           </div>
           <h4 class="mt-5 text-xl font-bold text-slate-700 relative z-10">
-            {{ selectedUser.name }}
+            {{ selectedCategory.title }}
           </h4>
           <span
             class="px-4 py-1.5 mt-2 rounded-full bg-white text-primary text-[10px] font-bold uppercase tracking-[0.15em] border border-primary/10 shadow-sm relative z-10"
-            >{{ selectedUser.role }}</span
+            >{{
+              selectedCategory.is_parent ? "Parent" : "Child"
+            }}
+            Category</span
           >
         </div>
 
         <!-- Data Sections -->
-        <InfoSection title="Account Identity" columns="2">
+        <InfoSection title="Category Identity" columns="2">
           <InfoItem
-            label="Display Name"
-            :value="selectedUser.name"
-            :icon="UserIcon"
+            label="Category Name"
+            :value="selectedCategory.title"
+            :icon="FolderIcon"
           />
           <InfoItem
-            label="Email Address"
-            :value="selectedUser.email"
-            :icon="MailIcon"
+            label="URL Slug"
+            :value="selectedCategory.slug"
+            :icon="LinkIcon"
           />
         </InfoSection>
 
-        <InfoSection title="System Access & Roles" columns="2">
+        <InfoSection
+          v-if="selectedCategory.summary"
+          title="Description"
+          columns="1"
+        >
+          <InfoItem label="Summary" :value="selectedCategory.summary" />
+        </InfoSection>
+
+        <InfoSection title="Hierarchy & Status" columns="2">
           <InfoItem
-            label="Designated Role"
-            :value="selectedUser.role"
-            :icon="ShieldIcon"
+            label="Parent Category"
+            :value="selectedCategory.parent?.title || 'None (Root Category)'"
+            :icon="FolderTreeIcon"
           />
           <InfoItem label="Current Status" :icon="ActivityIcon">
             <div class="flex items-center gap-2">
               <span
                 class="h-2 w-2 rounded-full"
                 :class="
-                  selectedUser.status === 'active'
+                  selectedCategory.status === 'active'
                     ? 'bg-emerald-500'
                     : 'bg-slate-300'
                 "
               ></span>
               <span class="text-sm font-semibold text-slate-700 capitalize">{{
-                selectedUser.status
+                selectedCategory.status
               }}</span>
             </div>
           </InfoItem>
         </InfoSection>
 
-        <InfoSection title="Registration Timeline" columns="2">
+        <InfoSection title="Audit Information" columns="2">
           <InfoItem
-            label="Joined Date"
-            :value="formatDate(selectedUser.created_at)"
+            label="Created Date"
+            :value="formatDate(selectedCategory.created_at)"
             :icon="CalendarIcon"
           />
           <InfoItem
-            label="Member ID"
-            :value="`#USR-${selectedUser.id.toString().padStart(5, '0')}`"
+            label="Created By"
+            :value="selectedCategory.added_by?.name || 'Unknown'"
+            :icon="UserIcon"
+          />
+        </InfoSection>
+
+        <InfoSection title="Modification History" columns="2">
+          <InfoItem
+            label="Last Modified"
+            :value="formatDate(selectedCategory.updated_at)"
+            :icon="CalendarIcon"
+          />
+          <InfoItem
+            label="Modified By"
+            :value="selectedCategory.modified_by?.name || 'Not modified yet'"
+            :icon="UserIcon"
+          />
+        </InfoSection>
+
+        <InfoSection title="System Info" columns="1">
+          <InfoItem
+            label="Category ID"
+            :value="`#CAT-${selectedCategory.id.toString().padStart(5, '0')}`"
             :icon="HashIcon"
           />
         </InfoSection>
@@ -312,20 +356,20 @@
       </template>
     </InfoModal>
 
-    <!-- Refined Edit Modal -->
-    <UserModal
+    <!-- Edit/Create Modal -->
+    <CategoryModal
       v-else
       :isOpen="isModalOpen"
-      :editUser="selectedUser"
+      :editCategory="selectedCategory"
       @close="isModalOpen = false"
-      @refresh="fetchUsers"
+      @refresh="fetchCategories"
     />
 
     <ConfirmationModal
       :isOpen="isDeleteModalOpen"
-      title="Delete User"
-      :description="`Are you sure you want to delete ${selectedUser?.name}? This will move them to the trash and revoke their access.`"
-      confirmLabel="Delete User"
+      title="Delete Category"
+      :description="`Are you sure you want to delete ${selectedCategory?.title}? This action cannot be undone.`"
+      confirmLabel="Delete Category"
       variant="danger"
       :loading="isDeleting"
       @close="isDeleteModalOpen = false"
@@ -337,135 +381,121 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from "vue";
 import {
-  UserPlus as UserPlusIcon,
+  Plus as PlusIcon,
   Search as SearchIcon,
   Edit3 as Edit3Icon,
   Trash2 as Trash2Icon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Eye as EyeIcon,
+  Folder as FolderIcon,
+  FolderTree as FolderTreeIcon,
+  Link as LinkIcon,
+  Activity as ActivityIcon,
+  Calendar as CalendarIcon,
+  Hash as HashIcon,
 } from "lucide-vue-next";
 import axios from "axios";
-import UserModal from "./UserModal.vue";
+import CategoryModal from "./CategoryModal.vue";
 import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 import InfoModal from "../../components/ui/InfoModal.vue";
 import InfoSection from "../../components/ui/InfoSection.vue";
 import InfoItem from "../../components/ui/InfoItem.vue";
 import FilterDropdown from "../../components/ui/FilterDropdown.vue";
 import ContextDropdown from "../../components/ui/ContextDropdown.vue";
+import FilterSection from "../../components/ui/FilterSection.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
 import { usePermissions } from "../../composables/usePermissions";
-import {
-  User as UserIcon,
-  Mail as MailIcon,
-  Shield as ShieldIcon,
-  Activity as ActivityIcon,
-  Calendar as CalendarIcon,
-  Hash as HashIcon,
-} from "lucide-vue-next";
-
-const roleFilterOptions = [
-  { label: "All Roles", value: "" },
-  {
-    label: "Administrator",
-    value: "admin",
-    description: "Full system access.",
-    badge: "Privileged",
-    badgeClass: "bg-slate-900 text-white",
-    metadata: [{ icon: ShieldIcon, text: "Admin" }],
-  },
-  {
-    label: "Staff Member",
-    value: "staff",
-    description: "Order handling access.",
-    badge: "Staff",
-    badgeClass: "bg-blue-100 text-blue-700",
-  },
-  {
-    label: "Content Moderator",
-    value: "moderator",
-    description: "Community management.",
-    badge: "Mod",
-    badgeClass: "bg-purple-100 text-purple-700",
-  },
-  {
-    label: "Standard User",
-    value: "user",
-    description: "Default member access.",
-    badge: "User",
-    badgeClass: "bg-slate-100 text-slate-600",
-  },
-];
+import { useToast } from "../../composables/useToast";
 
 const statusFilterOptions = [
   { label: "All Statuses", value: "" },
   {
     label: "Active",
     value: "active",
-    description: "Account is operational.",
-    badge: "Online",
+    description: "Category is visible.",
+    badge: "Live",
     badgeClass: "bg-emerald-100 text-emerald-700",
   },
   {
     label: "Inactive",
     value: "inactive",
-    description: "Access is suspended.",
-    badge: "Blocked",
+    description: "Category is hidden.",
+    badge: "Hidden",
     badgeClass: "bg-slate-200 text-slate-500",
   },
 ];
 
-const users = ref([]);
+const typeFilterOptions = [
+  { label: "All Types", value: "" },
+  {
+    label: "Parent Categories",
+    value: "1",
+    description: "Top-level categories.",
+    badge: "Parent",
+    badgeClass: "bg-blue-100 text-blue-700",
+  },
+  {
+    label: "Child Categories",
+    value: "0",
+    description: "Sub-categories.",
+    badge: "Child",
+    badgeClass: "bg-purple-100 text-purple-700",
+  },
+];
+
+const categories = ref([]);
 const loading = ref(true);
 const isDeleting = ref(false);
 const isModalOpen = ref(false);
 const isViewMode = ref(false);
 const isDeleteModalOpen = ref(false);
-const selectedUser = ref(null);
+const selectedCategory = ref(null);
 
 const meta = ref({});
 const links = ref({});
 const { canAdd, canEdit, canDelete } = usePermissions();
+const { success: toastSuccess, error: toastError } = useToast();
 
 const columns = [
-  { key: "user", label: "User", align: "left" },
-  { key: "role", label: "Role", align: "left" },
+  { key: "category", label: "Category", align: "left" },
+  { key: "parent", label: "Parent", align: "left" },
   { key: "status", label: "Status", align: "left" },
-  { key: "joined", label: "Joined", align: "left" },
+  { key: "created", label: "Created", align: "left" },
+  { key: "modified", label: "Modified", align: "left" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 
 const filters = reactive({
   search: "",
-  role: "",
   status: "",
+  is_parent: "",
 });
 
 const activeFiltersCount = computed(() => {
   let count = 0;
-  if (filters.role) count++;
   if (filters.status) count++;
+  if (filters.is_parent) count++;
   return count;
 });
 
 let searchTimeout = null;
 
-const fetchUsers = async (url = "/api/v1/users") => {
+const fetchCategories = async (url = "/api/v1/categories") => {
   loading.value = true;
   try {
     const params = {
       search: filters.search,
-      role: filters.role,
       status: filters.status,
+      is_parent: filters.is_parent,
     };
 
-    // Check if url is just path or full URL
     const finalUrl = url.includes("?") ? url : url;
     const response = await axios.get(finalUrl, { params });
 
     if (response.data.success) {
-      users.value = response.data.data.data;
+      categories.value = response.data.data.data;
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from,
@@ -477,7 +507,7 @@ const fetchUsers = async (url = "/api/v1/users") => {
       };
     }
   } catch (e) {
-    console.error("Failed to fetch users", e);
+    console.error("Failed to fetch categories", e);
   } finally {
     loading.value = false;
   }
@@ -486,41 +516,25 @@ const fetchUsers = async (url = "/api/v1/users") => {
 const debounceSearch = () => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    fetchUsers();
+    fetchCategories();
   }, 500);
 };
 
 const resetFilters = () => {
-  filters.role = "";
   filters.status = "";
-  fetchUsers();
-};
-
-const userInitials = (name) => {
-  if (!name) return "??";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .substring(0, 2)
-    .toUpperCase();
+  filters.is_parent = "";
+  fetchCategories();
 };
 
 const getImageSource = (path) => {
   if (!path) return "";
   if (path.startsWith("data:image")) return path;
+  if (path.startsWith("http")) return path;
   return `/${path}`;
 };
 
-const roleStyles = {
-  admin: "bg-slate-900/10 text-slate-900 border-slate-900/20",
-  staff: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  moderator: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  user: "bg-slate-100 text-slate-500 border-slate-200",
-};
-
-const handleView = (user) => {
-  selectedUser.value = user;
+const handleView = (category) => {
+  selectedCategory.value = category;
   isViewMode.value = true;
   isModalOpen.value = true;
 };
@@ -534,30 +548,37 @@ const formatDate = (date) => {
 };
 
 const openCreateModal = () => {
-  selectedUser.value = null;
+  selectedCategory.value = null;
   isViewMode.value = false;
   isModalOpen.value = true;
 };
 
-const openEditModal = (user) => {
-  selectedUser.value = user;
+const openEditModal = (category) => {
+  selectedCategory.value = category;
   isViewMode.value = false;
   isModalOpen.value = true;
 };
 
-const confirmDelete = (user) => {
-  selectedUser.value = user;
+const confirmDelete = (category) => {
+  selectedCategory.value = category;
   isDeleteModalOpen.value = true;
 };
 
 const handleDelete = async () => {
   isDeleting.value = true;
   try {
-    await axios.delete(`/api/v1/users/${selectedUser.value.id}`);
-    isDeleteModalOpen.value = false;
-    fetchUsers();
+    const response = await axios.delete(
+      `/api/v1/categories/${selectedCategory.value.id}`,
+    );
+    if (response.data.success) {
+      toastSuccess(response.data.message || "Category deleted successfully");
+      isDeleteModalOpen.value = false;
+      fetchCategories();
+    }
   } catch (e) {
-    console.error("Failed to delete user", e);
+    console.error("Failed to delete category", e);
+    const message = e.response?.data?.message || "Failed to delete category";
+    toastError(message);
   } finally {
     isDeleting.value = false;
   }
@@ -567,7 +588,7 @@ function cn(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-onMounted(fetchUsers);
+onMounted(fetchCategories);
 </script>
 
 <style scoped></style>

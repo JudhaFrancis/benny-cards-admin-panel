@@ -5,9 +5,7 @@
     </p>
 
     <div class="space-y-4">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-        >Design Outputs</label
-      >
+      <label class="text-sm font-medium text-slate-700">Design Outputs</label>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <label
           v-for="output in designOutputs"
@@ -24,9 +22,7 @@
     </div>
 
     <div class="space-y-4">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-        >Print & Add-ons</label
-      >
+      <label class="text-sm font-medium text-slate-700">Print & Add-ons</label>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         <label
           v-for="addon in printAddons"

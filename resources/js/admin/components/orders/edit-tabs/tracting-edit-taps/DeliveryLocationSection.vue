@@ -15,11 +15,9 @@
     </div>
 
     <div class="space-y-2">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-        >Place Name</label
-      >
+      <label class="text-sm font-medium text-slate-700">Place Name</label>
       <input
-        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         placeholder="Enter place name"
       />
     </div>

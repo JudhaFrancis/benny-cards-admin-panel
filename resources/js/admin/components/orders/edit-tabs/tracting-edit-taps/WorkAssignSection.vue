@@ -35,42 +35,30 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Assigned To</label
-        >
+        <label class="text-sm font-medium text-slate-700">Assigned To</label>
         <input
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Designer name"
         />
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Deadline</label
-        >
+        <label class="text-sm font-medium text-slate-700">Deadline</label>
         <input
           type="date"
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Content By</label
-        >
+        <label class="text-sm font-medium text-slate-700">Content By</label>
         <input
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Enter name"
         />
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Completed By</label
-        >
+        <label class="text-sm font-medium text-slate-700">Completed By</label>
         <input
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Enter name"
         />
       </div>

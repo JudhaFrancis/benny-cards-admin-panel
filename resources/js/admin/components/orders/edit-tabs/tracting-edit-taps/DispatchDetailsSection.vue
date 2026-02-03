@@ -6,31 +6,24 @@
       <h4 class="font-bold text-slate-900">Bus</h4>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-            >Bus No</label
-          >
+          <label class="text-sm font-medium text-slate-700">Bus No</label>
           <input
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+          <label class="text-sm font-medium text-slate-700"
             >Reaching Time</label
           >
           <input
             type="time"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-            >Contact No</label
-          >
+          <label class="text-sm font-medium text-slate-700">Contact No</label>
           <input
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
       </div>
@@ -42,21 +35,15 @@
       <h4 class="font-bold text-slate-900">Courier</h4>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-            >Name</label
-          >
+          <label class="text-sm font-medium text-slate-700">Name</label>
           <input
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-            >Tracking No</label
-          >
+          <label class="text-sm font-medium text-slate-700">Tracking No</label>
           <input
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
       </div>
@@ -78,21 +65,15 @@
       <h4 class="font-bold text-slate-900">Transport</h4>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-            >Name</label
-          >
+          <label class="text-sm font-medium text-slate-700">Name</label>
           <input
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-            >LR Number</label
-          >
+          <label class="text-sm font-medium text-slate-700">LR Number</label>
           <input
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
       </div>

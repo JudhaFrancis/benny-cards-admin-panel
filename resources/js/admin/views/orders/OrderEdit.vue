@@ -1,44 +1,55 @@
 <template>
   <div class="min-h-screen bg-slate-50">
     <!-- Header -->
-    <div class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-      <div class="px-6 py-4">
+    <div class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <div class="max-w-7xl mx-auto px-6 py-4">
         <div class="flex items-center justify-between">
+          <!-- Left Section -->
           <div class="flex items-center gap-4">
+            <!-- Back Button -->
             <button
               @click="handleBack"
-              class="p-2.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-all active:scale-95 border border-slate-200"
+              class="p-2.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition active:scale-95"
             >
               <ArrowLeftIcon class="h-5 w-5" />
             </button>
-            <div class="border-l border-slate-200 pl-4">
-              <div class="flex items-center gap-3 mb-1">
-                <h1 class="text-xl font-bold text-slate-900">
+
+            <!-- Divider -->
+            <div class="h-10 w-px bg-slate-200"></div>
+
+            <!-- Title Area -->
+            <div>
+              <div class="flex items-center gap-3">
+                <h1 class="text-lg font-semibold text-slate-900">
                   Order {{ editedOrder?.id }}
                 </h1>
+
                 <span
-                  class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100"
+                  class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase bg-blue-50 text-blue-600 border border-blue-100"
                 >
                   {{ editedOrder?.orderStatus || "Processing" }}
                 </span>
               </div>
-              <div class="flex items-center gap-2 text-xs text-slate-500">
-                <router-link
-                  to="/orders"
-                  class="hover:text-primary transition-colors"
-                >
+
+              <!-- Breadcrumb -->
+              <div
+                class="flex items-center gap-1.5 text-xs text-slate-500 mt-1"
+              >
+                <router-link to="/orders" class="hover:text-primary transition">
                   Orders
                 </router-link>
                 <ChevronRightIcon class="h-3 w-3" />
-                <span class="text-slate-400">Edit Order</span>
+                <span>Edit Order</span>
               </div>
             </div>
           </div>
-          <div class="text-xs text-slate-400">
+
+          <!-- Right Section -->
+          <div class="text-sm text-slate-500">
             Customer:
-            <span class="font-semibold text-slate-600">{{
-              editedOrder?.customer
-            }}</span>
+            <span class="font-medium text-slate-700 ml-1">
+              {{ editedOrder?.customer }}
+            </span>
           </div>
         </div>
       </div>
@@ -48,7 +59,7 @@
     <div class="flex h-[calc(100vh-73px)]">
       <!-- Sidebar Navigation -->
       <div
-        class="w-80 bg-white border-r border-slate-200 flex-shrink-0 overflow-y-auto"
+        class="w-80 bg-white border-r border-slate-200 flex-shrink-0 overflow-y-auto sticky top-0 self-start"
       >
         <div class="p-6">
           <h2

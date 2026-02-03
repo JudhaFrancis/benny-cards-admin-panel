@@ -1,12 +1,10 @@
 <template>
   <div class="space-y-8">
     <div class="space-y-2">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-        >Assigned Date</label
-      >
+      <label class="text-sm font-medium text-slate-700">Assigned Date</label>
       <input
         type="date"
-        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
       />
     </div>
 
@@ -47,10 +45,7 @@
         </label>
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Follow Up</label
-        >
+        <label class="text-sm font-medium text-slate-700">Follow Up</label>
         <div class="flex flex-wrap gap-2">
           <label
             v-for="day in days"
@@ -73,31 +68,26 @@
       <h4 class="font-bold text-slate-900">Customize Card</h4>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+          <label class="text-sm font-medium text-slate-700"
             >Sent to Print Date</label
           >
           <input
             type="date"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
         <div class="space-y-2">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+          <label class="text-sm font-medium text-slate-700"
             >Delivery Date</label
           >
           <input
             type="date"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Follow Up</label
-        >
+        <label class="text-sm font-medium text-slate-700">Follow Up</label>
         <div class="flex flex-wrap gap-2">
           <label
             v-for="day in days"
@@ -115,21 +105,19 @@
     </div>
 
     <div class="space-y-2">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+      <label class="text-sm font-medium text-slate-700"
         >Any Printing Issues</label
       >
       <textarea
-        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[100px]"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[100px]"
         placeholder="Describe any issues..."
       ></textarea>
     </div>
 
     <div class="space-y-2">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-        >Delay Reason</label
-      >
+      <label class="text-sm font-medium text-slate-700">Delay Reason</label>
       <textarea
-        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[100px]"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[100px]"
         placeholder="Reason for delay..."
       ></textarea>
     </div>

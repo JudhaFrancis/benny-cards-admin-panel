@@ -84,7 +84,7 @@
                     v-model="form.name"
                     type="text"
                     required
-                    class="w-full rounded-2xl py-3 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 text-slate-900 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
+                    class="w-full rounded-2xl py-3 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
                   />
                 </div>
               </div>
@@ -101,7 +101,7 @@
                     v-model="form.email"
                     type="email"
                     required
-                    class="w-full rounded-2xl py-3 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 text-slate-900 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
+                    class="w-full rounded-2xl py-3 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
                   />
                 </div>
               </div>
@@ -125,7 +125,7 @@
                       v-model="form.password"
                       type="password"
                       placeholder="Leave blank to keep current"
-                      class="w-full rounded-2xl py-3 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 text-slate-900 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
+                      class="w-full rounded-2xl py-3 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
                     />
                   </div>
                 </div>
@@ -141,7 +141,7 @@
                     <input
                       v-model="form.password_confirmation"
                       type="password"
-                      class="w-full rounded-2xl py-3 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 text-slate-900 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
+                      class="w-full rounded-2xl py-3 pl-11 pr-4 text-sm transition-all duration-200 border outline-none font-medium bg-slate-50 border-slate-200 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5"
                     />
                   </div>
                 </div>
@@ -302,3 +302,30 @@ const handleSubmit = async () => {
 
 onMounted(fetchUser);
 </script>
+
+<style scoped>
+/* Fix autofill text color visibility */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #475569 !important;
+  -webkit-box-shadow: 0 0 0 30px #f8fafc inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:focus:-webkit-autofill,
+input:focus:-webkit-autofill:hover,
+input:focus:-webkit-autofill:focus,
+input:focus:-webkit-autofill:active {
+  -webkit-text-fill-color: #475569 !important;
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+}
+
+/* Force input text color */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  color: #475569 !important;
+}
+</style>

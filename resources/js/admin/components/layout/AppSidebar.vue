@@ -44,17 +44,26 @@
     <div
       class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-8 px-2 space-y-10"
     >
-      <!-- Section: General -->
+      <!-- Dashboard - Standalone -->
+      <div class="space-y-1">
+        <SidebarNavItem
+          :item="navDashboard"
+          :isCollapsed="isCollapsed"
+          :isActive="isActive(navDashboard.url)"
+        />
+      </div>
+
+      <!-- Section: Order Management -->
       <div class="space-y-2">
         <p
           v-if="!isCollapsed"
-          class="px-5 mb-4 text-[10px] font-bold text-white/40 uppercase tracking-[0.3em] leading-none"
+          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
         >
-          Operations
+          Order Management
         </p>
         <div class="space-y-1">
           <SidebarNavItem
-            v-for="item in navMain"
+            v-for="item in navOrders"
             :key="item.title"
             :item="item"
             :isCollapsed="isCollapsed"
@@ -63,13 +72,88 @@
         </div>
       </div>
 
-      <!-- Section: Reports -->
+      <!-- Section: Product Management -->
       <div class="space-y-2">
         <p
           v-if="!isCollapsed"
-          class="px-5 mb-4 text-[10px] font-bold text-white/40 uppercase tracking-[0.3em] leading-none"
+          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
         >
-          Analytics
+          Product Management
+        </p>
+
+        <!-- Standalone Product Items -->
+        <div class="space-y-1">
+          <SidebarNavItem
+            v-for="item in navProducts"
+            :key="item.title"
+            :item="item"
+            :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)"
+          />
+        </div>
+
+        <!-- Catalog Management Dropdown -->
+        <div class="px-2 mt-2">
+          <div
+            @click="toggleCatalog"
+            :class="
+              cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 group mx-2',
+                catalogOpen && !isCollapsed
+                  ? 'bg-white/20 text-white backdrop-blur-md'
+                  : 'text-white/40 hover:bg-white/10 hover:text-white',
+              )
+            "
+          >
+            <PackageIcon
+              class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110"
+              :class="
+                catalogOpen && !isCollapsed
+                  ? 'text-white'
+                  : 'text-white/40 group-hover:text-white'
+              "
+            />
+            <div
+              v-if="!isCollapsed"
+              class="flex flex-1 items-center justify-between"
+            >
+              <span class="text-[14px] font-medium tracking-tight"
+                >Catalog Management</span
+              >
+              <ChevronDownIcon
+                :class="
+                  cn(
+                    'h-4 w-4 transition-transform duration-500 opacity-30',
+                    catalogOpen ? 'rotate-180 opacity-100 text-white' : '',
+                  )
+                "
+              />
+            </div>
+          </div>
+
+          <!-- Catalog Children -->
+          <div
+            v-if="catalogOpen && !isCollapsed"
+            class="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500"
+          >
+            <SidebarNavItem
+              v-for="item in navCatalog"
+              :key="item.title"
+              :item="item"
+              :isActive="isActive(item.url)"
+              isSubItem
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Analytics & Reports -->
+      <div class="space-y-2">
+        <p
+          v-if="!isCollapsed"
+          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
+        >
+          Analytics & Reports
         </p>
         <div class="px-2">
           <div
@@ -123,6 +207,17 @@
             />
           </div>
         </div>
+      </div>
+
+      <!-- Bottom Items: Settings & Users -->
+      <div class="space-y-1">
+        <SidebarNavItem
+          v-for="item in navBottom"
+          :key="item.title"
+          :item="item"
+          :isCollapsed="isCollapsed"
+          :isActive="isActive(item.url)"
+        />
       </div>
     </div>
 
@@ -212,6 +307,10 @@ import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
   ScrollText as ScrollTextIcon,
+  Package as PackageIcon,
+  Box as BoxIcon,
+  Image as ImageIcon,
+  FolderOpen as FolderOpenIcon,
 } from "lucide-vue-next";
 import SidebarNavItem from "./SidebarNavItem.vue";
 import ConfirmationModal from "../ui/ConfirmationModal.vue";
@@ -226,6 +325,7 @@ const { user, setUser } = useAuth();
 const { settings, fetchSettings, getLogoSource } = useSettings();
 const isCollapsed = ref(false);
 const reportsOpen = ref(false);
+const catalogOpen = ref(false);
 const isLogoutModalOpen = ref(false);
 const logoutLoading = ref(false);
 
@@ -253,13 +353,43 @@ onMounted(() => {
   fetchSettings();
 });
 
-const navMain = computed(() => {
+// Dashboard - standalone
+const navDashboard = { title: "Dashboard", url: "/", icon: DashboardIcon };
+
+// Order Management section
+const navOrders = [
+  { title: "Orders", url: "/orders", icon: OrdersIcon },
+  { title: "Invoices", url: "/invoices", icon: InvoicesIcon },
+  { title: "Payments", url: "/payments", icon: PaymentsIcon },
+];
+
+// Product Management - standalone items
+const navProducts = [
+  { title: "Products", url: "/products", icon: BoxIcon },
+  { title: "Banner", url: "/banner", icon: ImageIcon },
+  { title: "File Manager", url: "/file-manager", icon: FolderOpenIcon },
+];
+
+// Product Management - Catalog dropdown
+const navCatalog = [
+  { title: "Categories", url: "/catalog/categories" },
+  { title: "Price Range", url: "/catalog/price-range" },
+  { title: "Brands", url: "/catalog/brands" },
+  { title: "Reviews", url: "/catalog/reviews" },
+  { title: "Coupons", url: "/catalog/coupons" },
+];
+
+// Analytics - Intelligence dropdown
+const navReports = [
+  { title: "Order Trends", url: "/reports/orders" },
+  { title: "Payment Logs", url: "/reports/payments" },
+  { title: "Financials", url: "/reports/invoices" },
+];
+
+// Bottom items
+const navBottom = computed(() => {
   const items = [
-    { title: "Dashboard", url: "/", icon: DashboardIcon },
     { title: "Users", url: "/users", icon: UserIcon },
-    { title: "Orders", url: "/orders", icon: OrdersIcon },
-    { title: "Invoices", url: "/invoices", icon: InvoicesIcon },
-    { title: "Payments", url: "/payments", icon: PaymentsIcon },
     { title: "Settings", url: "/settings", icon: SettingsIcon },
   ];
 
@@ -268,12 +398,6 @@ const navMain = computed(() => {
   }
   return items;
 });
-
-const navReports = [
-  { title: "Order Trends", url: "/reports/orders" },
-  { title: "Payment Logs", url: "/reports/payments" },
-  { title: "Financials", url: "/reports/invoices" },
-];
 
 function cn(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -287,6 +411,19 @@ const isActive = (path) => {
 const toggleReports = () => {
   if (isCollapsed.value) isCollapsed.value = false;
   reportsOpen.value = !reportsOpen.value;
+  // Close other dropdowns
+  if (reportsOpen.value) {
+    catalogOpen.value = false;
+  }
+};
+
+const toggleCatalog = () => {
+  if (isCollapsed.value) isCollapsed.value = false;
+  catalogOpen.value = !catalogOpen.value;
+  // Close other dropdowns
+  if (catalogOpen.value) {
+    reportsOpen.value = false;
+  }
 };
 
 const handleLogout = async () => {
@@ -307,11 +444,22 @@ const handleLogout = async () => {
   }
 };
 
-// Auto-expand reports if current route is a report
+// Auto-expand/close dropdowns based on current route
 watch(
   () => route.path,
   (path) => {
-    if (path.startsWith("/reports")) reportsOpen.value = true;
+    // Auto-expand if navigating to a dropdown route
+    if (path.startsWith("/reports")) {
+      reportsOpen.value = true;
+      catalogOpen.value = false;
+    } else if (path.startsWith("/catalog")) {
+      catalogOpen.value = true;
+      reportsOpen.value = false;
+    } else {
+      // Close all dropdowns when navigating to non-dropdown routes
+      reportsOpen.value = false;
+      catalogOpen.value = false;
+    }
   },
   { immediate: true },
 );

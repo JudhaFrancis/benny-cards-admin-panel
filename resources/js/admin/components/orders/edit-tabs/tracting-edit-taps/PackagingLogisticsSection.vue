@@ -25,63 +25,49 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Crafted By</label
-        >
+        <label class="text-sm font-medium text-slate-700">Crafted By</label>
         <input
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Enter name"
         />
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Names</label
-        >
+        <label class="text-sm font-medium text-slate-700">Names</label>
         <input
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Names on cards"
         />
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Date</label
-        >
+        <label class="text-sm font-medium text-slate-700">Date</label>
         <input
           type="date"
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
       </div>
       <div class="space-y-2">
-        <label
-          class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-          >Qty of Cards</label
-        >
+        <label class="text-sm font-medium text-slate-700">Qty of Cards</label>
         <input
           type="number"
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
       </div>
     </div>
 
     <div class="space-y-2">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+      <label class="text-sm font-medium text-slate-700"
         >Envelope / Ribbon / Tag / Sticker</label
       >
       <textarea
-        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[100px]"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[100px]"
         placeholder="Details..."
       ></textarea>
     </div>
 
     <div class="space-y-2">
-      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest"
-        >Issues in Card</label
-      >
+      <label class="text-sm font-medium text-slate-700">Issues in Card</label>
       <textarea
-        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[100px]"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[100px]"
         placeholder="Describe any issues..."
       ></textarea>
     </div>
