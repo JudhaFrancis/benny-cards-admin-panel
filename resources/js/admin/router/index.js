@@ -29,6 +29,11 @@ const routes = [
                 component: Profile
             },
             {
+                path: 'products',
+                name: 'Products',
+                component: () => import('../views/products/ProductList.vue')
+            },
+            {
                 path: 'orders',
                 name: 'Orders',
                 component: OrderList
@@ -77,6 +82,26 @@ const routes = [
                 path: 'catalog/categories',
                 name: 'Categories',
                 component: () => import('../views/categories/CategoryList.vue')
+            },
+            {
+                path: 'catalog/price-ranges',
+                name: 'Price Ranges',
+                component: () => import('../views/price-ranges/PriceRangeList.vue')
+            },
+            {
+                path: 'catalog/brands',
+                name: 'Brands',
+                component: () => import('../views/brands/BrandList.vue')
+            },
+            {
+                path: 'catalog/coupons',
+                name: 'Coupons',
+                component: () => import('../views/coupons/CouponList.vue')
+            },
+            {
+                path: 'catalog/banners',
+                name: 'Banners',
+                component: () => import('../views/banners/BannerList.vue')
             }
         ]
     },

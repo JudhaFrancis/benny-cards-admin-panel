@@ -19,7 +19,7 @@
 
     <!-- Filters & Search -->
     <div
-      class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
+      class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
     >
       <div
         class="flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -28,13 +28,13 @@
           <!-- Search -->
           <div class="relative w-full md:w-72 group">
             <SearchIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+              class="absolute left-4 top-1/2 -trangray-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors"
             />
             <input
               v-model="filters.search"
               type="text"
               placeholder="Search by title or slug..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-700"
+              class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
               style="color: #475569 !important"
               @input="debounceSearch"
             />
@@ -73,7 +73,7 @@
         </div>
 
         <div
-          class="text-xs font-semibold text-slate-400 uppercase tracking-widest"
+          class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
         >
           Showing {{ meta.total || 0 }} categories
         </div>
@@ -91,7 +91,9 @@
       <template #cell-category="{ item: category }">
         <div class="flex items-center gap-4">
           <div
-            class="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden shrink-0"
+            class="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden shrink-0 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+            @click="openImagePreview(category.photo, category.title)"
+            title="Click to preview"
           >
             <img
               v-if="category.photo"
@@ -101,10 +103,10 @@
             <FolderIcon v-else class="h-5 w-5" />
           </div>
           <div class="flex flex-col min-w-0">
-            <span class="text-sm font-semibold text-slate-700 truncate">{{
+            <span class="text-sm font-semibold text-gray-700 truncate">{{
               category.title
             }}</span>
-            <span class="text-[11px] text-slate-500 truncate">{{
+            <span class="text-[11px] text-gray-500 truncate">{{
               category.slug
             }}</span>
           </div>
@@ -115,10 +117,10 @@
       <template #cell-parent="{ item: category }">
         <span
           v-if="category.parent"
-          class="text-xs text-slate-600 font-medium"
+          class="text-xs text-gray-600 font-medium"
           >{{ category.parent.title }}</span
         >
-        <span v-else class="text-xs text-slate-400 italic">—</span>
+        <span v-else class="text-xs text-gray-400 italic">—</span>
       </template>
 
       <!-- Custom Status Cell -->
@@ -127,10 +129,10 @@
           <span
             class="h-1.5 w-1.5 rounded-full"
             :class="
-              category.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'
+              category.status === 'active' ? 'bg-emerald-500' : 'bg-gray-300'
             "
           ></span>
-          <span class="text-xs font-medium text-slate-700 capitalize">{{
+          <span class="text-xs font-medium text-gray-700 capitalize">{{
             category.status
           }}</span>
         </div>
@@ -139,10 +141,10 @@
       <!-- Custom Created Cell -->
       <template #cell-created="{ item: category }">
         <div class="flex flex-col">
-          <span class="text-xs text-slate-500">{{
+          <span class="text-xs text-gray-500">{{
             formatDate(category.created_at)
           }}</span>
-          <span v-if="category.added_by" class="text-[10px] text-slate-400"
+          <span v-if="category.added_by" class="text-[10px] text-gray-400"
             >by {{ category.added_by?.name || "Unknown" }}</span
           >
         </div>
@@ -151,10 +153,10 @@
       <!-- Custom Modified Cell -->
       <template #cell-modified="{ item: category }">
         <div class="flex flex-col">
-          <span class="text-xs text-slate-500">{{
+          <span class="text-xs text-gray-500">{{
             formatDate(category.updated_at)
           }}</span>
-          <span v-if="category.modified_by" class="text-[10px] text-slate-400"
+          <span v-if="category.modified_by" class="text-[10px] text-gray-400"
             >by {{ category.modified_by?.name || "Unknown" }}</span
           >
         </div>
@@ -193,29 +195,29 @@
       <template #pagination>
         <div
           v-if="!loading && categories.length > 0"
-          class="px-6 py-4 border-t border-slate-100 flex items-center justify-between"
+          class="px-6 py-4 border-t border-gray-100 flex items-center justify-between"
         >
-          <p class="text-[11px] text-slate-500 font-medium">
+          <p class="text-[11px] text-gray-500 font-medium">
             Showing
-            <span class="text-slate-700"
+            <span class="text-gray-700"
               >{{ meta.from || 0 }} to {{ meta.to || 0 }}</span
             >
-            of <span class="text-slate-700">{{ meta.total || 0 }}</span> results
+            of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
           </p>
           <div class="flex items-center gap-2">
             <button
               :disabled="!links.prev"
               @click="fetchCategories(links.prev)"
-              class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
-              <ChevronLeftIcon class="h-4 w-4 text-slate-600" />
+              <ChevronLeftIcon class="h-4 w-4 text-gray-600" />
             </button>
             <button
               :disabled="!links.next"
               @click="fetchCategories(links.next)"
-              class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
-              <ChevronRightIcon class="h-4 w-4 text-slate-600" />
+              <ChevronRightIcon class="h-4 w-4 text-gray-600" />
             </button>
           </div>
         </div>
@@ -235,7 +237,7 @@
       <div class="space-y-10">
         <!-- Visual Card -->
         <div
-          class="flex flex-col items-center justify-center p-8 bg-slate-50/50 rounded-[2.5rem] border border-slate-100 relative overflow-hidden group"
+          class="flex flex-col items-center justify-center p-8 bg-gray-50/50 rounded-[2.5rem] border border-gray-100 relative overflow-hidden group"
         >
           <div
             class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700"
@@ -254,7 +256,7 @@
             />
             <FolderIcon v-else class="h-12 w-12" />
           </div>
-          <h4 class="mt-5 text-xl font-bold text-slate-700 relative z-10">
+          <h4 class="mt-5 text-xl font-bold text-gray-700 relative z-10">
             {{ selectedCategory.title }}
           </h4>
           <span
@@ -301,10 +303,10 @@
                 :class="
                   selectedCategory.status === 'active'
                     ? 'bg-emerald-500'
-                    : 'bg-slate-300'
+                    : 'bg-gray-300'
                 "
               ></span>
-              <span class="text-sm font-semibold text-slate-700 capitalize">{{
+              <span class="text-sm font-semibold text-gray-700 capitalize">{{
                 selectedCategory.status
               }}</span>
             </div>
@@ -375,6 +377,13 @@
       @close="isDeleteModalOpen = false"
       @confirm="handleDelete"
     />
+
+    <ImagePreviewModal
+      :isOpen="isPreviewOpen"
+      :imageSrc="previewImage"
+      :title="previewTitle"
+      @close="isPreviewOpen = false"
+    />
   </div>
 </template>
 
@@ -406,6 +415,7 @@ import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import FilterSection from "../../components/ui/FilterSection.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
+import ImagePreviewModal from "../../components/ui/ImagePreviewModal.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 
@@ -423,7 +433,7 @@ const statusFilterOptions = [
     value: "inactive",
     description: "Category is hidden.",
     badge: "Hidden",
-    badgeClass: "bg-slate-200 text-slate-500",
+    badgeClass: "bg-gray-200 text-gray-500",
   },
 ];
 
@@ -452,6 +462,9 @@ const isModalOpen = ref(false);
 const isViewMode = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedCategory = ref(null);
+const isPreviewOpen = ref(false);
+const previewImage = ref("");
+const previewTitle = ref("");
 
 const meta = ref({});
 const links = ref({});
@@ -537,6 +550,13 @@ const handleView = (category) => {
   selectedCategory.value = category;
   isViewMode.value = true;
   isModalOpen.value = true;
+};
+
+const openImagePreview = (image, title) => {
+  if (!image) return;
+  previewImage.value = getImageSource(image);
+  previewTitle.value = title;
+  isPreviewOpen.value = true;
 };
 
 const formatDate = (date) => {

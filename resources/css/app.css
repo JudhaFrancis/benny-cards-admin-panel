@@ -38,12 +38,37 @@
   input,
   textarea,
   select {
-    @apply text-slate-100 !important;
+    @apply text-slate-100;
   }
 
   input::placeholder,
   textarea::placeholder {
-    @apply text-slate-400 !important;
+    @apply text-slate-400;
+  }
+
+  /* Fix autofill text color visibility */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: #475569 !important;
+    -webkit-box-shadow: 0 0 0 30px #f8fafc inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  input:focus:-webkit-autofill,
+  input:focus:-webkit-autofill:hover,
+  input:focus:-webkit-autofill:focus,
+  input:focus:-webkit-autofill:active {
+    -webkit-text-fill-color: #475569 !important;
+    -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  }
+
+  /* Force input text color globally for all modals */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    color: #475569 !important;
   }
 }
 

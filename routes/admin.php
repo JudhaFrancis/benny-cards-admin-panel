@@ -6,6 +6,11 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\PriceRangeController;
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,5 +47,21 @@ Route::prefix('v1')->group(function () {
 
         // Categories
         Route::apiResource('categories', CategoryController::class);
+
+        // Price Ranges
+        Route::apiResource('price-ranges', PriceRangeController::class);
+
+        // Brands
+        Route::apiResource('brands', BrandController::class);
+
+        // Coupons
+        Route::apiResource('coupons', CouponController::class);
+
+        // Banners
+        Route::apiResource('banners', BannerController::class);
+
+        // Products
+        Route::get('products/options', [ProductController::class, 'options']);
+        Route::apiResource('products', ProductController::class);
     });
 });

@@ -1,0 +1,285 @@
+<template>
+  <TransitionRoot appear :show="isOpen" as="template">
+    <Dialog as="div" @close="handleClose" class="relative z-50">
+      <!-- Backdrop -->
+      <TransitionChild
+        as="template"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm" />
+      </TransitionChild>
+
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0 scale-95 translateY(20px)"
+            enter-to="opacity-100 scale-100 translateY(0)"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100 scale-100 translateY(0)"
+            leave-to="opacity-0 scale-95 translateY(20px)"
+          >
+            <DialogPanel
+              class="w-full max-w-2xl transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all border border-gray-100 flex flex-col"
+              :style="{ maxHeight: 'calc(100vh - 4rem)' }"
+            >
+              <!-- Sticky Header -->
+              <div
+                class="px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10"
+              >
+                <div class="flex items-center gap-4">
+                  <div
+                    class="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary shadow-inner"
+                  >
+                    <TagIcon v-if="!editBrand" class="h-6 w-6" />
+                    <Edit3Icon v-else class="h-6 w-6" />
+                  </div>
+                  <div>
+                    <DialogTitle
+                      as="h3"
+                      class="text-2xl font-bold text-gray-800 tracking-tight"
+                    >
+                      {{ editBrand ? "Edit Brand" : "Add New Brand" }}
+                    </DialogTitle>
+                    <p class="text-sm text-gray-500 mt-0.5">
+                      {{
+                        editBrand
+                          ? "Update brand details and visibility."
+                          : "Create a new product brand category."
+                      }}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  @click="handleClose"
+                  class="p-3 rounded-2xl hover:bg-gray-100 text-gray-400 transition-all active:scale-95"
+                >
+                  <XIcon class="h-6 w-6" />
+                </button>
+              </div>
+
+              <!-- Scrollable Form Content -->
+              <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <form @submit.prevent="handleSubmit" class="space-y-8">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Title -->
+                    <div class="md:col-span-2">
+                      <label
+                        class="block text-sm font-semibold text-gray-700 mb-2.5 ml-1"
+                      >
+                        <div class="flex items-center gap-2">
+                          <TypeIcon class="h-4 w-4 text-gray-400" />
+                          Brand Title
+                          <span class="text-rose-500">*</span>
+                        </div>
+                      </label>
+                      <input
+                        v-model="form.title"
+                        type="text"
+                        placeholder="e.g. Nike, Apple, Samsung"
+                        class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-gray-400"
+                        required
+                      />
+                    </div>
+
+                    <!-- Slug -->
+                    <div class="md:col-span-2">
+                      <label
+                        class="block text-sm font-semibold text-gray-700 mb-2.5 ml-1"
+                      >
+                        <div class="flex items-center gap-2">
+                          <LinkIcon class="h-4 w-4 text-gray-400" />
+                          Slug (URL Identifier)
+                        </div>
+                      </label>
+                      <div class="relative group">
+                        <input
+                          v-model="form.slug"
+                          type="text"
+                          placeholder="auto-generated-from-title"
+                          class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-500 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-mono text-xs"
+                        />
+                        <div
+                          class="absolute inset-y-0 right-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity"
+                        >
+                          <span class="text-[10px] text-gray-400 font-medium"
+                            >Editable</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="md:col-span-2">
+                      <label
+                        class="block text-sm font-semibold text-gray-700 mb-2.5 ml-1"
+                      >
+                        <div class="flex items-center gap-2">
+                          <ActivityIcon class="h-4 w-4 text-gray-400" />
+                          Status
+                        </div>
+                      </label>
+                      <ContextDropdown
+                        v-model="form.status"
+                        :options="statusOptions"
+                        :icon="ActivityIcon"
+                      />
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Sticky Footer -->
+              <div
+                class="px-8 py-6 border-t border-gray-50 bg-gray-50/50 flex justify-end gap-3 sticky bottom-0 z-10"
+              >
+                <button
+                  type="button"
+                  @click="handleClose"
+                  class="px-6 py-3 rounded-2xl text-gray-600 font-semibold hover:bg-gray-100 transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  @click="handleSubmit"
+                  :disabled="loading"
+                  class="px-8 py-3 bg-primary text-white rounded-2xl font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/25 flex items-center gap-2 active:scale-95"
+                >
+                  <span
+                    v-if="loading"
+                    class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                  ></span>
+                  {{ editBrand ? "Save Changes" : "Create Brand" }}
+                </button>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </div>
+    </Dialog>
+  </TransitionRoot>
+</template>
+
+<script setup>
+import { ref, watch, reactive } from "vue";
+import {
+  TransitionRoot,
+  TransitionChild,
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+} from "@headlessui/vue";
+import {
+  X as XIcon,
+  Tag as TagIcon,
+  Edit3 as Edit3Icon,
+  Type as TypeIcon,
+  Link as LinkIcon,
+  Activity as ActivityIcon,
+} from "lucide-vue-next";
+import axios from "axios";
+import { useToast } from "../../composables/useToast";
+import ContextDropdown from "../../components/ui/ContextDropdown.vue";
+
+const props = defineProps({
+  isOpen: Boolean,
+  editBrand: Object,
+});
+
+const emit = defineEmits(["close", "refresh"]);
+const { success: toastSuccess, error: toastError } = useToast();
+
+const loading = ref(false);
+const form = reactive({
+  title: "",
+  slug: "",
+  status: "active",
+});
+
+const statusOptions = [
+  {
+    label: "Active",
+    value: "active",
+    description: "Brand is visible to customers.",
+    badge: "Live",
+    badgeClass: "bg-emerald-100 text-emerald-700",
+  },
+  {
+    label: "Inactive",
+    value: "inactive",
+    description: "Brand is hidden from search and catalog.",
+    badge: "Hidden",
+    badgeClass: "bg-gray-200 text-gray-500",
+  },
+];
+
+watch(
+  () => props.isOpen,
+  (newVal) => {
+    if (newVal) {
+      if (props.editBrand) {
+        form.title = props.editBrand.title;
+        form.slug = props.editBrand.slug;
+        form.status = props.editBrand.status;
+      } else {
+        form.title = "";
+        form.slug = "";
+        form.status = "active";
+      }
+    }
+  },
+);
+
+const handleClose = () => {
+  if (!loading.value) {
+    emit("close");
+  }
+};
+
+const handleSubmit = async () => {
+  loading.value = true;
+  try {
+    const url = props.editBrand
+      ? `/api/v1/brands/${props.editBrand.id}`
+      : "/api/v1/brands";
+    const method = props.editBrand ? "put" : "post";
+
+    const response = await axios({
+      method,
+      url,
+      data: { ...form },
+    });
+
+    if (response.data.success) {
+      toastSuccess(response.data.message);
+      emit("refresh");
+      loading.value = false;
+      handleClose();
+    }
+  } catch (error) {
+    console.error("Brand submission failed", error);
+    toastError(error.response?.data?.message || "Failed to save brand");
+  } finally {
+    loading.value = false;
+  }
+};
+</script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 20px;
+}
+</style>

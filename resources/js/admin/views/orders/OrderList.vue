@@ -120,7 +120,7 @@ import FilterSectionHelper from "../../components/ui/FilterSection.vue";
 import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 
-const { canCreate } = usePermissions();
+const { canAdd: canCreate } = usePermissions();
 const toast = useToast();
 const router = useRouter();
 

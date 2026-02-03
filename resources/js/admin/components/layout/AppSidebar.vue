@@ -148,7 +148,7 @@
       </div>
 
       <!-- Section: Analytics & Reports -->
-      <div class="space-y-2">
+      <!-- <div class="space-y-2">
         <p
           v-if="!isCollapsed"
           class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
@@ -191,10 +191,10 @@
                 "
               />
             </div>
-          </div>
+          </div> -->
 
-          <!-- Report Children -->
-          <div
+      <!-- Report Children -->
+      <!-- <div
             v-if="reportsOpen && !isCollapsed"
             class="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500"
           >
@@ -207,7 +207,7 @@
             />
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Bottom Items: Settings & Users -->
       <div class="space-y-1">
@@ -366,16 +366,16 @@ const navOrders = [
 // Product Management - standalone items
 const navProducts = [
   { title: "Products", url: "/products", icon: BoxIcon },
-  { title: "Banner", url: "/banner", icon: ImageIcon },
-  { title: "File Manager", url: "/file-manager", icon: FolderOpenIcon },
+  // { title: "File Manager", url: "/file-manager", icon: FolderOpenIcon },
 ];
 
 // Product Management - Catalog dropdown
 const navCatalog = [
   { title: "Categories", url: "/catalog/categories" },
-  { title: "Price Range", url: "/catalog/price-range" },
+  { title: "Price Range", url: "/catalog/price-ranges" },
   { title: "Brands", url: "/catalog/brands" },
-  { title: "Reviews", url: "/catalog/reviews" },
+  { title: "Banners", url: "/catalog/banners" },
+  // { title: "Reviews", url: "/catalog/reviews" },
   { title: "Coupons", url: "/catalog/coupons" },
 ];
 

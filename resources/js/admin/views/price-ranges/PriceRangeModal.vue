@@ -47,17 +47,19 @@
                   <div
                     class="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20"
                   >
-                    <FolderIcon class="h-7 w-7" />
+                    <DollarSignIcon class="h-7 w-7" />
                   </div>
                   <div class="flex-1">
                     <h3 class="text-2xl font-bold text-gray-700">
-                      {{ editCategory ? "Edit Category" : "Create Category" }}
+                      {{
+                        editRange ? "Edit Price Range" : "Create Price Range"
+                      }}
                     </h3>
                     <p class="text-sm text-gray-500 mt-1">
                       {{
-                        editCategory
-                          ? "Update category information and settings"
-                          : "Add a new category to organize your products"
+                        editRange
+                          ? "Update range information and pricing settings"
+                          : "Add a new price range to filter your collection"
                       }}
                     </p>
                   </div>
@@ -78,8 +80,8 @@
                       class="block text-sm font-medium text-gray-700 mb-2"
                     >
                       <div class="flex items-center gap-2">
-                        <FolderIcon class="h-4 w-4 text-gray-400" />
-                        Category Title
+                        <TagIcon class="h-4 w-4 text-gray-400" />
+                        Range Title
                         <span class="text-rose-500">*</span>
                       </div>
                     </label>
@@ -87,8 +89,8 @@
                       v-model="form.title"
                       type="text"
                       required
-                      placeholder="Enter category name"
-                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      placeholder="e.g. Under $100"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
                       style="color: #475569 !important"
                       @input="generateSlug"
                     />
@@ -108,82 +110,98 @@
                       v-model="form.slug"
                       type="text"
                       placeholder="auto-generated-from-title"
-                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
                       style="color: #475569 !important"
                     />
-                    <p class="text-xs text-gray-500 mt-1.5">
-                      Auto-generated from title. Edit if needed.
-                    </p>
                   </div>
 
-                  <!-- Summary -->
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      <div class="flex items-center gap-2">
-                        <AlignLeftIcon class="h-4 w-4 text-gray-400" />
-                        Description
-                      </div>
-                    </label>
-                    <textarea
-                      v-model="form.summary"
-                      rows="3"
-                      placeholder="Brief description of this category..."
-                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                      style="color: #475569 !important"
-                    ></textarea>
-                  </div>
-
-                  <!-- Photo Upload -->
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      <div class="flex items-center gap-2">
-                        <ImageIcon class="h-4 w-4 text-gray-400" />
-                        Category Image
-                        <span class="text-rose-500">*</span>
-                      </div>
-                    </label>
-                    <div class="flex items-start gap-4">
-                      <!-- Preview -->
-                      <div
-                        v-if="photoPreview || editCategory?.photo"
-                        class="w-20 h-20 rounded-xl overflow-hidden border-2 border-gray-200 shrink-0"
+                  <!-- Pricing Configuration -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        <img
-                          :src="
-                            photoPreview || getImageSource(editCategory.photo)
-                          "
-                          class="w-full h-full object-cover"
-                        />
-                      </div>
-                      <!-- Upload Button -->
-                      <div class="flex-1">
-                        <input
-                          ref="photoInput"
-                          type="file"
-                          accept="image/*"
-                          class="hidden"
-                          @change="handlePhotoChange"
-                        />
-                        <button
-                          type="button"
-                          @click="$refs.photoInput.click()"
-                          class="px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 text-sm font-medium text-gray-600 hover:text-primary transition-all"
-                        >
-                          {{ photoPreview ? "Change Image" : "Upload Image" }}
-                        </button>
-                        <p class="text-xs text-gray-500 mt-2">
-                          JPG, PNG or GIF. Max 2MB.
-                        </p>
-                      </div>
+                        <div class="flex items-center gap-2">
+                          <DollarSignIcon class="h-4 w-4 text-gray-400" />
+                          Min Price
+                        </div>
+                      </label>
+                      <input
+                        v-model="form.min_price"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
+                        style="color: #475569 !important"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        <div class="flex items-center gap-2">
+                          <DollarSignIcon class="h-4 w-4 text-gray-400" />
+                          Max Price
+                        </div>
+                      </label>
+                      <input
+                        v-model="form.max_price"
+                        type="number"
+                        step="0.01"
+                        placeholder="∞"
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
+                        style="color: #475569 !important"
+                      />
                     </div>
                   </div>
 
-                  <!-- Category Type & Status (Single Row) -->
-                  <div class="grid grid-cols-2 gap-4">
+                  <!-- Image & Status Row -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                    <!-- Photo Upload -->
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        <div class="flex items-center gap-2">
+                          <ImageIcon class="h-4 w-4 text-gray-400" />
+                          Range Image
+                          <span class="text-rose-500">*</span>
+                        </div>
+                      </label>
+                      <div class="flex items-center gap-4">
+                        <!-- Preview -->
+                        <div
+                          v-if="photoPreview || editRange?.photo"
+                          class="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 shrink-0"
+                        >
+                          <img
+                            :src="
+                              photoPreview || getImageSource(editRange.photo)
+                            "
+                            class="w-full h-full object-cover"
+                          />
+                        </div>
+                        <!-- Upload Button -->
+                        <div class="flex-1">
+                          <input
+                            ref="photoInput"
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            @change="handlePhotoChange"
+                          />
+                          <button
+                            type="button"
+                            @click="$refs.photoInput.click()"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 hover:border-primary hover:bg-primary/5 text-sm font-medium text-gray-600 hover:text-primary transition-all flex items-center justify-center gap-2"
+                          >
+                            <ImageIcon class="h-4 w-4" />
+                            {{ photoPreview ? "Change" : "Upload" }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                     <!-- Status -->
                     <div>
                       <label
@@ -201,43 +219,6 @@
                         :icon="ActivityIcon"
                       />
                     </div>
-                    <!-- Is Parent -->
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        <div class="flex items-center gap-2">
-                          <FolderTreeIcon class="h-4 w-4 text-gray-400" />
-                          Category Type
-                          <span class="text-rose-500">*</span>
-                        </div>
-                      </label>
-                      <ContextDropdown
-                        v-model="form.is_parent"
-                        :options="typeOptions"
-                        :icon="FolderTreeIcon"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Parent Category (shown only if child, full width) -->
-                  <div v-if="!form.is_parent">
-                    <label
-                      class="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      <div class="flex items-center gap-2">
-                        <FolderIcon class="h-4 w-4 text-gray-400" />
-                        Parent Category
-                        <span class="text-rose-500">*</span>
-                      </div>
-                    </label>
-                    <ContextDropdown
-                      v-model="form.parent_id"
-                      :options="parentOptions"
-                      :icon="FolderIcon"
-                      searchable
-                      placeholder="Select parent category..."
-                    />
                   </div>
                 </div>
 
@@ -258,7 +239,7 @@
                     class="px-6 py-2.5 rounded-xl bg-primary text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95"
                   >
                     <Loader2Icon v-if="loading" class="h-4 w-4 animate-spin" />
-                    {{ editCategory ? "Update Category" : "Create Category" }}
+                    {{ editRange ? "Update Range" : "Create Range" }}
                   </button>
                 </div>
               </form>
@@ -271,7 +252,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from "vue";
+import { ref, reactive, watch } from "vue";
 import { computed } from "vue";
 import {
   Dialog,
@@ -281,11 +262,10 @@ import {
 } from "@headlessui/vue";
 import {
   X as XIcon,
-  Folder as FolderIcon,
-  FolderTree as FolderTreeIcon,
+  Tag as TagIcon,
   Link as LinkIcon,
+  DollarSign as DollarSignIcon,
   Image as ImageIcon,
-  AlignLeft as AlignLeftIcon,
   Activity as ActivityIcon,
   Loader2 as Loader2Icon,
 } from "lucide-vue-next";
@@ -295,7 +275,7 @@ import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 
 const props = defineProps({
   isOpen: Boolean,
-  editCategory: Object,
+  editRange: Object,
 });
 
 const emit = defineEmits(["close", "refresh"]);
@@ -305,69 +285,34 @@ const loading = ref(false);
 const photoInput = ref(null);
 const photoPreview = ref(null);
 const photoFile = ref(null);
-const parentCategories = ref([]);
-
-const typeOptions = [
-  {
-    label: "Parent Category",
-    value: true,
-    description: "This category can have sub-categories.",
-    badge: "Top Level",
-    badgeClass: "bg-blue-100 text-blue-700",
-  },
-  {
-    label: "Child Category",
-    value: false,
-    description: "This category belongs to a parent category.",
-    badge: "Sub Level",
-    badgeClass: "bg-purple-100 text-purple-700",
-  },
-];
 
 const statusOptions = [
   {
     label: "Active",
     value: "active",
-    description: "Category is visible to customers.",
+    description: "Range is visible to customers.",
     badge: "Live",
     badgeClass: "bg-emerald-100 text-emerald-700",
   },
   {
     label: "Inactive",
     value: "inactive",
-    description: "Category is hidden from customers.",
+    description: "Range is hidden from customers.",
     badge: "Hidden",
     badgeClass: "bg-gray-200 text-gray-500",
   },
 ];
 
-const parentOptions = computed(() => {
-  // Filter out the category itself to prevent self-parenting
-  const filtered = parentCategories.value.filter(
-    (cat) => !props.editCategory || cat.id !== props.editCategory.id,
-  );
-
-  return [
-    { label: "Select parent...", value: "" },
-    ...filtered.map((cat) => ({
-      label: cat.title,
-      value: cat.id,
-      description: `Slug: ${cat.slug}`,
-    })),
-  ];
-});
-
 const form = reactive({
   title: "",
   slug: "",
-  summary: "",
-  is_parent: true,
-  parent_id: "",
+  min_price: "",
+  max_price: "",
   status: "active",
 });
 
 const generateSlug = () => {
-  if (!props.editCategory) {
+  if (!props.editRange) {
     form.slug = form.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -394,19 +339,6 @@ const getImageSource = (path) => {
   return `/${path}`;
 };
 
-const fetchParentCategories = async () => {
-  try {
-    const response = await axios.get("/api/v1/categories", {
-      params: { is_parent: 1, per_page: 100 },
-    });
-    if (response.data.success) {
-      parentCategories.value = response.data.data.data;
-    }
-  } catch (e) {
-    console.error("Failed to fetch parent categories", e);
-  }
-};
-
 const handleSubmit = async () => {
   loading.value = true;
 
@@ -414,9 +346,8 @@ const handleSubmit = async () => {
     const formData = new FormData();
     formData.append("title", form.title);
     formData.append("slug", form.slug);
-    formData.append("summary", form.summary || "");
-    formData.append("is_parent", form.is_parent ? 1 : 0);
-    formData.append("parent_id", form.parent_id || "");
+    formData.append("min_price", form.min_price || "");
+    formData.append("max_price", form.max_price || "");
     formData.append("status", form.status);
 
     if (photoFile.value) {
@@ -424,16 +355,14 @@ const handleSubmit = async () => {
     }
 
     let response;
-    if (props.editCategory) {
-      // For updates with files, we MUST use POST with _method spoofing
-      // because PHP doesn't populate $_FILES for PUT/PATCH requests.
+    if (props.editRange) {
       formData.append("_method", "PUT");
       response = await axios.post(
-        `/api/v1/categories/${props.editCategory.id}`,
+        `/api/v1/price-ranges/${props.editRange.id}`,
         formData,
       );
     } else {
-      response = await axios.post("/api/v1/categories", formData);
+      response = await axios.post("/api/v1/price-ranges", formData);
     }
 
     if (response.data.success) {
@@ -442,17 +371,14 @@ const handleSubmit = async () => {
       closeModal();
     }
   } catch (error) {
-    console.error("Failed to save category", error);
-
-    // Extract Laravel validation errors
+    console.error("Failed to save price range", error);
     if (error.response?.status === 422 && error.response.data.errors) {
       const errors = error.response.data.errors;
       const firstError = Object.values(errors)[0][0];
       toastError(`Validation Error: ${firstError}`);
-      console.table(errors); // Show all errors in a nice table in console
     } else {
       const message =
-        error.response?.data?.message || "Failed to save category";
+        error.response?.data?.message || "Failed to save price range";
       toastError(message);
     }
   } finally {
@@ -468,24 +394,22 @@ const closeModal = () => {
 const resetForm = () => {
   form.title = "";
   form.slug = "";
-  form.summary = "";
-  form.is_parent = true;
-  form.parent_id = "";
+  form.min_price = "";
+  form.max_price = "";
   form.status = "active";
   photoPreview.value = null;
   photoFile.value = null;
 };
 
 watch(
-  () => props.editCategory,
-  (category) => {
-    if (category) {
-      form.title = category.title;
-      form.slug = category.slug;
-      form.summary = category.summary || "";
-      form.is_parent = category.is_parent;
-      form.parent_id = category.parent_id || "";
-      form.status = category.status;
+  () => props.editRange,
+  (range) => {
+    if (range) {
+      form.title = range.title;
+      form.slug = range.slug;
+      form.min_price = range.min_price || "";
+      form.max_price = range.max_price || "";
+      form.status = range.status;
       photoPreview.value = null;
       photoFile.value = null;
     } else {
@@ -494,10 +418,6 @@ watch(
   },
   { immediate: true },
 );
-
-onMounted(() => {
-  fetchParentCategories();
-});
 </script>
 
 <style scoped>
@@ -510,29 +430,5 @@ onMounted(() => {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 20px;
-}
-
-/* Autofill styling */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-textarea:-webkit-autofill:hover,
-textarea:-webkit-autofill:focus,
-select:-webkit-autofill,
-select:-webkit-autofill:hover,
-select:-webkit-autofill:focus {
-  -webkit-text-fill-color: #475569 !important;
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-  box-shadow: 0 0 0px 1000px #ffffff inset !important;
-  transition: background-color 5000s ease-in-out 0s;
-}
-
-input[type="text"],
-input[type="email"],
-input[type="password"],
-textarea,
-select {
-  color: #475569 !important;
 }
 </style>
