@@ -2,6 +2,7 @@
   <DataTable
     :columns="columns"
     :items="orders"
+    :loading="loading"
     empty-text="No orders found matching your criteria."
   >
     <!-- Custom Row Cells -->
@@ -109,6 +110,10 @@ const props = defineProps({
   orders: {
     type: Array,
     required: true,
+  },
+  loading: {
+    type: Boolean,
+    default: false,
   },
 });
 
