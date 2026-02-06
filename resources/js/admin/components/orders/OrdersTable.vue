@@ -6,9 +6,9 @@
     empty-text="No orders found matching your criteria."
   >
     <!-- Custom Row Cells -->
-    <template #cell-id="{ item: order }">
+    <template #cell-order_number="{ item: order }">
       <span class="font-semibold text-slate-900 italic"
-        >#{{ order.order_number }}</span
+        >{{ order.order_number }}</span
       >
     </template>
 
@@ -122,7 +122,7 @@ defineEmits(["view-info", "edit", "delete"]);
 const { canEdit, canDelete } = usePermissions();
 
 const columns = [
-  { key: "order_number", label: "Order ID", align: "left" },
+  { key: "order_number", label: "Order", align: "left" },
   { key: "customer", label: "Customer", align: "left" },
   { key: "orderDate", label: "Order Date", align: "left" },
   { key: "items", label: "Items", align: "center" },
@@ -143,7 +143,7 @@ const orderStatusStyles = {
 
 const paymentStatusStyles = {
   paid: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  partial: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  due: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   unpaid: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 

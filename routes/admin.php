@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +34,9 @@ Route::prefix('v1')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
         Route::put('me', [AuthController::class, 'updateProfile']);
+
+        // Dashboard
+        Route::get('dashboard/stats', [DashboardController::class, 'index']);
 
         // Orders
         Route::get('orders', [OrderController::class, 'index']);
@@ -67,5 +72,8 @@ Route::prefix('v1')->group(function () {
         // Products
         Route::get('products/options', [ProductController::class, 'options']);
         Route::apiResource('products', ProductController::class);
+
+        // Payments
+        Route::apiResource('payments', PaymentController::class);
     });
 });

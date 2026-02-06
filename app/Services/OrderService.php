@@ -74,6 +74,7 @@ class OrderService
                 'total_amount' => $totalAmount,
                 'paid_amount' => 0, // Force 0 on creation
                 'balance_due' => (float) $totalAmount, // All due on creation
+                'payment_status' => 'unpaid',
                 'status' => $data['status'] ?? 'pending',
                 'added_by' => auth()->id(),
                 'modified_by' => auth()->id(),

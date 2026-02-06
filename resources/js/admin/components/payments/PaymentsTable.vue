@@ -1,0 +1,128 @@
+<template>
+  <DataTable
+    :columns="columns"
+    :items="payments"
+    :loading="loading"
+    empty-text="No payments found matching your criteria."
+  >
+    <!-- Custom Row Cells -->
+    <template #cell-payment_number="{ item: payment }">
+      <span class="font-semibold text-slate-900">{{ payment.payment_number }}</span>
+    </template>
+
+    <template #cell-order="{ item: payment }">
+      <span v-if="payment.order" class="text-sm text-slate-600 font-medium">#{{ payment.order.order_number }}</span>
+      <span v-else class="text-slate-400 italic font-medium">None</span>
+    </template>
+
+    <template #cell-amount="{ item: payment }">
+      <span class="font-bold text-slate-900">${{ Number(payment.amount).toFixed(2) }}</span>
+    </template>
+
+    <template #cell-method="{ item: payment }">
+      <span class="capitalize text-slate-600 font-medium">{{ payment.payment_method.replace('_', ' ') }}</span>
+    </template>
+
+    <template #cell-status="{ item: payment }">
+      <span
+        :class="
+          cn(
+            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
+            statusStyles[payment.payment_status] || 'bg-slate-100 text-slate-800 border-slate-200',
+          )
+        "
+      >
+        {{ capitalize(payment.payment_status) }}
+      </span>
+    </template>
+
+    <template #cell-date="{ item: payment }">
+      <span class="text-slate-500 font-medium">{{ formatDate(payment.payment_date) }}</span>
+    </template>
+
+    <template #cell-actions="{ item: payment }">
+      <div class="flex justify-end gap-1.5 transition-opacity duration-200">
+        <button
+          @click="$emit('view', payment)"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
+          title="View Info"
+        >
+          <Eye class="h-4 w-4" />
+        </button>
+        <button
+          v-if="canEdit"
+          @click="$emit('edit', payment)"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-all duration-200"
+          title="Edit Payment"
+        >
+          <Pencil class="h-4 w-4" />
+        </button>
+        <button
+          v-if="canDelete"
+          @click="$emit('delete', payment)"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
+          title="Delete Payment"
+        >
+          <Trash2 class="h-4 w-4" />
+        </button>
+      </div>
+    </template>
+  </DataTable>
+</template>
+
+<script setup>
+import { Eye, Pencil, Trash2 } from "lucide-vue-next";
+import { usePermissions } from "../../composables/usePermissions";
+import DataTable from "../ui/DataTable.vue";
+
+const props = defineProps({
+  payments: {
+    type: Array,
+    required: true,
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  }
+});
+
+defineEmits(["view", "edit", "delete"]);
+
+const { canEdit, canDelete } = usePermissions();
+
+const columns = [
+  { key: "payment_number", label: "Payment", align: "left" },
+  { key: "order", label: "Order", align: "left" },
+  { key: "amount", label: "Amount", align: "right" },
+  { key: "method", label: "Method", align: "left" },
+  { key: "status", label: "Status", align: "left" },
+  { key: "date", label: "Date", align: "left" },
+  { key: "actions", label: "Actions", align: "right" },
+];
+
+const statusStyles = {
+  completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  failed: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  refunded: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  cancelled: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+};
+
+function cn(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+const capitalize = (str) => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+};
+</script>
