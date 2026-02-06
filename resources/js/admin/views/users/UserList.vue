@@ -48,7 +48,7 @@
           >
             <FilterSectionHelper label="Member Role">
               <ContextDropdown
-                v-model="filters.role"
+                v-model="filters.role_id"
                 :options="roleFilterOptions"
                 :icon="ShieldIcon"
               />
@@ -117,12 +117,12 @@
           :class="
             cn(
               'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors duration-200',
-              roleStyles[user.role.toLowerCase()] ||
+              roleStyles[user.role?.name?.toLowerCase()] ||
                 'bg-slate-100 text-slate-800 border-slate-200',
             )
           "
         >
-          {{ user.role }}
+          {{ user.role?.name || "N/A" }}
         </span>
       </template>
 
@@ -152,6 +152,7 @@
       <template #cell-actions="{ item: user }">
         <div class="flex justify-end gap-1.5 transition-opacity duration-200">
           <button
+            v-if="canView"
             @click="handleView(user)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
             title="View Info"
@@ -247,7 +248,7 @@
           </h4>
           <span
             class="px-4 py-1.5 mt-2 rounded-full bg-white text-primary text-[10px] font-bold uppercase tracking-[0.15em] border border-primary/10 shadow-sm relative z-10"
-            >{{ selectedUser.role }}</span
+            >{{ selectedUser.role?.name }}</span
           >
         </div>
 
@@ -268,7 +269,7 @@
         <InfoSection title="System Access & Roles" columns="2">
           <InfoItem
             label="Designated Role"
-            :value="selectedUser.role"
+            :value="selectedUser.role?.name"
             :icon="ShieldIcon"
           />
           <InfoItem label="Current Status" :icon="ActivityIcon">
@@ -365,38 +366,50 @@ import {
   Hash as HashIcon,
 } from "lucide-vue-next";
 
-const roleFilterOptions = [
-  { label: "All Roles", value: "" },
-  {
-    label: "Administrator",
-    value: "admin",
-    description: "Full system access.",
-    badge: "Privileged",
-    badgeClass: "bg-slate-900 text-white",
-    metadata: [{ icon: ShieldIcon, text: "Admin" }],
-  },
-  {
-    label: "Staff Member",
-    value: "staff",
-    description: "Order handling access.",
-    badge: "Staff",
-    badgeClass: "bg-blue-100 text-blue-700",
-  },
-  {
-    label: "Content Moderator",
-    value: "moderator",
-    description: "Community management.",
-    badge: "Mod",
-    badgeClass: "bg-purple-100 text-purple-700",
-  },
-  {
-    label: "Standard User",
-    value: "user",
-    description: "Default member access.",
-    badge: "User",
-    badgeClass: "bg-slate-100 text-slate-600",
-  },
-];
+const roleFilterOptions = ref([{ label: "All Roles", value: "" }]);
+
+const fetchRoles = async () => {
+  try {
+    const response = await axios.get("/api/v1/users/roles");
+    if (response.data.success) {
+      const dbRoles = response.data.data.map((role) => {
+        const name = role.name.toLowerCase();
+        let richProps = {};
+        if (name === "super-admin" || name === "admin") {
+          richProps = {
+            badge: "Admin",
+            badgeClass: "bg-slate-900 text-white",
+          };
+        } else if (name === "staff") {
+          richProps = {
+            badge: "Staff",
+            badgeClass: "bg-blue-100 text-blue-700",
+          };
+        } else if (name === "moderator") {
+          richProps = {
+            badge: "Mod",
+            badgeClass: "bg-purple-100 text-purple-700",
+          };
+        } else if (name === "user") {
+          richProps = {
+            badge: "User",
+            badgeClass: "bg-slate-100 text-slate-600",
+          };
+        }
+
+        return {
+          label: role.name,
+          value: role.id,
+          description: `Access assigned to ${role.name} role.`,
+          ...richProps,
+        };
+      });
+      roleFilterOptions.value = [{ label: "All Roles", value: "" }, ...dbRoles];
+    }
+  } catch (e) {
+    console.error("Failed to fetch roles", e);
+  }
+};
 
 const statusFilterOptions = [
   { label: "All Statuses", value: "" },
@@ -426,9 +439,11 @@ const selectedUser = ref(null);
 
 const meta = ref({});
 const links = ref({});
-const { canAdd, canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canAdd, canView, canEdit, canDelete } = getModulePermissions("User");
 
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "user", label: "User", align: "left" },
   { key: "role", label: "Role", align: "left" },
   { key: "status", label: "Status", align: "left" },
@@ -438,13 +453,13 @@ const columns = [
 
 const filters = reactive({
   search: "",
-  role: "",
+  role_id: "",
   status: "",
 });
 
 const activeFiltersCount = computed(() => {
   let count = 0;
-  if (filters.role) count++;
+  if (filters.role_id) count++;
   if (filters.status) count++;
   return count;
 });
@@ -456,7 +471,7 @@ const fetchUsers = async (url = "/api/v1/users") => {
   try {
     const params = {
       search: filters.search,
-      role: filters.role,
+      role_id: filters.role_id,
       status: filters.status,
     };
 
@@ -465,7 +480,10 @@ const fetchUsers = async (url = "/api/v1/users") => {
     const response = await axios.get(finalUrl, { params });
 
     if (response.data.success) {
-      users.value = response.data.data.data;
+      users.value = response.data.data.data.map((user, index) => ({
+        ...user,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from,
@@ -491,7 +509,7 @@ const debounceSearch = () => {
 };
 
 const resetFilters = () => {
-  filters.role = "";
+  filters.role_id = "";
   filters.status = "";
   fetchUsers();
 };
@@ -513,6 +531,7 @@ const getImageSource = (path) => {
 };
 
 const roleStyles = {
+  "super-admin": "bg-slate-900/10 text-slate-900 border-slate-900/20",
   admin: "bg-slate-900/10 text-slate-900 border-slate-900/20",
   staff: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   moderator: "bg-purple-500/10 text-purple-500 border-purple-500/20",
@@ -567,7 +586,10 @@ function cn(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-onMounted(fetchUsers);
+onMounted(() => {
+  fetchUsers();
+  fetchRoles();
+});
 </script>
 
 <style scoped></style>

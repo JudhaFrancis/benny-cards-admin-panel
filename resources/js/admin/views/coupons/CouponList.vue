@@ -184,6 +184,7 @@
       <template #cell-actions="{ item: coupon }">
         <div class="flex justify-end gap-1.5 transition-opacity duration-200">
           <button
+            v-if="canView"
             @click="viewCoupon(coupon)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
             title="View Details"
@@ -389,7 +390,8 @@ import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 
 const { success: toastSuccess, error: toastError } = useToast();
-const { canAdd, canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Coupons");
 
 // State
 const coupons = ref([]);
@@ -409,6 +411,7 @@ const filters = reactive({
 });
 
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "code", label: "Coupon Code", sortable: true },
   { key: "type", label: "Type" },
   { key: "value", label: "Value" },
@@ -450,7 +453,10 @@ const fetchCoupons = async (url = "/api/v1/coupons") => {
       },
     });
     if (response.data.success) {
-      coupons.value = response.data.data.data;
+      coupons.value = response.data.data.data.map((coupon, index) => ({
+        ...coupon,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from,
@@ -482,6 +488,11 @@ const resetFilters = () => {
   filters.status = "";
   filters.type = "";
   fetchCoupons();
+};
+
+const viewCoupon = (coupon) => {
+  selectedCoupon.value = coupon;
+  isInfoModalOpen.value = true;
 };
 
 const openCreateModal = () => {

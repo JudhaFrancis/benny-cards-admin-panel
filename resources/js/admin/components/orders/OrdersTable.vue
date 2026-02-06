@@ -73,6 +73,7 @@
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
         <button
+          v-if="canView"
           @click="$emit('view-info', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
           title="View Info"
@@ -114,9 +115,11 @@ const props = defineProps({
 
 defineEmits(["view-info", "edit", "delete"]);
 
-const { canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canView, canEdit, canDelete } = getModulePermissions("Order");
 
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "order_number", label: "Order ID", align: "left" },
   { key: "customer", label: "Customer", align: "left" },
   { key: "orderDate", label: "Order Date", align: "left" },

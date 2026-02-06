@@ -47,6 +47,7 @@ Route::prefix('v1')->group(function () {
         Route::put('settings', [SettingController::class, 'update']);
 
         // Users
+        Route::get('users/roles', [UserController::class, 'roles']);
         Route::apiResource('users', UserController::class);
 
         // Categories

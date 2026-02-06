@@ -162,9 +162,13 @@ const fetchOrders = async () => {
 
     const response = await axios.get("/api/v1/orders", { params });
     if (response.data.success) {
-      orders.value = response.data.data.data;
+      orders.value = response.data.data.data.map((order, index) => ({
+        ...order,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
+        from: response.data.data.from,
         current_page: response.data.data.current_page,
         last_page: response.data.data.last_page,
       };

@@ -252,8 +252,9 @@
 
       <!-- Actions Cell -->
       <template #cell-actions="{ item: product }">
-        <div class="flex justify-end gap-1.5">
+        <div class="flex justify-end gap-1.5 transition-opacity duration-200">
           <button
+            v-if="canView"
             @click="viewProduct(product)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
             title="View Details"
@@ -513,7 +514,8 @@ import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 
 const { success: toastSuccess, error: toastError } = useToast();
-const { canAdd, canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Product");
 
 // State
 const products = ref([]);
@@ -548,6 +550,7 @@ const tabOptions = [
 ];
 
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "photo", label: "Product", width: "80px" },
   { key: "title", label: "Title & Meta", sortable: true },
   { key: "price", label: "Price / Stock" },
@@ -586,7 +589,10 @@ const fetchProducts = async (url = "/api/v1/products") => {
       },
     });
     if (response.data.success) {
-      products.value = response.data.data.data;
+      products.value = response.data.data.data.map((product, index) => ({
+        ...product,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from,

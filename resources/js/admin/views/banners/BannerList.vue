@@ -162,6 +162,7 @@
       <template #cell-actions="{ item: banner }">
         <div class="flex justify-end gap-1.5">
           <button
+            v-if="canView"
             @click="viewBanner(banner)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
             title="View Details"
@@ -348,7 +349,8 @@ import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 
 const { success: toastSuccess, error: toastError } = useToast();
-const { canAdd, canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Banners");
 
 // State
 const banners = ref([]);
@@ -371,6 +373,7 @@ const filters = reactive({
 });
 
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "photo", label: "Image", width: "80px" },
   { key: "title", label: "Banner Info", sortable: true },
   { key: "status", label: "Status" },
@@ -403,7 +406,10 @@ const fetchBanners = async (url = "/api/v1/banners") => {
       },
     });
     if (response.data.success) {
-      banners.value = response.data.data.data;
+      banners.value = response.data.data.data.map((banner, index) => ({
+        ...banner,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from,

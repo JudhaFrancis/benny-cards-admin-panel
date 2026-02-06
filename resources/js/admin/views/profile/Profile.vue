@@ -44,7 +44,7 @@
           <p
             class="text-xs font-bold text-primary uppercase tracking-widest mt-1"
           >
-            {{ user.role }}
+            {{ user.role.name }}
           </p>
           <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-2">
             <div class="flex items-center justify-between text-sm">

@@ -169,7 +169,8 @@
       <template #cell-actions="{ item: range }">
         <div class="flex justify-end gap-1.5 transition-opacity duration-200">
           <button
-            @click="viewRange(range)"
+            v-if="canView"
+            @click="handleView(range)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
             title="View Details"
           >
@@ -376,7 +377,9 @@ import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 
 const { success: toastSuccess, error: toastError } = useToast();
-const { canAdd, canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canAdd, canView, canEdit, canDelete } =
+  getModulePermissions("Price Range");
 
 // State
 const priceRanges = ref([]);
@@ -398,6 +401,7 @@ const filters = reactive({
 });
 
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "range", label: "Price Range", sortable: true },
   { key: "min_price", label: "Min Price", sortable: true },
   { key: "max_price", label: "Max Price", sortable: true },
@@ -431,7 +435,10 @@ const fetchPriceRanges = async (url = "/api/v1/price-ranges") => {
       },
     });
     if (response.data.success) {
-      priceRanges.value = response.data.data.data;
+      priceRanges.value = response.data.data.data.map((range, index) => ({
+        ...range,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from,
@@ -462,6 +469,11 @@ const resetFilters = () => {
   filters.search = "";
   filters.status = "";
   fetchPriceRanges();
+};
+
+const handleView = (range) => {
+  selectedRange.value = range;
+  isInfoModalOpen.value = true;
 };
 
 const openCreateModal = () => {

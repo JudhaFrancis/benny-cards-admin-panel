@@ -16,7 +16,7 @@ class Admin
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && $request->user()->role == 'admin') {
+        if ($request->user() && ($request->user()->role?->name === 'super-admin' || $request->user()->role?->name === 'Admin' || $request->user()->role?->name === 'Staff')) {
             return $next($request);
         }
 
@@ -30,7 +30,7 @@ class Admin
         session()->flash('error', 'You do not have any permission to access this page');
 
         // If the user has a role, redirect to that role's route, otherwise redirect /
-        $redirectRoute = $request->user() ? $request->user()->role : 'login';
+        $redirectRoute = ($request->user() && $request->user()->role) ? strtolower($request->user()->role->name) : 'login';
 
         try {
             return redirect()->route($redirectRoute);

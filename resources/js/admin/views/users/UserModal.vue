@@ -120,7 +120,7 @@
                     <!-- Role -->
                     <div class="space-y-2">
                       <ContextDropdown
-                        v-model="form.role"
+                        v-model="form.role_id"
                         label="System Role"
                         :icon="ShieldIcon"
                         :options="roleOptions"
@@ -226,7 +226,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import {
   Dialog,
   DialogPanel,
@@ -263,7 +263,7 @@ const isEdit = computed(() => !!props.editUser);
 const form = ref({
   name: "",
   email: "",
-  role: "user",
+  role_id: null,
   status: "active",
   password: "",
   password_confirmation: "",
@@ -279,7 +279,7 @@ watch(
         form.value = {
           name: props.editUser.name,
           email: props.editUser.email,
-          role: props.editUser.role,
+          role_id: props.editUser.role_id,
           status: props.editUser.status,
           password: "",
           password_confirmation: "",
@@ -289,7 +289,7 @@ watch(
         form.value = {
           name: "",
           email: "",
-          role: "user",
+          role_id: null,
           status: "active",
           password: "",
           password_confirmation: "",
@@ -339,40 +339,58 @@ const handleSubmit = async () => {
   }
 };
 
-const roleOptions = [
-  {
-    label: "Administrator",
-    value: "admin",
-    description:
-      "Full access to all system settings, user management, and sensitive data.",
-    badge: "High Privilege",
-    badgeClass: "bg-rose-100 text-rose-600",
-    metadata: [{ icon: ShieldIcon, text: "Wait 24h for access" }],
-  },
-  {
-    label: "Staff Member",
-    value: "staff",
-    description:
-      "Can manage orders, view customer data, and process shipments.",
-    badge: "Operational",
-    badgeClass: "bg-blue-100 text-blue-600",
-  },
-  {
-    label: "Content Moderator",
-    value: "moderator",
-    description:
-      "Can manage user comments, reviews, and community interactions.",
-    badge: "Limited",
-    badgeClass: "bg-amber-100 text-amber-600",
-  },
-  {
-    label: "Standard User",
-    value: "user",
-    description:
-      "Basic account with access to personal profile and order history.",
-    button: "Default",
-  },
-];
+const roleOptions = ref([]);
+
+const fetchRoles = async () => {
+  try {
+    const response = await axios.get("/api/v1/users/roles");
+    if (response.data.success) {
+      roleOptions.value = response.data.data.map((role) => {
+        // Map to existing rich styles if matching names
+        const name = role.name.toLowerCase();
+        let richProps = {};
+
+        if (name === "super-admin" || name === "admin") {
+          richProps = {
+            description:
+              "Full access to all system settings and user management.",
+            badge: "High Privilege",
+            badgeClass: "bg-rose-100 text-rose-600",
+          };
+        } else if (name === "staff") {
+          richProps = {
+            description:
+              "Can manage orders, view customer data, and process shipments.",
+            badge: "Operational",
+            badgeClass: "bg-blue-100 text-blue-600",
+          };
+        } else if (name === "moderator") {
+          richProps = {
+            description: "Can manage user comments and community interactions.",
+            badge: "Limited",
+            badgeClass: "bg-amber-100 text-amber-600",
+          };
+        } else if (name === "user") {
+          richProps = {
+            description: "Basic account with access to personal profile.",
+            badge: "Default",
+            badgeClass: "bg-slate-100 text-slate-600",
+          };
+        }
+
+        return {
+          label: role.name,
+          value: role.id,
+          ...richProps,
+        };
+      });
+    }
+  } catch (e) {
+    console.error("Failed to fetch roles", e);
+  }
+};
+
+onMounted(fetchRoles);
 
 const statusOptions = [
   {
