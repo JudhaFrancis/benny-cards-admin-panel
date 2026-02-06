@@ -16,8 +16,6 @@ class Order extends Model
 
     protected $table = 'orders';
 
-    protected $appends = ['payment_status'];
-
     protected $fillable = [
         'order_number',
         'tracking_number',
@@ -31,6 +29,7 @@ class Order extends Model
         'total_amount',
         'balance_due',
         'paid_amount',
+        'payment_status',
         'status',
         'added_by',
         'modified_by'
@@ -92,10 +91,17 @@ class Order extends Model
         $paid = $this->calculatePaidAmount();
         $total = $this->total_amount ?? 0;
 
-        // Note: payment_status column was removed from orders table
-        // This method now only updates the financial fields
         $this->paid_amount = (float) $paid;
         $this->balance_due = (float) max(0, $total - $paid);
+
+        if ($paid <= 0) {
+            $this->payment_status = 'unpaid';
+        } elseif ($paid < $total) {
+            $this->payment_status = 'due';
+        } else {
+            $this->payment_status = 'paid';
+        }
+
         $this->save();
     }
 
@@ -103,22 +109,5 @@ class Order extends Model
     {
         // Note: payment_method column was removed from orders table
         // This is now handled via payments relationship
-    }
-
-    // Accessors
-    public function getPaymentStatusAttribute(): string
-    {
-        $paid = (float) ($this->paid_amount ?? 0);
-        $total = (float) ($this->total_amount ?? 0);
-
-        if ($paid <= 0) {
-            return 'unpaid';
-        }
-
-        if ($paid < $total) {
-            return 'partial';
-        }
-
-        return 'paid';
     }
 }

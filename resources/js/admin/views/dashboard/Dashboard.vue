@@ -139,36 +139,58 @@ import { useAuth } from "../../composables/useAuth";
 
 const { user } = useAuth();
 
-const stats = [
+const realStats = ref({
+  total_orders: 0,
+  completed_orders: 0,
+  total_payments: 0,
+  total_revenue: 0,
+});
+
+const fetchDashboardStats = async () => {
+  try {
+    const response = await axios.get("/api/v1/dashboard/stats");
+    if (response.data.success) {
+      realStats.value = response.data.data;
+    }
+  } catch (error) {
+    console.error("Failed to fetch dashboard stats", error);
+  }
+};
+
+onMounted(() => {
+  fetchDashboardStats();
+});
+
+const stats = computed(() => [
   {
     title: "Total Orders",
-    value: "1,234",
+    value: realStats.value.total_orders.toLocaleString(),
     change: "+12.5%",
     changeType: "positive",
     icon: ShoppingCart,
   },
   {
     title: "Completed Orders",
-    value: "1,089",
+    value: realStats.value.completed_orders.toLocaleString(),
     change: "+8.2%",
     changeType: "positive",
     icon: CheckCircle,
   },
   {
-    title: "Pending Payments",
-    value: "45",
+    title: "Total Payments",
+    value: realStats.value.total_payments.toLocaleString(),
     change: "-3.1%",
-    changeType: "negative",
+    changeType: "neutral",
     icon: Clock,
   },
   {
     title: "Total Revenue",
-    value: "$89,420",
+    value: `$${Number(realStats.value.total_revenue).toLocaleString()}`,
     change: "+15.3%",
     changeType: "positive",
     icon: DollarSign,
   },
-];
+]);
 </script>
 
 <style scoped>

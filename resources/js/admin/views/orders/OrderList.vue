@@ -77,6 +77,7 @@
     <!-- Table Section -->
     <OrdersTable
       :orders="filteredOrders"
+      :loading="loading"
       @view-info="handleViewInfo"
       @edit="handleEdit"
       @delete="handleConfirmDelete"
@@ -143,7 +144,7 @@ const toast = useToast();
 const router = useRouter();
 
 const orders = ref([]);
-const loading = ref(false);
+const loading = ref(true);
 const isSaving = ref(false);
 const searchQuery = ref("");
 const statusFilter = ref("all");

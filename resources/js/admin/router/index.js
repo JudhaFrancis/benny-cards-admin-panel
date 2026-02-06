@@ -52,8 +52,7 @@ const routes = [
             {
                 path: 'payments',
                 name: 'Payments',
-                component: PlaceholderView,
-                meta: { module: 'Payment' }
+                component: () => import('../views/payments/PaymentList.vue')
             },
             {
                 path: 'reports/payments',

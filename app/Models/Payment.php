@@ -23,6 +23,7 @@ class Payment extends Model
         'payment_details',
         'notes',
         'added_by',
+        'modified_by',
     ];
 
     protected $casts = [
@@ -40,5 +41,10 @@ class Payment extends Model
     public function addedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'added_by');
+    }
+
+    public function modifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modified_by');
     }
 }

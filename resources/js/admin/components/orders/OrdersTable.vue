@@ -2,13 +2,14 @@
   <DataTable
     :columns="columns"
     :items="orders"
+    :loading="loading"
     empty-text="No orders found matching your criteria."
   >
     <!-- Custom Row Cells -->
-    <template #cell-id="{ item: order }">
-      <span class="font-semibold text-slate-900 italic"
-        >#{{ order.order_number }}</span
-      >
+    <template #cell-order_number="{ item: order }">
+      <span class="font-semibold text-slate-900 italic">{{
+        order.order_number
+      }}</span>
     </template>
 
     <template #cell-customer="{ item: order }">
@@ -111,6 +112,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 defineEmits(["view-info", "edit", "delete"]);
@@ -141,7 +146,7 @@ const orderStatusStyles = {
 
 const paymentStatusStyles = {
   paid: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  partial: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  due: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   unpaid: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 

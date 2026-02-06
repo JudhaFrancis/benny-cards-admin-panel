@@ -31,33 +31,44 @@
             >
               <!-- Sticky Header -->
               <div
-                class="px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10"
+                class="relative bg-primary text-white overflow-hidden shrink-0 sticky top-0 z-10"
               >
-                <div class="flex items-center gap-4">
-                  <div
-                    class="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary shadow-inner"
-                  >
-                    <PackageIcon class="h-6 w-6" />
-                  </div>
-                  <div>
-                    <DialogTitle
-                      as="h3"
-                      class="text-2xl font-bold text-gray-800 tracking-tight"
-                    >
-                      Create New Order
-                    </DialogTitle>
-                    <p class="text-sm text-gray-500 mt-0.5">
-                      Add a new order to your system with customer and product
-                      details.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  @click="handleClose"
-                  class="p-3 rounded-2xl hover:bg-gray-100 text-gray-400 transition-all active:scale-95"
+                <!-- Decorative Background -->
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent"
+                ></div>
+                <div
+                  class="absolute -right-20 -top-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+                ></div>
+
+                <div
+                  class="relative px-8 py-8 flex items-center justify-between"
                 >
-                  <XIcon class="h-6 w-6" />
-                </button>
+                  <div class="flex items-center gap-5">
+                    <div
+                      class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-inner"
+                    >
+                      <PackageIcon class="h-7 w-7 text-white" />
+                    </div>
+                    <div>
+                      <DialogTitle
+                        as="h3"
+                        class="text-2xl font-bold tracking-tight text-white mb-1"
+                      >
+                        Create New Order
+                      </DialogTitle>
+                      <p class="text-sm text-white/80">
+                        Add a new order to your system with customer and product details.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    @click="handleClose"
+                    class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-all border border-white/5 active:scale-95"
+                  >
+                    <XIcon class="h-6 w-6" />
+                  </button>
+                </div>
               </div>
 
               <!-- Main Content: Two Column Layout -->
@@ -676,7 +687,16 @@ import {
   ComboboxOptions,
   ComboboxOption,
 } from "@headlessui/vue";
-import { Search as SearchIcon, Check as CheckIcon } from "lucide-vue-next";
+import {
+  Search as SearchIcon,
+  Check as CheckIcon,
+  Package as PackageIcon,
+  X as XIcon,
+  User as UserIcon,
+  ChevronDown as ChevronDownIcon,
+  Plus as PlusIcon,
+  Trash2 as Trash2Icon,
+} from "lucide-vue-next";
 import axios from "axios";
 import { useToast } from "../../composables/useToast";
 
