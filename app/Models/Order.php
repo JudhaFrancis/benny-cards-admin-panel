@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
@@ -15,36 +16,109 @@ class Order extends Model
 
     protected $table = 'orders';
 
+    protected $appends = ['payment_status'];
+
     protected $fillable = [
-        'customer_id',
         'order_number',
-        'status',
+        'tracking_number',
+        'order_date',
+        'user_id',
+        'items_count',
+        'total_quantity',
+        'net_amount',
+        'coupons_id',
+        'discount',
         'total_amount',
-        'payment_status',
-        'shipping_address',
-        'billing_address',
-        'placed_at',
+        'balance_due',
+        'paid_amount',
+        'status',
+        'added_by',
+        'modified_by'
     ];
 
     protected $casts = [
-        'status' => OrderStatus::class,
-        'placed_at' => 'datetime',
+        'order_date' => 'datetime',
+        'net_amount' => 'decimal:2',
+        'discount' => 'decimal:2',
         'total_amount' => 'decimal:2',
-        'shipping_address' => 'array',
-        'billing_address' => 'array',
+        'balance_due' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
     ];
 
+    // Relationships
     public function items(): HasMany
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'order_id');
     }
 
-    public function customer(): BelongsTo
+    public function user(): BelongsTo
     {
-        // Assuming users table handles customers or there is a specific customers table
-        // Adjusting to 'User' model (standard Laravel) or 'Customer' if it exists.
-        // User requested Example Models "Order, OrderItem, Product". 
-        // I will assume a generic "Customer" model is used for the relationship but won't implement the full module.
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function addedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'added_by');
+    }
+
+    public function modifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modified_by');
+    }
+
+    public function customerDetails(): HasOne
+    {
+        return $this->hasOne(OrderCustomerDetails::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class, 'coupons_id');
+    }
+
+    // Helper methods
+    public function calculatePaidAmount(): float
+    {
+        return (float) $this->payments()->sum('amount');
+    }
+
+    public function updatePaymentStatus(): void
+    {
+        $paid = $this->calculatePaidAmount();
+        $total = $this->total_amount ?? 0;
+
+        // Note: payment_status column was removed from orders table
+        // This method now only updates the financial fields
+        $this->paid_amount = (float) $paid;
+        $this->balance_due = (float) max(0, $total - $paid);
+        $this->save();
+    }
+
+    public function updatePaymentMethod(): void
+    {
+        // Note: payment_method column was removed from orders table
+        // This is now handled via payments relationship
+    }
+
+    // Accessors
+    public function getPaymentStatusAttribute(): string
+    {
+        $paid = (float) ($this->paid_amount ?? 0);
+        $total = (float) ($this->total_amount ?? 0);
+
+        if ($paid <= 0) {
+            return 'unpaid';
+        }
+
+        if ($paid < $total) {
+            return 'partial';
+        }
+
+        return 'paid';
     }
 }

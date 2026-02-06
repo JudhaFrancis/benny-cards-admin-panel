@@ -100,6 +100,7 @@
                             photoPreview || getImageSource(editBanner.photo)
                           "
                           class="w-full h-full object-cover"
+                          @error="handleImageError"
                         />
                         <div
                           class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
@@ -312,6 +313,13 @@ const generateSlug = () => {
 const getImageSource = (path) => {
   if (!path) return "/images/placeholder.webp";
   return `/${path}`;
+};
+
+const handleImageError = (e) => {
+  const fallback =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='9' cy='9' r='2'%3E%3C/circle%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'%3E%3C/path%3E%3C/svg%3E";
+  if (e.target.src === fallback) return;
+  e.target.src = fallback;
 };
 
 const handleFileUpload = (e) => {

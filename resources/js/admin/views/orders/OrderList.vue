@@ -5,6 +5,7 @@
       <template #actions>
         <button
           v-if="canCreate"
+          @click="isCreateModalOpen = true"
           class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95"
         >
           <PlusIcon class="h-4 w-4" />
@@ -68,7 +69,7 @@
         <div
           class="text-xs font-semibold text-slate-400 uppercase tracking-widest"
         >
-          {{ filteredOrders.length }} Results
+          {{ filteredOrders.length }} Orders
         </div>
       </div>
     </div>
@@ -88,10 +89,25 @@
       @close="isInfoModalOpen = false"
     />
 
+    <OrderCreateDialog
+      :is-open="isCreateModalOpen"
+      @close="isCreateModalOpen = false"
+      @success="fetchOrders"
+    />
+
+    <OrderEditDialog
+      :open="isEditModalOpen"
+      :order="selectedOrder"
+      :is-saving="isSaving"
+      @open-change="isEditModalOpen = $event"
+      @save="handleOrderSaved"
+      @refresh="fetchOrders"
+    />
+
     <ConfirmationModal
       :is-open="isDeleteModalOpen"
       title="Delete Order"
-      :message="`Are you sure you want to delete order #${selectedOrder?.id}? This action cannot be undone.`"
+      :message="`Are you sure you want to delete order #${selectedOrder?.order_number || selectedOrder?.id}? This action cannot be undone.`"
       confirm-text="Delete Order"
       variant="danger"
       @close="isDeleteModalOpen = false"
@@ -101,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import {
   Search as SearchIcon,
   Plus as PlusIcon,
@@ -109,27 +125,63 @@ import {
   CreditCard as CreditCardIcon,
 } from "lucide-vue-next";
 import { useRouter } from "vue-router";
-import { mockOrders } from "../../data/mockOrders";
+import axios from "axios";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 import OrdersTable from "../../components/orders/OrdersTable.vue";
 import OrderInfoDialog from "../../components/orders/OrderInfoDialog.vue";
+import OrderCreateDialog from "../../components/orders/OrderCreateDialog.vue";
+import OrderEditDialog from "../../components/orders/OrderEditDialog.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import FilterDropdown from "../../components/ui/FilterDropdown.vue";
 import FilterSectionHelper from "../../components/ui/FilterSection.vue";
 import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 
-const { canAdd: canCreate } = usePermissions();
+const { canAdd: canCreate, canEdit, canDelete } = usePermissions();
 const toast = useToast();
 const router = useRouter();
 
-const orders = ref([...mockOrders]);
+const orders = ref([]);
+const loading = ref(false);
+const isSaving = ref(false);
 const searchQuery = ref("");
 const statusFilter = ref("all");
 const paymentFilter = ref("all");
+const page = ref(1);
+const meta = ref({ total: 0 });
+
+const fetchOrders = async () => {
+  loading.value = true;
+  try {
+    const params = {
+      page: page.value,
+      search: searchQuery.value,
+    };
+    if (statusFilter.value !== "all") params.status = statusFilter.value;
+
+    const response = await axios.get("/api/v1/orders", { params });
+    if (response.data.success) {
+      orders.value = response.data.data.data;
+      meta.value = {
+        total: response.data.data.total,
+        current_page: response.data.data.current_page,
+        last_page: response.data.data.last_page,
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    toast.error("Failed to load orders");
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(fetchOrders);
 
 const isInfoModalOpen = ref(false);
+const isCreateModalOpen = ref(false);
+const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedOrder = ref(null);
 
@@ -209,22 +261,12 @@ const resetFilters = () => {
   paymentFilter.value = "all";
 };
 
-const filteredOrders = computed(() => {
-  return orders.value.filter((order) => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchQuery.value.toLowerCase());
+const filteredOrders = computed(() => orders.value);
 
-    const matchesStatus =
-      statusFilter.value === "all" ||
-      order.orderStatus.toLowerCase() === statusFilter.value.toLowerCase();
-
-    const matchesPayment =
-      paymentFilter.value === "all" ||
-      order.paymentStatus.toLowerCase() === paymentFilter.value.toLowerCase();
-
-    return matchesSearch && matchesStatus && matchesPayment;
-  });
+// Watch for search/filter changes
+watch([searchQuery, statusFilter, paymentFilter], () => {
+  page.value = 1;
+  fetchOrders();
 });
 
 const handleViewInfo = (order) => {
@@ -233,7 +275,46 @@ const handleViewInfo = (order) => {
 };
 
 const handleEdit = (order) => {
-  router.push(`/orders/${order.id}/edit`);
+  selectedOrder.value = order;
+  isEditModalOpen.value = true;
+};
+
+const handleOrderSaved = async (updatedOrderData) => {
+  // If the dialog emits the full updated order, we might use it to optimistically update
+  // But reliable way is to re-fetch or patch the local list
+  // Assuming updatedOrderData might be partial or full.
+
+  // Optimistic update if we have full data
+  if (updatedOrderData && updatedOrderData.id) {
+    const index = orders.value.findIndex((o) => o.id === updatedOrderData.id);
+    if (index !== -1) {
+      orders.value[index] = { ...orders.value[index], ...updatedOrderData };
+    }
+  }
+
+  // Also verify backend persistence (save logic is inside the dialog components, but top level might need final save if dialog emits 'save' with data but didn't push to API itself)
+  // Wait, in OrderEditDialog structure I made, it emits 'save'.
+  // Let's check OrderEditDialog again. It emits 'save' with data. It DOES NOT call API itself.
+
+  // So we MUST save changes here!
+
+  try {
+    isSaving.value = true;
+    const oid = selectedOrder.value.id; // or updatedOrderData.id
+    const payload = updatedOrderData || selectedOrder.value;
+
+    const res = await axios.put(`/api/v1/orders/${oid}`, payload);
+    if (res.data.success) {
+      toast.success("Order updated successfully");
+      isEditModalOpen.value = false;
+      fetchOrders(); // Refresh to be sure
+    }
+  } catch (e) {
+    console.error(e);
+    toast.error("Failed to save changes");
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 const handleConfirmDelete = (order) => {
@@ -241,9 +322,17 @@ const handleConfirmDelete = (order) => {
   isDeleteModalOpen.value = true;
 };
 
-const handleDelete = () => {
-  orders.value = orders.value.filter((o) => o.id !== selectedOrder.value.id);
-  toast.success("Order deleted successfully");
-  isDeleteModalOpen.value = false;
+const handleDelete = async () => {
+  if (!selectedOrder.value) return;
+
+  try {
+    await axios.delete(`/api/v1/orders/${selectedOrder.value.id}`);
+    toast.success("Order deleted successfully");
+    orders.value = orders.value.filter((o) => o.id !== selectedOrder.value.id);
+    isDeleteModalOpen.value = false;
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    toast.error("Failed to delete order");
+  }
 };
 </script>

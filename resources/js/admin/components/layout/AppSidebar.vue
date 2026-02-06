@@ -297,7 +297,6 @@ import {
   CreditCard as CreditCardIcon,
   LayoutDashboard as DashboardIcon,
   ShoppingBag as OrdersIcon,
-  FileText as InvoicesIcon,
   Wallet as PaymentsIcon,
   PieChart as PieChartIcon,
   User as UserIcon,
@@ -359,7 +358,6 @@ const navDashboard = { title: "Dashboard", url: "/", icon: DashboardIcon };
 // Order Management section
 const navOrders = [
   { title: "Orders", url: "/orders", icon: OrdersIcon },
-  { title: "Invoices", url: "/invoices", icon: InvoicesIcon },
   { title: "Payments", url: "/payments", icon: PaymentsIcon },
 ];
 
@@ -383,7 +381,6 @@ const navCatalog = [
 const navReports = [
   { title: "Order Trends", url: "/reports/orders" },
   { title: "Payment Logs", url: "/reports/payments" },
-  { title: "Financials", url: "/reports/invoices" },
 ];
 
 // Bottom items

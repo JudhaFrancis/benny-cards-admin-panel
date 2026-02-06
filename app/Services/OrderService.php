@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\Product;
 use App\Enums\OrderStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
@@ -15,17 +17,18 @@ class OrderService
     public function listOrders(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return Order::query()
-            ->with(['customer', 'items'])
-            ->when(isset($filters['status']), function (Builder $query) use ($filters) {
+            ->with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon'])
+            ->when(isset($filters['status']) && $filters['status'] !== 'all', function (Builder $query) use ($filters) {
                 $query->where('status', $filters['status']);
             })
             ->when(isset($filters['search']), function (Builder $query) use ($filters) {
                 $query->where('order_number', 'like', "%{$filters['search']}%")
-                    ->orWhereHas('customer', function ($q) use ($filters) {
-                        $q->where('name', 'like', "%{$filters['search']}%");
+                    ->orWhereHas('customerDetails', function (Builder $q) use ($filters) {
+                        $q->where('name', 'like', "%{$filters['search']}%")
+                            ->orWhere('email', 'like', "%{$filters['search']}%");
                     });
             })
-            ->latest('placed_at')
+            ->latest('created_at')
             ->paginate($perPage);
     }
 
@@ -34,18 +37,282 @@ class OrderService
      */
     public function getOrder(int $id): Order
     {
-        return Order::with(['customer', 'items.product'])->findOrFail($id);
+        return Order::with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon'])
+            ->findOrFail($id);
+    }
+
+    /**
+     * Create a new order with items and customer details.
+     */
+    public function createOrder(array $data): Order
+    {
+        return DB::transaction(function () use ($data) {
+            // Fetch product details and calculate totals
+            $itemsData = $this->prepareOrderItems($data['items'] ?? []);
+            $totals = $this->calculateOrderTotals($itemsData);
+
+            // Calculate discount and final total
+            $discount = $data['discount'] ?? 0;
+            $totalAmount = (float) max(0, $totals['net_amount'] - $discount);
+
+            // Generate custom numbers
+            $orderNumber = $this->generateOrderNumber();
+            $trackingNumber = $this->generateTrackingNumber();
+            $trackingNumber = $this->generateTrackingNumber();
+
+            // Create Order
+            $order = Order::create([
+                'order_number' => $orderNumber,
+                'tracking_number' => $trackingNumber,
+                'order_date' => $data['order_date'] ?? now(),
+                'user_id' => $data['user_id'] ?? null,
+                'items_count' => $totals['items_count'],
+                'total_quantity' => $totals['total_quantity'],
+                'net_amount' => $totals['net_amount'],
+                'coupons_id' => $data['coupon_id'] ?? null,
+                'discount' => $discount,
+                'total_amount' => $totalAmount,
+                'paid_amount' => 0, // Force 0 on creation
+                'balance_due' => (float) $totalAmount, // All due on creation
+                'status' => $data['status'] ?? 'pending',
+                'added_by' => auth()->id(),
+                'modified_by' => auth()->id(),
+            ]);
+
+            // Create Order Items
+            foreach ($itemsData as $item) {
+                $order->items()->create([
+                    'product_id' => $item['product_id'],
+                    'product_name' => $item['product_name'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'discount_amount' => $item['discount_amount'] ?? 0,
+                    'total_price' => $item['total_price'],
+                ]);
+            }
+
+            // Create or Update Customer Details (Always save address details)
+            if (!empty($data['customer'])) {
+                $customerData = $data['customer'];
+                if (isset($data['remarks'])) {
+                    $customerData['remarks'] = $data['remarks'];
+                }
+
+                $order->customerDetails()->updateOrCreate(
+                    ['order_id' => $order->id],
+                    $customerData
+                );
+            }
+
+            // Payments are not created on order creation anymore based on "make paid_amount 0"
+
+            return $order->load(['items.product', 'customerDetails', 'payments', 'coupon']);
+        });
+    }
+
+    /**
+     * Update an existing order.
+     */
+    public function updateOrder(Order $order, array $data): Order
+    {
+        return DB::transaction(function () use ($order, $data) {
+            // Update Order Items if provided
+            if (isset($data['items'])) {
+                // Delete existing items
+                $order->items()->delete();
+
+                // Prepare and create new items
+                $itemsData = $this->prepareOrderItems($data['items']);
+                foreach ($itemsData as $item) {
+                    $order->items()->create([
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['product_name'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'discount_amount' => $item['discount_amount'] ?? 0,
+                        'total_price' => $item['total_price'],
+                    ]);
+                }
+
+                // Recalculate totals
+                $totals = $this->calculateOrderTotals($itemsData);
+                $order->items_count = $totals['items_count'];
+                $order->total_quantity = $totals['total_quantity'];
+                $order->net_amount = $totals['net_amount'];
+            }
+
+            // Update discount and recalculate total
+            if (isset($data['discount'])) {
+                $order->discount = $data['discount'];
+            }
+
+            // Recalculate total amount
+            $order->total_amount = (float) max(0, $order->net_amount - $order->discount);
+
+            // Update coupon
+            if (isset($data['coupon_id'])) {
+                $order->coupons_id = $data['coupon_id'];
+            }
+
+            // Update Customer Details
+            if (isset($data['customer'])) {
+                $customerData = $data['customer'];
+                if (isset($data['remarks'])) {
+                    $customerData['remarks'] = $data['remarks'];
+                }
+
+                $order->customerDetails()->updateOrCreate(
+                    ['order_id' => $order->id],
+                    $customerData
+                );
+            }
+
+            // Update other fields
+            if (isset($data['order_date'])) {
+                $order->order_date = $data['order_date'];
+            }
+            if (isset($data['status'])) {
+                $order->status = $data['status'];
+            }
+
+            // Update payment information from payments
+            $order->updatePaymentStatus();
+            $order->updatePaymentMethod();
+
+            $order->modified_by = auth()->id();
+            $order->save();
+
+            return $order->load(['items.product', 'customerDetails', 'payments', 'coupon']);
+        });
+    }
+
+    /**
+     * Soft delete an order.
+     */
+    public function deleteOrder(Order $order): bool
+    {
+        return DB::transaction(function () use ($order) {
+            // Delete order items
+            $order->items()->delete();
+
+            // Delete customer details
+            $order->customerDetails()->delete();
+
+            // Delete payments (soft delete)
+            $order->payments()->delete();
+
+            // Delete order
+            return $order->delete();
+        });
     }
 
     /**
      * Update order status.
      */
-    public function updateStatus(Order $order, OrderStatus $status): Order
+    public function updateStatus(Order $order, string $status): Order
     {
-        $order->update(['status' => $status]);
-
-        // Potential logic: Send email notification, update stock, etc.
-
+        $order->update([
+            'status' => $status,
+            'modified_by' => auth()->id()
+        ]);
         return $order;
     }
+
+    /**
+     * Update customer details given an order and data.
+     */
+    public function updateCustomerDetails(Order $order, array $data): Order
+    {
+        $order->customerDetails()->updateOrCreate(
+            ['order_id' => $order->id],
+            $data
+        );
+        $order->modified_by = auth()->id();
+        $order->save();
+        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon']);
+    }
+
+    /**
+     * Prepare order items with product details.
+     */
+    protected function prepareOrderItems(array $items): array
+    {
+        $preparedItems = [];
+
+        foreach ($items as $item) {
+            $product = Product::find($item['product_id']);
+
+            if (!$product) {
+                continue;
+            }
+
+            $quantity = $item['quantity'] ?? 1;
+            $unitPrice = $item['unit_price'] ?? $product->price;
+            $discountAmount = $item['discount_amount'] ?? 0;
+            $totalPrice = max(0, ($quantity * $unitPrice) - $discountAmount);
+
+            $preparedItems[] = [
+                'product_id' => $product->id,
+                'product_name' => $item['product_name'] ?? $product->title,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'discount_amount' => $discountAmount,
+                'total_price' => $totalPrice,
+            ];
+        }
+
+        return $preparedItems;
+    }
+
+    /**
+     * Calculate order totals from items.
+     */
+    protected function calculateOrderTotals(array $items): array
+    {
+        $netAmount = 0;
+        $totalQuantity = 0;
+
+        foreach ($items as $item) {
+            $netAmount += $item['total_price'];
+            $totalQuantity += $item['quantity'];
+        }
+
+        return [
+            'items_count' => count($items),
+            'total_quantity' => $totalQuantity,
+            'net_amount' => $netAmount,
+        ];
+    }
+
+
+    /**
+     * Generate unique order number.
+     */
+    protected function generateOrderNumber(): string
+    {
+        $date = date('d');
+        $month = date('m');
+        $year = date('Y');
+
+        // Count total orders today to increment
+        $countToday = Order::whereDate('created_at', today())->count() + 1;
+
+        return sprintf('ORD-%s%s%s-%d', $date, $month, $year, $countToday);
+    }
+
+    /**
+     * Generate unique tracking number.
+     */
+    protected function generateTrackingNumber(): string
+    {
+        $date = date('d');
+        $month = date('m');
+        $year = date('Y');
+
+        // Count total orders today to increment
+        $countToday = Order::whereDate('created_at', today())->count() + 1;
+
+        return sprintf('TRK-%s%s%s-%d', $date, $month, $year, $countToday);
+    }
+
 }

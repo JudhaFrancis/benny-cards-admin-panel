@@ -44,11 +44,6 @@ const routes = [
                 component: () => import('../views/orders/OrderEdit.vue')
             },
             {
-                path: 'invoices',
-                name: 'Invoices',
-                component: PlaceholderView
-            },
-            {
                 path: 'payments',
                 name: 'Payments',
                 component: PlaceholderView
@@ -56,11 +51,6 @@ const routes = [
             {
                 path: 'reports/payments',
                 name: 'PaymentReports',
-                component: PlaceholderView
-            },
-            {
-                path: 'reports/invoices',
-                name: 'InvoiceReports',
                 component: PlaceholderView
             },
             {

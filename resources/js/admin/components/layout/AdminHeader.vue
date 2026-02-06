@@ -205,7 +205,6 @@ import {
   LogOut as LogOutIcon,
   LayoutDashboard as DashboardIcon,
   ShoppingBag as OrdersIcon,
-  FileText as InvoicesIcon,
   Wallet as PaymentsIcon,
   Users as UsersIcon,
   Settings as SettingsIcon,
@@ -234,12 +233,6 @@ const allModules = [
   { title: "Users", url: "/users", icon: UsersIcon, category: "Management" },
   { title: "Orders", url: "/orders", icon: OrdersIcon, category: "Sales" },
   {
-    title: "Invoices",
-    url: "/invoices",
-    icon: InvoicesIcon,
-    category: "Sales",
-  },
-  {
     title: "Payments",
     url: "/payments",
     icon: PaymentsIcon,
@@ -254,12 +247,6 @@ const allModules = [
   {
     title: "Payment Logs",
     url: "/reports/payments",
-    icon: ChartIcon,
-    category: "Reports",
-  },
-  {
-    title: "Financials",
-    url: "/reports/invoices",
     icon: ChartIcon,
     category: "Reports",
   },

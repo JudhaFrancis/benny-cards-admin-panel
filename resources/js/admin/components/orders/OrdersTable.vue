@@ -6,23 +6,27 @@
   >
     <!-- Custom Row Cells -->
     <template #cell-id="{ item: order }">
-      <span class="font-semibold text-slate-900 italic">#{{ order.id }}</span>
+      <span class="font-semibold text-slate-900 italic"
+        >#{{ order.order_number }}</span
+      >
     </template>
 
     <template #cell-customer="{ item: order }">
       <div class="flex flex-col">
         <span class="text-sm font-medium text-slate-900">{{
-          order.customer
+          order.customer_details?.name || "N/A"
         }}</span>
       </div>
     </template>
 
     <template #cell-orderDate="{ item: order }">
-      <span class="text-slate-500">{{ order.orderDate }}</span>
+      <span class="text-slate-500">{{
+        new Date(order.order_date).toLocaleDateString()
+      }}</span>
     </template>
 
     <template #cell-items="{ item: order }">
-      <span class="font-medium text-slate-900">{{ order.itemsCount }}</span>
+      <span class="font-medium text-slate-900">{{ order.items_count }}</span>
     </template>
 
     <template #cell-status="{ item: order }">
@@ -30,24 +34,24 @@
         :class="
           cn(
             'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-            orderStatusStyles[order.orderStatus.toLowerCase()] ||
+            (order.status && orderStatusStyles[order.status.toLowerCase()]) ||
               'bg-slate-100 text-slate-800 border-slate-200',
           )
         "
       >
-        {{ capitalize(order.orderStatus) }}
+        {{ capitalize(order.status) }}
       </span>
     </template>
 
     <template #cell-amount="{ item: order }">
       <span class="font-bold text-slate-900"
-        >${{ order.amount.toFixed(2) }}</span
+        >${{ Number(order.total_amount).toFixed(2) }}</span
       >
     </template>
 
     <template #cell-paid="{ item: order }">
       <span class="font-medium text-slate-600"
-        >${{ order.paidAmount.toFixed(2) }}</span
+        >${{ Number(order.paid_amount).toFixed(2) }}</span
       >
     </template>
 
@@ -56,12 +60,13 @@
         :class="
           cn(
             'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-            paymentStatusStyles[order.paymentStatus.toLowerCase()] ||
+            (order.payment_status &&
+              paymentStatusStyles[order.payment_status.toLowerCase()]) ||
               'bg-slate-100 text-slate-800 border-slate-200',
           )
         "
       >
-        {{ capitalize(order.paymentStatus) }}
+        {{ capitalize(order.payment_status) }}
       </span>
     </template>
 
@@ -112,7 +117,7 @@ defineEmits(["view-info", "edit", "delete"]);
 const { canEdit, canDelete } = usePermissions();
 
 const columns = [
-  { key: "id", label: "Order ID", align: "left" },
+  { key: "order_number", label: "Order ID", align: "left" },
   { key: "customer", label: "Customer", align: "left" },
   { key: "orderDate", label: "Order Date", align: "left" },
   { key: "items", label: "Items", align: "center" },

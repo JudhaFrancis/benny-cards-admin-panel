@@ -29,8 +29,16 @@ class Product extends Model
         'brand_id',
         'type',
         'added_by',
+        'added_by',
         'modified_by'
     ];
+
+    protected $appends = ['sku'];
+
+    public function getSkuAttribute()
+    {
+        return 'PRD-' . str_pad($this->id, 5, '0', STR_PAD_LEFT);
+    }
 
     /**
      * Relationship: Category
