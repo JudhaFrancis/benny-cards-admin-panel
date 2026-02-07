@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-6 animate-in fade-in duration-500">
     <!-- Header Section -->
-    <PageHeader title="Payments" subtitle="Track and manage financial transactions">
+    <PageHeader
+      title="Payments"
+      subtitle="Track and manage financial transactions"
+    >
       <template #actions>
         <button
           v-if="canAdd"
@@ -70,6 +73,9 @@
     <PaymentsTable
       :payments="payments"
       :loading="loading"
+      :can-view="canView"
+      :can-edit="canEdit"
+      :can-delete="canDelete"
       @view="handleView"
       @edit="handleEdit"
       @delete="handleConfirmDelete"
@@ -127,7 +133,8 @@ import FilterSectionHelper from "../../components/ui/FilterSection.vue";
 import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 
-const { canAdd, canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Payment");
 const toast = useToast();
 
 const payments = ref([]);
@@ -139,9 +146,24 @@ const meta = ref({ total: 0 });
 
 const statusOptions = [
   { label: "All Statuses", value: "all" },
-  { label: "Completed", value: "completed", badge: "Live", badgeClass: "bg-emerald-100 text-emerald-700" },
-  { label: "Pending", value: "pending", badge: "New", badgeClass: "bg-amber-100 text-amber-700" },
-  { label: "Failed", value: "failed", badge: "Err", badgeClass: "bg-rose-100 text-rose-700" },
+  {
+    label: "Completed",
+    value: "completed",
+    badge: "Live",
+    badgeClass: "bg-emerald-100 text-emerald-700",
+  },
+  {
+    label: "Pending",
+    value: "pending",
+    badge: "New",
+    badgeClass: "bg-amber-100 text-amber-700",
+  },
+  {
+    label: "Failed",
+    value: "failed",
+    badge: "Err",
+    badgeClass: "bg-rose-100 text-rose-700",
+  },
 ];
 
 const fetchPayments = async () => {
@@ -155,7 +177,10 @@ const fetchPayments = async () => {
 
     const response = await axios.get("/api/v1/payments", { params });
     if (response.data.success) {
-      payments.value = response.data.data.data;
+      payments.value = response.data.data.data.map((payment, index) => ({
+        ...payment,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
         current_page: response.data.data.current_page,

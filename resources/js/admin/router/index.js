@@ -122,6 +122,12 @@ const routes = [
                 name: 'Banners',
                 component: () => import('../views/banners/BannerList.vue'),
                 meta: { module: 'Banners' }
+            },
+            {
+                path: 'catalog/reviews',
+                name: 'Reviews',
+                component: () => import('../views/reviews/ReviewList.vue'),
+                meta: { module: 'Review' }
             }
         ]
     },

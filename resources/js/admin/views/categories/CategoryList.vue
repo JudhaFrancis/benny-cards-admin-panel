@@ -574,12 +574,6 @@ const formatDate = (date) => {
   });
 };
 
-const handleView = (category) => {
-  selectedCategory.value = category;
-  isViewMode.value = true;
-  isModalOpen.value = true;
-};
-
 const openCreateModal = () => {
   selectedCategory.value = null;
   isViewMode.value = false;

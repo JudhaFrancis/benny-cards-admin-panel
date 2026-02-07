@@ -505,11 +505,6 @@ const openEditModal = (coupon) => {
   isModalOpen.value = true;
 };
 
-const viewCoupon = (coupon) => {
-  selectedCoupon.value = coupon;
-  isInfoModalOpen.value = true;
-};
-
 const confirmDelete = (coupon) => {
   selectedCoupon.value = coupon;
   isDeleteModalOpen.value = true;

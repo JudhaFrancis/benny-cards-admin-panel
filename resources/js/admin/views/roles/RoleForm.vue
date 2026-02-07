@@ -190,7 +190,7 @@ const isEdit = computed(() => !!route.params.id);
 
 const getPermissions = async () => {
   try {
-    const response = await axios.get("/api/roles");
+    const response = await axios.get("/api/v1/roles");
     modules.value = response.data.modules;
     // We could perform dynamic action extraction if needed, but static list ensures order
     // actions.value = [...new Set(modules.value.flatMap(m => m.permissions.map(p => p.name.split('-')[1])))];
@@ -203,7 +203,7 @@ const getPermissions = async () => {
 const getRole = async () => {
   if (!isEdit.value) return;
   try {
-    const response = await axios.get(`/api/roles/${route.params.id}`);
+    const response = await axios.get(`/api/v1/roles/${route.params.id}`);
     form.value.name = response.data.role.name;
     form.value.permission = response.data.rolePermissions.map((p) => p.name);
   } catch (error) {
@@ -244,10 +244,10 @@ const submitForm = async () => {
   loading.value = true;
   try {
     if (isEdit.value) {
-      await axios.put(`/api/roles/${route.params.id}`, form.value);
+      await axios.put(`/api/v1/roles/${route.params.id}`, form.value);
       toastSuccess("Role updated successfully");
     } else {
-      await axios.post("/api/roles", form.value);
+      await axios.post("/api/v1/roles", form.value);
       toastSuccess("Role created successfully");
     }
     router.push({ name: "roles.index" });

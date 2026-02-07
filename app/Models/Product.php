@@ -17,8 +17,8 @@ class Product extends Model
         'summary',
         'description',
         'photo',
-        'stock',
-        'size',
+        'photo',
+        // 'stock', // Removed
         'condition',
         'status',
         'price',

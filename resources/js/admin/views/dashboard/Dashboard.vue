@@ -125,6 +125,8 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from "vue";
+import axios from "axios";
 import { ShoppingCart, CheckCircle, Clock, DollarSign } from "lucide-vue-next";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import Card from "../../components/ui/Card.vue";

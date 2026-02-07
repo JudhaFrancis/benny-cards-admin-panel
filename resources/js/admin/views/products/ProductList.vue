@@ -175,7 +175,7 @@
         </div>
       </template>
 
-      <!-- Price & Stock Cell -->
+      <!-- Price Cell -->
       <template #cell-price="{ item: product }">
         <div class="flex flex-col">
           <div class="text-sm font-black text-gray-700 flex items-center gap-1">
@@ -186,18 +186,6 @@
               >(-{{ product.discount }}%)</span
             >
           </div>
-          <span
-            :class="[
-              'text-[10px] font-bold uppercase tracking-wider mt-0.5',
-              product.stock > 0
-                ? 'text-gray-400'
-                : 'text-rose-500 animate-pulse',
-            ]"
-          >
-            {{
-              product.stock > 0 ? `${product.stock} in stock` : "Out of Stock"
-            }}
-          </span>
         </div>
       </template>
 
@@ -367,7 +355,6 @@
               label="Discount"
               :value="`${selectedProduct.discount || 0}%`"
             />
-            <InfoItem label="Stock Level" :value="selectedProduct.stock" />
             <InfoItem
               label="Condition"
               :value="selectedProduct.condition"
@@ -462,7 +449,7 @@
     <ConfirmationModal
       :isOpen="isDeleteModalOpen"
       title="Delete Product"
-      :description="`Are you sure you want to remove '${selectedProduct?.title}'? Current stock is ${selectedProduct?.stock}. The product image file will also be permanently deleted from the storage.`"
+      :description="`Are you sure you want to remove '${selectedProduct?.title}'? The product image file will also be permanently deleted from the storage.`"
       confirmLabel="Confirm Delete"
       variant="danger"
       :loading="isDeleting"
@@ -553,7 +540,7 @@ const columns = [
   { key: "sn", label: "S.No", width: "80px" },
   { key: "photo", label: "Product", width: "80px" },
   { key: "title", label: "Title & Meta", sortable: true },
-  { key: "price", label: "Price / Stock" },
+  { key: "price", label: "Price" },
   { key: "status", label: "Status" },
   { key: "created_at", label: "Created" },
   { key: "updated_at", label: "Modified" },

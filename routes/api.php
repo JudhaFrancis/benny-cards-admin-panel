@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::group(['middleware' => ['auth:sanctum']], function () {
+Route::group(['prefix' => 'v1', 'middleware' => ['auth:sanctum']], function () {
     Route::resource('roles', App\Http\Controllers\Admin\RoleController::class);
+    Route::apiResource('reviews', App\Http\Controllers\Api\ProductReviewController::class);
 });

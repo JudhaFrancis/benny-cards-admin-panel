@@ -31,37 +31,48 @@
             >
               <!-- Sticky Header -->
               <div
-                class="px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10"
+                class="relative bg-primary text-white overflow-hidden shrink-0 sticky top-0 z-10"
               >
-                <div class="flex items-center gap-4">
-                  <div
-                    class="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary shadow-inner"
-                  >
-                    <BoxIcon v-if="!editProduct" class="h-6 w-6" />
-                    <Edit3Icon v-else class="h-6 w-6" />
-                  </div>
-                  <div>
-                    <DialogTitle
-                      as="h3"
-                      class="text-2xl font-bold text-gray-800 tracking-tight"
-                    >
-                      {{ editProduct ? "Edit Product" : "Add New Product" }}
-                    </DialogTitle>
-                    <p class="text-sm text-gray-500 mt-0.5">
-                      {{
-                        editProduct
-                          ? "Update product inventory and descriptions."
-                          : "Create a new entry in your digital catalog."
-                      }}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  @click="handleClose"
-                  class="p-3 rounded-2xl hover:bg-gray-100 text-gray-400 transition-all active:scale-95"
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent"
+                ></div>
+                <div
+                  class="absolute -right-20 -top-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+                ></div>
+
+                <div
+                  class="relative px-8 py-8 flex items-center justify-between"
                 >
-                  <XIcon class="h-6 w-6" />
-                </button>
+                  <div class="flex items-center gap-5">
+                    <div
+                      class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-inner"
+                    >
+                      <BoxIcon v-if="!editProduct" class="h-7 w-7 text-white" />
+                      <Edit3Icon v-else class="h-7 w-7 text-white" />
+                    </div>
+                    <div>
+                      <DialogTitle
+                        as="h3"
+                        class="text-2xl font-bold tracking-tight text-white mb-1"
+                      >
+                        {{ editProduct ? "Edit Product" : "Add New Product" }}
+                      </DialogTitle>
+                      <p class="text-sm text-white/80">
+                        {{
+                          editProduct
+                            ? "Update product inventory and descriptions."
+                            : "Create a new entry in your digital catalog."
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    @click="handleClose"
+                    class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-all border border-white/5 active:scale-95"
+                  >
+                    <XIcon class="h-6 w-6" />
+                  </button>
+                </div>
               </div>
 
               <!-- Scrollable Form Content -->
@@ -337,7 +348,7 @@
                         </div>
                       </div>
 
-                      <!-- Pricing & Stock -->
+                      <!-- Pricing -->
                       <div
                         class="p-8 rounded-[2.5rem] bg-gray-50/50 border border-gray-100 flex flex-col md:flex-row gap-8 shadow-inner"
                       >
@@ -366,18 +377,6 @@
                             type="number"
                             step="0.1"
                             class="w-full bg-transparent border-b-2 border-gray-200 focus:border-primary focus:outline-none py-2 text-2xl font-black text-emerald-500 transition-all"
-                            placeholder="0"
-                          />
-                        </div>
-                        <div class="flex-1">
-                          <label
-                            class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2.5"
-                            >Stock</label
-                          >
-                          <input
-                            v-model="form.stock"
-                            type="number"
-                            class="w-full bg-transparent border-b-2 border-gray-200 focus:border-primary focus:outline-none py-2 text-2xl font-black text-gray-700 transition-all"
                             placeholder="0"
                           />
                         </div>
@@ -544,8 +543,6 @@ const form = reactive({
   slug: "",
   summary: "",
   description: "",
-  stock: 1,
-  size: "M",
   condition: "default",
   status: "active",
   price: 0,
@@ -707,8 +704,6 @@ watch(
           slug: "",
           summary: "",
           description: "",
-          stock: 1,
-          size: "M",
           condition: "default",
           status: "active",
           price: 0,

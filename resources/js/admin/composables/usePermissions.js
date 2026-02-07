@@ -18,10 +18,10 @@ export function usePermissions() {
 
     const getModulePermissions = (module) => {
         return {
-            canView: computed(() => hasPermission(module, 'view') || hasPermission(module, 'list')),
-            canAdd: computed(() => hasPermission(module, 'add') || hasPermission(module, 'create')),
-            canEdit: computed(() => hasPermission(module, 'edit') || hasPermission(module, 'update')),
-            canDelete: computed(() => hasPermission(module, 'delete') || hasPermission(module, 'destroy')),
+            canView: computed(() => hasPermission(module, 'view')),
+            canAdd: computed(() => hasPermission(module, 'create')),
+            canEdit: computed(() => hasPermission(module, 'edit')),
+            canDelete: computed(() => hasPermission(module, 'delete')),
         };
     };
 

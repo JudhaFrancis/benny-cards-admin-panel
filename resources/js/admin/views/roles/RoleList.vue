@@ -202,7 +202,7 @@ const filteredRoles = computed(() => {
 const fetchRoles = async () => {
   loading.value = true;
   try {
-    const response = await axios.get("/api/roles");
+    const response = await axios.get("/api/v1/roles");
     roles.value = response.data.roles.map((role, index) => ({
       ...role,
       sn: index + 1,
@@ -224,7 +224,7 @@ const handleEdit = (role) => {
 const handleSave = async (formData) => {
   isSaving.value = true;
   try {
-    await axios.put(`/api/roles/${formData.id}`, formData);
+    await axios.put(`/api/v1/roles/${formData.id}`, formData);
     toastSuccess("Role updated successfully");
     isEditModalOpen.value = false;
     fetchRoles();
@@ -239,7 +239,7 @@ const handleSave = async (formData) => {
 const handleSaveCreate = async (formData) => {
   isSaving.value = true;
   try {
-    await axios.post("/api/roles", formData);
+    await axios.post("/api/v1/roles", formData);
     toastSuccess("Role created successfully");
     isCreateModalOpen.value = false;
     fetchRoles();

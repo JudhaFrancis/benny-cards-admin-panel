@@ -61,8 +61,7 @@ class ProductController extends Controller
             'photo' => 'required|image|max:1024',
             'images' => 'nullable|array',
             'images.*' => 'image|max:1024',
-            'stock' => 'required|integer|min:0',
-            'size' => 'nullable|string',
+            // 'stock' => 'required|integer|min:0', // Removed
             'condition' => ['required', Rule::in(['default', 'new', 'hot'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'price' => 'required|numeric|min:0',
@@ -149,8 +148,7 @@ class ProductController extends Controller
             'images.*' => 'nullable|image|max:1024',
             'deleted_images' => 'nullable|array',
             'deleted_images.*' => 'integer|exists:product_images,id',
-            'stock' => 'required|integer|min:0',
-            'size' => 'nullable|string',
+            // 'stock' => 'required|integer|min:0', // Removed
             'condition' => ['required', Rule::in(['default', 'new', 'hot'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'price' => 'required|numeric|min:0',
