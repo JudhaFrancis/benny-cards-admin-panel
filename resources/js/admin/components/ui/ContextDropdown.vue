@@ -174,7 +174,7 @@ const props = defineProps({
     type: String,
     default: "Select an option",
   },
-  icon: Object,
+  icon: [Object, Function],
 });
 
 defineEmits(["update:modelValue"]);

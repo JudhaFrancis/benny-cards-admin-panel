@@ -108,14 +108,22 @@
       <!-- Custom Min Price Cell -->
       <template #cell-min_price="{ item: range }">
         <span class="text-sm font-medium text-gray-600">
-          {{ range.min_price ? `$${range.min_price}` : "No Min" }}
+          {{
+            range.min_price
+              ? `₹${Number(range.min_price).toLocaleString("en-IN")}`
+              : "No Min"
+          }}
         </span>
       </template>
 
       <!-- Custom Max Price Cell -->
       <template #cell-max_price="{ item: range }">
         <span class="text-sm font-medium text-gray-600">
-          {{ range.max_price ? `$${range.max_price}` : "∞" }}
+          {{
+            range.max_price
+              ? `₹${Number(range.max_price).toLocaleString("en-IN")}`
+              : "∞"
+          }}
         </span>
       </template>
 
@@ -546,9 +554,11 @@ const formatDate = (dateString, includeTime = false) => {
 
 const rangeDisplay = (range) => {
   if (!range.min_price && !range.max_price) return "Any Price";
-  if (!range.min_price) return `Up to $${range.max_price}`;
-  if (!range.max_price) return `From $${range.min_price}`;
-  return `$${range.min_price} - $${range.max_price}`;
+  if (!range.min_price)
+    return `Up to ₹${Number(range.max_price).toLocaleString("en-IN")}`;
+  if (!range.max_price)
+    return `From ₹${Number(range.min_price).toLocaleString("en-IN")}`;
+  return `₹${Number(range.min_price).toLocaleString("en-IN")} - ₹${Number(range.max_price).toLocaleString("en-IN")}`;
 };
 
 onMounted(() => {

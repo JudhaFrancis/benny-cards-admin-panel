@@ -71,7 +71,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
                       <label
-                        class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2"
+                        class="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2"
                       >
                         <PackageIcon class="h-4 w-4 text-primary" />
                         Select Order <span class="text-rose-500">*</span>
@@ -151,10 +151,16 @@
                                     <span
                                       class="block truncate text-xs font-medium text-gray-400 mt-0.5"
                                     >
-                                      {{ order.customer_details?.name }} • ${{
-                                        order.total_amount
+                                      {{ order.customer_details?.name }} • ₹{{
+                                        Number(
+                                          order.total_amount,
+                                        ).toLocaleString("en-IN")
                                       }}
-                                      • Due: ${{ order.balance_due }}
+                                      • Due: ₹{{
+                                        Number(
+                                          order.balance_due,
+                                        ).toLocaleString("en-IN")
+                                      }}
                                     </span>
                                   </div>
                                   <span
@@ -176,7 +182,7 @@
 
                     <div>
                       <label class="block text-sm font-bold text-gray-700 mb-2"
-                        >Amount ($) <span class="text-rose-500">*</span></label
+                        >Amount (₹) <span class="text-rose-500">*</span></label
                       >
                       <input
                         v-model="form.amount"
@@ -200,23 +206,99 @@
                       />
                     </div>
                     <div>
-                      <label class="block text-sm font-bold text-gray-700 mb-2"
-                        >Method <span class="text-rose-500">*</span></label
+                      <label
+                        class="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2"
                       >
-                      <select
-                        v-model="form.payment_method"
-                        required
-                        class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-semibold text-slate-600"
-                      >
-                        <option value="cash">Cash</option>
-                        <option value="card">Card</option>
-                        <option value="upi">UPI</option>
-                        <option value="net_banking">Net Banking</option>
-                        <option value="qr_code">QR Code</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="cheque">Cheque</option>
-                        <option value="wallet">Wallet</option>
-                      </select>
+                        <CreditCardIcon class="h-4 w-4 text-primary" />
+                        Method <span class="text-rose-500">*</span>
+                      </label>
+                      <Listbox v-model="form.payment_method">
+                        <div class="relative">
+                          <ListboxButton
+                            class="relative w-full cursor-pointer rounded-2xl bg-gray-50 py-4 pl-11 pr-10 text-left border border-gray-200 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm sm:text-sm"
+                          >
+                            <span
+                              class="absolute left-4 top-1/2 -translate-y-1/2"
+                            >
+                              <component
+                                :is="selectedMethodIcon"
+                                class="h-5 w-5 text-gray-400"
+                              />
+                            </span>
+                            <span
+                              class="block truncate font-bold text-slate-700"
+                            >
+                              {{
+                                selectedMethodLabel || "Select payment method"
+                              }}
+                            </span>
+                            <span
+                              class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4"
+                            >
+                              <ChevronDownIcon
+                                class="h-5 w-5 text-gray-400 transition-transform duration-200"
+                                aria-hidden="true"
+                              />
+                            </span>
+                          </ListboxButton>
+                          <transition
+                            leave-active-class="transition duration-100 ease-in"
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0"
+                          >
+                            <ListboxOptions
+                              class="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar"
+                            >
+                              <ListboxOption
+                                v-slot="{ active, selected }"
+                                v-for="method in paymentMethods"
+                                :key="method.value"
+                                :value="method.value"
+                                as="template"
+                              >
+                                <li
+                                  :class="[
+                                    active
+                                      ? 'bg-primary/5 text-primary'
+                                      : 'text-gray-700',
+                                    'relative cursor-pointer select-none py-3 pl-11 pr-4 transition-colors',
+                                  ]"
+                                >
+                                  <span
+                                    class="absolute left-4 top-1/2 -translate-y-1/2"
+                                  >
+                                    <component
+                                      :is="method.icon"
+                                      :class="[
+                                        active
+                                          ? 'text-primary'
+                                          : 'text-gray-400',
+                                        'h-5 w-5 transition-colors',
+                                      ]"
+                                    />
+                                  </span>
+                                  <span
+                                    :class="[
+                                      selected ? 'font-bold' : 'font-medium',
+                                      'block truncate',
+                                    ]"
+                                    >{{ method.label }}</span
+                                  >
+                                  <span
+                                    v-if="selected"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-primary"
+                                  >
+                                    <CheckIcon
+                                      class="h-5 w-5"
+                                      aria-hidden="true"
+                                    />
+                                  </span>
+                                </li>
+                              </ListboxOption>
+                            </ListboxOptions>
+                          </transition>
+                        </div>
+                      </Listbox>
                     </div>
                     <div>
                       <label
@@ -282,6 +364,10 @@ import {
   ComboboxButton,
   ComboboxOptions,
   ComboboxOption,
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption,
 } from "@headlessui/vue";
 import {
   Wallet as WalletIcon,
@@ -290,6 +376,13 @@ import {
   ChevronDown as ChevronDownIcon,
   Check as CheckIcon,
   Package as PackageIcon,
+  Banknote as BanknoteIcon,
+  CreditCard as CreditCardIcon,
+  Smartphone as SmartphoneIcon,
+  Globe as GlobeIcon,
+  QrCode as QrCodeIcon,
+  Building2 as Building2Icon,
+  ClipboardCheck as ClipboardCheckIcon,
 } from "lucide-vue-next";
 import axios from "axios";
 import { useToast } from "../../composables/useToast";
@@ -311,6 +404,30 @@ const form = reactive({
   payment_method: "cash",
   transaction_id: "",
   notes: "",
+});
+
+const paymentMethods = [
+  { label: "Cash", value: "cash", icon: BanknoteIcon },
+  { label: "Card", value: "card", icon: CreditCardIcon },
+  { label: "UPI", value: "upi", icon: SmartphoneIcon },
+  { label: "Net Banking", value: "net_banking", icon: GlobeIcon },
+  { label: "QR Code", value: "qr_code", icon: QrCodeIcon },
+  { label: "Bank Transfer", value: "bank_transfer", icon: Building2Icon },
+  { label: "Cheque", value: "cheque", icon: ClipboardCheckIcon },
+  { label: "Wallet", value: "wallet", icon: WalletIcon },
+];
+
+const selectedMethodLabel = computed(() => {
+  return (
+    paymentMethods.find((m) => m.value === form.payment_method)?.label || ""
+  );
+});
+
+const selectedMethodIcon = computed(() => {
+  return (
+    paymentMethods.find((m) => m.value === form.payment_method)?.icon ||
+    CreditCardIcon
+  );
 });
 
 const filteredOrders = computed(() => {

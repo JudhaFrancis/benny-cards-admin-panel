@@ -179,7 +179,12 @@
       <template #cell-price="{ item: product }">
         <div class="flex flex-col">
           <div class="text-sm font-black text-gray-700 flex items-center gap-1">
-            ${{ product.price }}
+            ₹{{
+              Number(product.price).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })
+            }}
             <span
               v-if="product.discount > 0"
               class="text-[10px] font-bold text-emerald-500"
@@ -350,7 +355,10 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InfoSection title="Pricing & Inventory" :icon="TagIcon">
-            <InfoItem label="Base Price" :value="`$${selectedProduct.price}`" />
+            <InfoItem
+              label="Base Price"
+              :value="`₹${Number(selectedProduct.price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`"
+            />
             <InfoItem
               label="Discount"
               :value="`${selectedProduct.discount || 0}%`"

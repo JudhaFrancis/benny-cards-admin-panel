@@ -46,6 +46,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('orders/{id}', [OrderController::class, 'destroy']);
         Route::patch('orders/{id}/status', [OrderController::class, 'updateStatus']);
         Route::put('orders/{id}/customer-details', [OrderController::class, 'updateCustomerDetails']);
+        Route::put('orders/{id}/tracking', [OrderController::class, 'updateTracking']);
 
         // Settings
         Route::get('settings', [SettingController::class, 'show']);

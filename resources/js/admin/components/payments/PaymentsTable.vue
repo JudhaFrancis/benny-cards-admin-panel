@@ -25,7 +25,12 @@
 
     <template #cell-amount="{ item: payment }">
       <span class="font-bold text-slate-900"
-        >${{ Number(payment.amount).toFixed(2) }}</span
+        >₹{{
+          Number(payment.amount).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        }}</span
       >
     </template>
 

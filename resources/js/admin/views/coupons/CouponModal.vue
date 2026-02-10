@@ -144,7 +144,7 @@
                           class="absolute inset-y-0 right-4 flex items-center pointer-events-none"
                         >
                           <span class="text-gray-400 font-bold">
-                            {{ form.type === "percent" ? "%" : "$" }}
+                            {{ form.type === "percent" ? "%" : "₹" }}
                           </span>
                         </div>
                       </div>
@@ -242,8 +242,8 @@ const typeOptions = [
   {
     label: "Fixed Amount",
     value: "fixed",
-    description: "Deduct a specific dollar amount.",
-    badge: "$ USD",
+    description: "Deduct a specific amount in ₹.",
+    badge: "₹ INR",
     badgeClass: "bg-blue-100 text-blue-700",
   },
   {

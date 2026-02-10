@@ -355,7 +355,7 @@
                         <div class="flex-1">
                           <label
                             class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2.5"
-                            >Price ($)
+                            >Price (₹)
                             <span class="text-rose-500">*</span></label
                           >
                           <input

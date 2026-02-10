@@ -129,7 +129,12 @@
             {{ coupon.value }}%
           </template>
           <template v-else>
-            ${{ parseFloat(coupon.value).toFixed(2) }}
+            ₹{{
+              Number(coupon.value).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })
+            }}
           </template>
         </span>
       </template>
@@ -320,7 +325,11 @@
               :value="
                 selectedCoupon.type === 'percent'
                   ? selectedCoupon.value + '%'
-                  : '$' + parseFloat(selectedCoupon.value).toFixed(2)
+                  : '₹' +
+                    Number(selectedCoupon.value).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
               "
             />
           </InfoSection>

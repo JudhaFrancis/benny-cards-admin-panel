@@ -61,7 +61,7 @@
                           class="text-xs text-slate-200 font-medium flex items-center gap-1.5 bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 backdrop-blur-sm"
                         >
                           <ActivityIcon class="h-3.5 w-3.5" />
-                          {{ order?.status }}
+                          {{ order?.tracking_status_label || "New" }}
                         </span>
                         <span
                           class="text-xs text-slate-200 font-medium flex items-center gap-1.5 bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 backdrop-blur-sm"

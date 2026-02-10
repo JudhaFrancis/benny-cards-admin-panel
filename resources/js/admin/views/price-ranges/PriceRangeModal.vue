@@ -97,7 +97,7 @@
                       v-model="form.title"
                       type="text"
                       required
-                      placeholder="e.g. Under $100"
+                      placeholder="e.g. Under ₹100"
                       class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
                       style="color: #475569 !important"
                       @input="generateSlug"

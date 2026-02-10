@@ -35,12 +35,13 @@
         :class="
           cn(
             'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-            (order.status && orderStatusStyles[order.status.toLowerCase()]) ||
+            (order.tracking_status_label &&
+              orderStatusStyles[order.tracking_status_label.toLowerCase()]) ||
               'bg-slate-100 text-slate-800 border-slate-200',
           )
         "
       >
-        {{ capitalize(order.status) }}
+        {{ order.tracking_status_label || "New" }}
       </span>
     </template>
 
@@ -137,10 +138,14 @@ const columns = [
 ];
 
 const orderStatusStyles = {
+  new: "bg-slate-500/10 text-slate-500 border-slate-500/20",
   pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  confirmed: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  assigned: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
   processing: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  shipped: "bg-primary/10 text-primary border-primary/20",
-  delivered: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  packed: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  dispatched: "bg-primary/10 text-primary border-primary/20",
+  completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   cancelled: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 

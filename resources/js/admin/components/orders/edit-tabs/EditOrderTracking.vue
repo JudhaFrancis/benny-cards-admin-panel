@@ -8,8 +8,12 @@
         <button
           v-for="(section, index) in trackingSections"
           :key="section.id"
-          @click="selectedSection = section.id"
-          class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group min-w-[5rem]"
+          @click="handleSectionClick(section.id, index)"
+          :disabled="!isSectionUnlocked(index)"
+          class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group min-w-[5rem] transition-opacity duration-300"
+          :class="{
+            'opacity-50 cursor-not-allowed': !isSectionUnlocked(index),
+          }"
         >
           <div
             class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm border"
@@ -90,6 +94,7 @@
           <component
             :is="activeSectionComponent"
             :order="order"
+            :staff-options="staffOptions"
             @update:order="(val) => $emit('update:order', val)"
           />
         </div>
@@ -111,14 +116,20 @@
           <div class="flex gap-3">
             <button
               @click="handleSaveSection"
-              class="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 text-sm flex items-center gap-2"
+              :disabled="isSaving || !!savingSectionId"
+              class="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <CheckIcon class="h-4 w-4" />
-              Save &
+              <Loader2Icon
+                v-if="isSaving || !!savingSectionId"
+                class="h-4 w-4 animate-spin"
+              />
+              <CheckIcon v-else class="h-4 w-4" />
               {{
-                activeSectionIndex < trackingSections.length - 1
-                  ? "Next"
-                  : "Finish"
+                isSaving || !!savingSectionId
+                  ? "Saving..."
+                  : activeSectionIndex < trackingSections.length - 1
+                    ? "Save & Next"
+                    : "Save & Finish"
               }}
             </button>
           </div>
@@ -139,7 +150,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
+import { useToast } from "../../../composables/useToast";
+
+const { error: toastError } = useToast();
+
 import {
   ClipboardList as ClipboardListIcon,
   User as UserIcon,
@@ -153,7 +168,9 @@ import {
   FileText as FileTextIcon,
   DollarSign as DollarSignIcon,
   Check as CheckIcon,
+  Loader2 as Loader2Icon,
 } from "lucide-vue-next";
+import axios from "axios";
 
 // Import tracking section components
 import OrderDetailsSection from "./tracking-edit-tabs/OrderDetailsSection.vue";
@@ -184,6 +201,23 @@ const emit = defineEmits(["update:order", "save", "cancel"]);
 
 const selectedSection = ref("order-details");
 const completedSections = ref([]);
+const staffOptions = ref([]);
+
+const fetchStaff = async () => {
+  try {
+    const response = await axios.get("/api/v1/users", {
+      params: { role_id: 4, per_page: 100 },
+    });
+    if (response.data.success) {
+      staffOptions.value = response.data.data.data.map((user) => ({
+        label: user.name,
+        value: user.name,
+      }));
+    }
+  } catch (e) {
+    console.error("Failed to fetch staff", e);
+  }
+};
 
 const trackingSections = [
   {
@@ -277,17 +311,299 @@ const activeSectionIndex = computed(() => {
   return trackingSections.findIndex((s) => s.id === selectedSection.value);
 });
 
+const sectionMap = {
+  "order-details": "job_details",
+  "client-info": "client_info",
+  "card-specs": "card_specs",
+  "work-assign": "work_assign",
+  "design-print": "design_print",
+  "order-printing": "printing_status",
+  "packaging-logistics": "packaging_logistics",
+  "packaging-status": "packaging_status",
+  "delivery-location": "delivery_location",
+  "dispatch-mode": "dispatch_mode",
+  "dispatch-details": "dispatch_details",
+  payment: "payment_info",
+};
+
+// Check if a section is unlocked (accessible)
+const isSectionUnlocked = (index) => {
+  // First section is always unlocked
+  if (index === 0) return true;
+  // Unlock if previous section is completed
+  const prevSectionId = trackingSections[index - 1].id;
+  return completedSections.value.includes(prevSectionId);
+};
+
+// Handle Tab Clicks (Prevent access to locked sections)
+const handleSectionClick = (sectionId, index) => {
+  if (isSectionUnlocked(index)) {
+    selectedSection.value = sectionId;
+  }
+};
+
+// Helper to get validation errors for a specific section
+const getSectionErrors = (sectionId) => {
+  const tracking = props.order.tracking || {};
+  let errors = [];
+
+  switch (sectionId) {
+    case "order-details":
+      const details = tracking.job_details || {};
+      if (!props.order.order_date) errors.push("Order Date");
+      if (!details.order_taken_by) errors.push("Order Taken By");
+      if (!details.order_placed_in) errors.push("Order Placed In");
+      if (!details.reference) errors.push("Reference");
+      break;
+
+    case "client-info":
+      const client = tracking.client_info || {};
+      if (!client.name) errors.push("Name");
+      if (!client.address) errors.push("Place (Address)");
+      if (!client.phone) errors.push("Contact No");
+      if (!client.occasion) errors.push("Occasion");
+      if (!client.expected_delivery_date) errors.push("Expected Delivery Date");
+      break;
+
+    case "card-specs":
+      const specs = tracking.card_specs || {};
+      if (!specs.type) errors.push("Product Type (Customize or Ready Made)");
+      if (!specs.card_size) errors.push("Card Size");
+      if (!specs.quantity) errors.push("Quantity");
+      if (!specs.specifications) errors.push("Specifications");
+      if (!specs.inner_gsm) errors.push("Inner GSM");
+      if (!specs.envelope_gsm) errors.push("Envelope GSM");
+      if (!specs.card_lamination) errors.push("Card Lamination");
+      if (!specs.envelope_lamination) errors.push("Envelope Lamination");
+      break;
+
+    case "work-assign":
+      const work = tracking.work_assign || {};
+      if (!work.assigned_to) errors.push("Assigned To");
+      if (!work.deadline) errors.push("Deadline");
+      if (!work.content_by) errors.push("Content By");
+      if (!work.completed_by) errors.push("Completed By");
+      break;
+
+    case "design-print":
+      const design = tracking.design_print || {};
+      if (!design.design_outputs)
+        errors.push("Design Outputs (Select at least one)");
+      if (!design.print_addons)
+        errors.push("Print & Add-ons (Select at least one)");
+      break;
+
+    case "order-printing":
+      const printing = tracking.printing_status || {};
+
+      if (!printing.assigned_date) errors.push("Assigned Date");
+
+      // Validate Customize section if any data is present
+      const hasCustomizeData =
+        printing.customize_sent_to_print_date ||
+        printing.customize_delivery_date ||
+        printing.customize_follow_up;
+
+      if (hasCustomizeData) {
+        if (!printing.customize_sent_to_print_date)
+          errors.push("Sent to Print Date");
+        if (!printing.customize_delivery_date) errors.push("Delivery Date");
+
+        const followUpCount = printing.customize_follow_up
+          ? printing.customize_follow_up.split(",").filter((d) => d).length
+          : 0;
+        if (followUpCount < 7)
+          errors.push("Customize Card: All 7 Follow Up days must be checked");
+      }
+
+      // Validate Readymade section if any data is present
+      const hasReadymadeData =
+        printing.readymade_ordered ||
+        printing.readymade_sub_received ||
+        printing.readymade_sent_to_print ||
+        printing.readymade_follow_up;
+
+      if (hasReadymadeData) {
+        const followUpCount = printing.readymade_follow_up
+          ? printing.readymade_follow_up.split(",").filter((d) => d).length
+          : 0;
+        if (followUpCount < 7)
+          errors.push("Readymade Card: All 7 Follow Up days must be checked");
+      }
+
+      // Fallback: If absolutely nothing is entered, but a card type is known,
+      // it should at least validate that type if we want strictness.
+      // But for now, let it be flexible as long as something is being tracked.
+      break;
+
+    case "packaging-logistics":
+      const logistics = tracking.packaging_logistics || {};
+      if (!logistics.crafted_by) errors.push("Crafted By");
+      if (!logistics.names) errors.push("Names");
+      if (!logistics.date) errors.push("Date");
+      if (!logistics.qty_cards) errors.push("Qty of Cards");
+      if (!logistics.logistics_details)
+        errors.push("Envelope / Ribbon / Tag / Sticker");
+      if (!logistics.card_issues) errors.push("Issues in Card");
+      break;
+
+    case "packaging-status":
+      const packing = tracking.packaging_status || {};
+      if (!packing.packed_by) errors.push("Packed By");
+      break;
+
+    case "delivery-location":
+      const loc = tracking.delivery_location || {};
+      if (!loc.place_name) errors.push("Place Name");
+      break;
+
+    case "dispatch-mode":
+      const dispMode = tracking.dispatch_mode || {};
+      if (!dispMode.date) errors.push("Dispatch Details with Date");
+      if (!dispMode.expense) errors.push("Dispatch Expense");
+      if (!dispMode.signature_name) errors.push("Signature & Name");
+      break;
+
+    case "dispatch-details":
+      const dispDet = tracking.dispatch_details || {};
+      const modesStr = tracking.dispatch_mode?.modes || "";
+      const modes = modesStr.split(",");
+
+      if (modes.includes("Bus")) {
+        const bus = dispDet.bus || {};
+        if (!bus.bus_no) errors.push("Bus No");
+        if (!bus.reaching_time) errors.push("Bus Reaching Time");
+        if (!bus.contact_no) errors.push("Bus Contact No");
+      }
+      if (modes.includes("Courier")) {
+        const courier = dispDet.courier || {};
+        if (!courier.name) errors.push("Courier Name");
+        if (!courier.tracking_no) errors.push("Courier Tracking No");
+      }
+      if (modes.includes("Transport")) {
+        const transport = dispDet.transport || {};
+        if (!transport.name) errors.push("Transport Name");
+        if (!transport.lr_number) errors.push("Transport LR Number");
+      }
+      break;
+
+    case "payment":
+      const paymentInfo = tracking.payment_info || {};
+      const payments = Array.isArray(paymentInfo)
+        ? paymentInfo
+        : paymentInfo.payments || [];
+
+      if (!Array.isArray(payments) || payments.length === 0) {
+        errors.push("At least one payment record is required");
+      } else {
+        payments.forEach((p, i) => {
+          const prefix = `Payment ${i + 1}: `;
+          if (!p.payment_method) errors.push(prefix + "Payment Via");
+          if (!p.payment_date) errors.push(prefix + "Payment Date");
+          if (!p.amount) errors.push(prefix + "Amount");
+          if (!p.signature_name) errors.push(prefix + "Signature & Name");
+        });
+      }
+      break;
+  }
+
+  return errors;
+};
+
+const savingSectionId = ref(null);
+
+// Initialize completed sections based on existing data
+const calculateCompletedStatus = () => {
+  const tracking = props.order.tracking || {};
+  const filled = [];
+
+  for (const section of trackingSections) {
+    const dbCol = sectionMap[section.id];
+    const sectionData = tracking[dbCol];
+
+    if (
+      sectionData &&
+      sectionData._audit &&
+      getSectionErrors(section.id).length === 0
+    ) {
+      filled.push(section.id);
+    } else {
+      break;
+    }
+  }
+  return filled;
+};
+
+const initCompletedSections = () => {
+  const filled = calculateCompletedStatus();
+  completedSections.value = filled;
+
+  // Auto-select the first incomplete section
+  const firstIncomplete = trackingSections.find((s) => !filled.includes(s.id));
+  if (firstIncomplete) {
+    selectedSection.value = firstIncomplete.id;
+  } else {
+    selectedSection.value = trackingSections[trackingSections.length - 1].id;
+  }
+};
+
+// Watch for tracking updates from parent (after a save)
+watch(
+  () => props.order.tracking,
+  (newTracking) => {
+    const newlyFilled = calculateCompletedStatus();
+    const oldFilledCount = completedSections.value.length;
+    completedSections.value = newlyFilled;
+
+    // If we just finished a save for a section
+    if (savingSectionId.value) {
+      const isNowCompleted = newlyFilled.includes(savingSectionId.value);
+
+      if (isNowCompleted) {
+        const currentIndex = trackingSections.findIndex(
+          (s) => s.id === savingSectionId.value,
+        );
+
+        // Auto-advance if not the last section
+        if (currentIndex < trackingSections.length - 1) {
+          selectedSection.value = trackingSections[currentIndex + 1].id;
+        } else {
+          // If it was the last section (Payment), emit success to close modal
+          emit("success");
+        }
+      }
+      // Reset saving state
+      savingSectionId.value = null;
+    }
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  initCompletedSections();
+  fetchStaff();
+});
+
 const handleSaveSection = () => {
-  if (!completedSections.value.includes(selectedSection.value)) {
-    completedSections.value.push(selectedSection.value);
+  const errors = getSectionErrors(selectedSection.value);
+
+  if (errors.length > 0) {
+    toastError("Please fill in the required fields:\n- " + errors.join("\n- "));
+    return;
   }
 
-  // Auto-advance
-  if (activeSectionIndex.value < trackingSections.length - 1) {
-    selectedSection.value = trackingSections[activeSectionIndex.value + 1].id;
-  }
+  // Set saving state
+  savingSectionId.value = selectedSection.value;
 
-  emit("save");
+  // Emit Save
+  const dbColumn = sectionMap[selectedSection.value];
+  if (dbColumn) {
+    const trackingData = props.order.tracking || {};
+    const sectionData = trackingData[dbColumn] || {};
+    emit("save", { [dbColumn]: sectionData });
+  } else {
+    emit("save");
+  }
 };
 
 const selectPreviousSection = () => {

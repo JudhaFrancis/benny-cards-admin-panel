@@ -83,7 +83,7 @@ class Order extends Model
     // Helper methods
     public function calculatePaidAmount(): float
     {
-        return (float) $this->payments()->sum('amount');
+        return (float) $this->payments()->where('payment_status', 'completed')->sum('amount');
     }
 
     public function updatePaymentStatus(): void
@@ -91,8 +91,8 @@ class Order extends Model
         $paid = $this->calculatePaidAmount();
         $total = $this->total_amount ?? 0;
 
-        $this->paid_amount = (float) $paid;
-        $this->balance_due = (float) max(0, $total - $paid);
+        $this->paid_amount = $paid;
+        $this->balance_due = max(0, $total - $paid);
 
         if ($paid <= 0) {
             $this->payment_status = 'unpaid';
@@ -103,6 +103,123 @@ class Order extends Model
         }
 
         $this->save();
+
+        $this->syncTrackingWithPayments();
+    }
+
+    /**
+     * Sync order tracking payment_info with the latest payment details.
+     */
+    public function syncTrackingWithPayments(): void
+    {
+        $payments = $this->payments()
+            ->where('payment_status', 'completed')
+            ->where('amount', '>', 0)
+            ->get();
+
+        if ($payments->count() > 0) {
+            $paymentInfoArray = $payments->map(function ($payment) {
+                return [
+                    'id' => $payment->id,
+                    'payment_method' => $payment->payment_method,
+                    'transaction_id' => $payment->transaction_id,
+                    'payment_date' => $payment->payment_date ? $payment->payment_date->toDateString() : null,
+                    'amount' => (float) $payment->amount,
+                    'signature_name' => $payment->signature_name,
+                    '_audit' => [
+                        'updated_by' => $payment->addedBy?->name ?? 'System',
+                        'updated_at' => $payment->updated_at->toDateTimeString(),
+                    ]
+                ];
+            })->toArray();
+
+            $this->tracking()->updateOrCreate(
+                ['order_id' => $this->id],
+                [
+                    'payment_info' => [
+                        'payments' => $paymentInfoArray,
+                        '_audit' => [
+                            'updated_by' => 'System',
+                            'updated_at' => now()->toDateTimeString(),
+                        ]
+                    ]
+                ]
+            );
+        } else {
+            // Clear payment info if no completed payments exist
+            if ($this->tracking) {
+                $this->tracking->update([
+                    'payment_info' => [
+                        'payments' => [],
+                        '_audit' => [
+                            'updated_by' => 'System',
+                            'updated_at' => now()->toDateTimeString(),
+                        ]
+                    ]
+                ]);
+            }
+        }
+    }
+
+    protected $appends = ['tracking_status_label'];
+
+    public function getTrackingStatusLabelAttribute(): string
+    {
+        $tracking = $this->tracking;
+        if (!$tracking) {
+            return 'New';
+        }
+
+        // 6. Paid/Completed
+        if (isset($tracking->payment_info['_audit'])) {
+            return (float) $this->total_amount == (float) $this->paid_amount ? 'Completed' : 'Pending';
+        }
+
+        // 5. Dispatched
+        if (
+            isset($tracking->dispatch_details['_audit']) ||
+            isset($tracking->dispatch_mode['_audit']) ||
+            isset($tracking->delivery_location['_audit'])
+        ) {
+            return 'Dispatched';
+        }
+
+        // 4. Packed
+        if (
+            isset($tracking->packaging_status['_audit']) ||
+            isset($tracking->packaging_logistics['_audit'])
+        ) {
+            return 'Packed';
+        }
+
+        // 3. Processing
+        if (
+            isset($tracking->printing_status['_audit']) ||
+            isset($tracking->design_print['_audit'])
+        ) {
+            return 'Processing';
+        }
+
+        // 2. Assigned
+        if (isset($tracking->work_assign['_audit'])) {
+            return 'Assigned';
+        }
+
+        // 1. Confirmed
+        if (
+            isset($tracking->card_specs['_audit']) ||
+            isset($tracking->client_info['_audit']) ||
+            isset($tracking->job_details['_audit'])
+        ) {
+            return 'Confirmed';
+        }
+
+        return 'New';
+    }
+
+    public function tracking(): HasOne
+    {
+        return $this->hasOne(OrderTracking::class);
     }
 
     public function updatePaymentMethod(): void
