@@ -11,16 +11,23 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
-const series = ref([68, 22, 10]);
+const props = defineProps({
+  data: {
+    type: Object,
+    default: () => ({ paid: 0, pending: 0, overdue: 0 }),
+  },
+});
+
+const series = ref([0, 0, 0]);
 
 const chartOptions = ref({
   chart: {
     type: "donut",
   },
   labels: ["Paid", "Pending", "Overdue"],
-  colors: ["#10B981", "#F59E0B", "#F43F5E"], // emerald, amber, rose
+  colors: ["#10B981", "#F59E0B", "#F43F5E"],
   stroke: { width: 0 },
   plotOptions: {
     pie: {
@@ -39,14 +46,14 @@ const chartOptions = ref({
             fontSize: "24px",
             fontWeight: 800,
             color: "#0F172A",
-            formatter: (val) => `${val}%`,
+            formatter: (val) => val,
           },
           total: {
             show: true,
-            label: "Total Paid",
+            label: "Total Payments",
             color: "#94A3B8",
             formatter: (w) => {
-              return w.globals.seriesTotals[0] + "%";
+              return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
             },
           },
         },
@@ -63,8 +70,18 @@ const chartOptions = ref({
   },
   tooltip: {
     y: {
-      formatter: (val) => `${val}%`,
+      formatter: (val) => `${val} Payments`,
     },
   },
 });
+
+watch(
+  () => props.data,
+  (newData) => {
+    if (newData) {
+      series.value = [newData.paid || 0, newData.pending || 0, newData.overdue || 0];
+    }
+  },
+  { immediate: true }
+);
 </script>

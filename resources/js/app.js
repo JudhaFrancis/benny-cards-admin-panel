@@ -7,7 +7,7 @@ import router from './admin/router';
 import axios from 'axios';
 
 // Set default base URL for axios
-axios.defaults.baseURL = 'http://localhost:8000'; // Adjust if needed
+axios.defaults.baseURL = window.location.origin;
 axios.defaults.withCredentials = true;
 
 // Add auth token if exists

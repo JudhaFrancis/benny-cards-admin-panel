@@ -14,6 +14,12 @@ const routes = [
         meta: { guest: true }
     },
     {
+        path: '/live-operations',
+        name: 'LiveOperations',
+        component: () => import('../views/dashboard/LiveOperations.vue'),
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/',
         component: AdminLayout,
         meta: { requiresAuth: true },

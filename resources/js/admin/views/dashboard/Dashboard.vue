@@ -8,14 +8,24 @@
         >! Here's your overview.
       </template>
       <template #actions>
-        <div
-          class="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl"
-        >
-          <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span
-            class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-            >Systems Active</span
+        <div class="flex items-center gap-3">
+          <router-link
+            to="/live-operations"
+            target="_blank"
+            class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-2xl hover:bg-primary/20 transition-all font-bold text-[10px] uppercase tracking-widest"
           >
+            <Activity class="h-3 w-3" />
+            Live Operations
+          </router-link>
+          <div
+            class="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl"
+          >
+            <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span
+              class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+              >Systems Active</span
+            >
+          </div>
         </div>
       </template>
     </PageHeader>
@@ -67,7 +77,7 @@
           </div>
         </CardHeader>
         <CardContent class="flex-1 bg-gradient-to-b from-white to-slate-50/30">
-          <OrdersChart />
+          <OrdersChart :data="realStats.monthly_trend" />
         </CardContent>
       </Card>
 
@@ -82,7 +92,7 @@
           </p>
         </CardHeader>
         <CardContent class="flex-1 flex flex-col justify-center">
-          <PaymentsChart />
+          <PaymentsChart :data="realStats.payment_distribution" />
         </CardContent>
       </Card>
     </div>
@@ -125,7 +135,9 @@
 </template>
 
 <script setup>
-import { ShoppingCart, CheckCircle, Clock, DollarSign } from "lucide-vue-next";
+import { ref, onMounted, computed } from "vue";
+import axios from "axios";
+import { ShoppingCart, CheckCircle, Clock, DollarSign, Activity } from "lucide-vue-next";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import Card from "../../components/ui/Card.vue";
 import CardHeader from "../../components/ui/CardHeader.vue";
@@ -144,6 +156,8 @@ const realStats = ref({
   completed_orders: 0,
   total_payments: 0,
   total_revenue: 0,
+  monthly_trend: [],
+  payment_distribution: { paid: 0, pending: 0, overdue: 0 },
 });
 
 const fetchDashboardStats = async () => {

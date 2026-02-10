@@ -35,7 +35,6 @@
               type="text"
               placeholder="Search by coupon code..."
               class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
-              style="color: #475569 !important"
               @input="debounceSearch"
             />
           </div>

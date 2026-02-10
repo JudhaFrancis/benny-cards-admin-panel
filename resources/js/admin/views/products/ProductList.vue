@@ -55,7 +55,6 @@
               type="text"
               placeholder="Search by title..."
               class="w-full pl-11 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all text-gray-700"
-              style="color: #475569 !important"
               @input="debounceSearch"
             />
           </div>

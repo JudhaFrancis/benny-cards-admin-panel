@@ -10,12 +10,19 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
+
+const props = defineProps({
+  data: {
+    type: Array,
+    default: () => [],
+  },
+});
 
 const series = ref([
   {
     name: "Orders",
-    data: [65, 78, 90, 81, 95, 110, 125],
+    data: [],
   },
 ]);
 
@@ -24,7 +31,7 @@ const chartOptions = ref({
     toolbar: { show: false },
     zoom: { enabled: false },
   },
-  colors: ["#0F172A"], // Primary color
+  colors: ["#0F172A"],
   dataLabels: { enabled: false },
   stroke: {
     curve: "smooth",
@@ -40,7 +47,7 @@ const chartOptions = ref({
     },
   },
   xaxis: {
-    categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
+    categories: [],
     axisBorder: { show: false },
     axisTicks: { show: false },
     labels: {
@@ -72,4 +79,21 @@ const chartOptions = ref({
     },
   },
 });
+
+watch(
+  () => props.data,
+  (newData) => {
+    if (newData && newData.length > 0) {
+      series.value[0].data = newData.map((item) => item.count);
+      chartOptions.value = {
+        ...chartOptions.value,
+        xaxis: {
+          ...chartOptions.value.xaxis,
+          categories: newData.map((item) => item.month),
+        },
+      };
+    }
+  },
+  { immediate: true }
+);
 </script>
