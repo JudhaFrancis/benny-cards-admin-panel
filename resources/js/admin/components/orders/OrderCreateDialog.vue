@@ -58,7 +58,8 @@
                         Create New Order
                       </DialogTitle>
                       <p class="text-sm text-white/80">
-                        Add a new order to your system with customer and product details.
+                        Add a new order to your system with customer and product
+                        details.
                       </p>
                     </div>
                   </div>
@@ -464,12 +465,6 @@
                                               "
                                             >
                                               ${{ product.price }}
-                                            </p>
-                                            <p
-                                              v-if="product.stock !== undefined"
-                                              class="text-[10px] font-bold text-gray-400 mt-0.5"
-                                            >
-                                              {{ product.stock }} in stock
                                             </p>
                                           </div>
                                         </div>

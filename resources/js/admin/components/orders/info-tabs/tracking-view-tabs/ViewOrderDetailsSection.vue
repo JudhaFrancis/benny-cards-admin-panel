@@ -1,0 +1,142 @@
+<template>
+  <div class="space-y-8">
+    <!-- Order Information Group -->
+    <div class="space-y-4">
+      <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+        <ClipboardListIcon class="h-5 w-5 text-primary" />
+        Order Information
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-2">
+          <label
+            class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >Order No</label
+          >
+          <div
+            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 font-mono text-sm"
+          >
+            #{{ order.order_number }}
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label
+            class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >Order Date</label
+          >
+          <div
+            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
+          >
+            {{ formatDate(order.order_date) || "N/A" }}
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label
+            class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >Order Taken By</label
+          >
+          <div
+            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 flex items-center gap-2"
+          >
+            <UserIcon class="h-4 w-4 text-slate-400" />
+            {{ jobDetails.order_taken_by || "N/A" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-slate-100"></div>
+
+    <!-- Source & Reference Group -->
+    <div class="space-y-6">
+      <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+        <CompassIcon class="h-5 w-5 text-primary" />
+        Source & Reference
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-2">
+          <label
+            class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >Order Placed In</label
+          >
+          <div
+            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
+          >
+            {{ jobDetails.order_placed_in || "N/A" }}
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label
+            class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >Reference</label
+          >
+          <div
+            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
+          >
+            {{ jobDetails.reference || "N/A" }}
+          </div>
+        </div>
+      </div>
+      <div v-if="jobDetails.remarks" class="space-y-2">
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+          >Remarks</label
+        >
+        <div
+          class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm text-slate-700 leading-relaxed italic"
+        >
+          "{{ jobDetails.remarks }}"
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Information -->
+    <div
+      v-if="jobDetails._audit"
+      class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
+    >
+      <ClockIcon class="h-3.5 w-3.5" />
+      <span>
+        Last updated by
+        <strong class="text-slate-600">{{
+          jobDetails._audit.updated_by
+        }}</strong>
+        on
+        <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
+          formatAuditDate(jobDetails._audit.updated_at)
+        }}</span>
+      </span>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed } from "vue";
+import {
+  ClipboardList as ClipboardListIcon,
+  User as UserIcon,
+  Compass as CompassIcon,
+  Clock as ClockIcon,
+} from "lucide-vue-next";
+
+const props = defineProps({
+  order: { type: Object, required: true },
+});
+
+const jobDetails = computed(() => props.order.tracking?.job_details || {});
+
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatAuditDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+</script>

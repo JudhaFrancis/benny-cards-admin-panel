@@ -6,21 +6,38 @@
     empty-text="No payments found matching your criteria."
   >
     <!-- Custom Row Cells -->
+    <template #cell-sn="{ item: payment }">
+      <span class="font-bold text-slate-900"> #{{ payment.sn }} </span>
+    </template>
+
     <template #cell-payment_number="{ item: payment }">
-      <span class="font-semibold text-slate-900">{{ payment.payment_number }}</span>
+      <span class="font-semibold text-slate-900">{{
+        payment.payment_number
+      }}</span>
     </template>
 
     <template #cell-order="{ item: payment }">
-      <span v-if="payment.order" class="text-sm text-slate-600 font-medium">#{{ payment.order.order_number }}</span>
+      <span v-if="payment.order" class="text-sm text-slate-600 font-medium"
+        >#{{ payment.order.order_number }}</span
+      >
       <span v-else class="text-slate-400 italic font-medium">None</span>
     </template>
 
     <template #cell-amount="{ item: payment }">
-      <span class="font-bold text-slate-900">${{ Number(payment.amount).toFixed(2) }}</span>
+      <span class="font-bold text-slate-900"
+        >₹{{
+          Number(payment.amount).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        }}</span
+      >
     </template>
 
     <template #cell-method="{ item: payment }">
-      <span class="capitalize text-slate-600 font-medium">{{ payment.payment_method.replace('_', ' ') }}</span>
+      <span class="capitalize text-slate-600 font-medium">{{
+        payment.payment_method.replace("_", " ")
+      }}</span>
     </template>
 
     <template #cell-status="{ item: payment }">
@@ -28,7 +45,8 @@
         :class="
           cn(
             'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-            statusStyles[payment.payment_status] || 'bg-slate-100 text-slate-800 border-slate-200',
+            statusStyles[payment.payment_status] ||
+              'bg-slate-100 text-slate-800 border-slate-200',
           )
         "
       >
@@ -37,12 +55,15 @@
     </template>
 
     <template #cell-date="{ item: payment }">
-      <span class="text-slate-500 font-medium">{{ formatDate(payment.payment_date) }}</span>
+      <span class="text-slate-500 font-medium">{{
+        formatDate(payment.payment_date)
+      }}</span>
     </template>
 
     <template #cell-actions="{ item: payment }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
         <button
+          v-if="canView"
           @click="$emit('view', payment)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
           title="View Info"
@@ -72,7 +93,6 @@
 
 <script setup>
 import { Eye, Pencil, Trash2 } from "lucide-vue-next";
-import { usePermissions } from "../../composables/usePermissions";
 import DataTable from "../ui/DataTable.vue";
 
 const props = defineProps({
@@ -83,14 +103,25 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false,
-  }
+  },
+  canView: {
+    type: Boolean,
+    default: false,
+  },
+  canEdit: {
+    type: Boolean,
+    default: false,
+  },
+  canDelete: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 defineEmits(["view", "edit", "delete"]);
 
-const { canEdit, canDelete } = usePermissions();
-
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "payment_number", label: "Payment", align: "left" },
   { key: "order", label: "Order", align: "left" },
   { key: "amount", label: "Amount", align: "right" },
@@ -122,7 +153,7 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric"
+    year: "numeric",
   });
 };
 </script>

@@ -159,6 +159,8 @@ import {
   Calendar as CalendarIcon,
   Truck as TruckIcon,
 } from "lucide-vue-next";
+import axios from "axios";
+import { useToast } from "../../composables/useToast";
 import EditOrderItems from "./edit-tabs/EditOrderItems.vue";
 import EditCustomerDetails from "./edit-tabs/EditCustomerDetails.vue";
 import EditOrderTracking from "./edit-tabs/EditOrderTracking.vue";
@@ -179,6 +181,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["openChange", "save", "refresh"]);
+const toast = useToast();
 
 const activeTab = ref("items");
 const editedOrder = ref(null);
@@ -208,6 +211,11 @@ watch(
     if (val) {
       // Deep copy to avoid mutating prop directly
       editedOrder.value = JSON.parse(JSON.stringify(val));
+
+      // Initialize tracking object if it doesn't exist
+      if (!editedOrder.value.tracking) {
+        editedOrder.value.tracking = {};
+      }
     }
   },
   { immediate: true },
@@ -230,7 +238,41 @@ const formatDate = (dateString) => {
   });
 };
 
-const handleSave = (updatedOrderData) => {
+const handleSave = async (updatedOrderData) => {
+  // Handle Tracking Tab Save Separately
+  if (activeTab.value === "tracking") {
+    try {
+      // payload comes from EditOrderTracking emit('save', payload)
+      const payload = updatedOrderData || editedOrder.value.tracking;
+
+      const res = await axios.put(
+        `/api/v1/orders/${props.order.id}/tracking`,
+        payload,
+      );
+
+      if (res.data.success) {
+        toast.success("Tracking info updated");
+        // Update local state with fresh data from server
+        if (res.data.data) {
+          editedOrder.value = {
+            ...res.data.data,
+            // Ensure tracking exists even if not in response
+            tracking: res.data.data.tracking || {},
+          };
+        }
+
+        // Explicitly close if saving the last section (Payment)
+        if (payload.payment_info) {
+          handleSuccess();
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to update tracking info");
+    }
+    return;
+  }
+
   // If the child component emits specific data, use it. Otherwise use local state.
   const dataToEmit = updatedOrderData || editedOrder.value;
   emit("save", dataToEmit);

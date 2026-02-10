@@ -165,9 +165,10 @@
       <template #cell-actions="{ item: category }">
         <div class="flex justify-end gap-1.5 transition-opacity duration-200">
           <button
+            v-if="canView"
             @click="handleView(category)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
-            title="View Info"
+            title="View Details"
           >
             <EyeIcon class="h-4 w-4" />
           </button>
@@ -467,10 +468,13 @@ const previewTitle = ref("");
 
 const meta = ref({});
 const links = ref({});
-const { canAdd, canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canAdd, canView, canEdit, canDelete } =
+  getModulePermissions("Category");
 const { success: toastSuccess, error: toastError } = useToast();
 
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "category", label: "Category", align: "left" },
   { key: "parent", label: "Parent", align: "left" },
   { key: "status", label: "Status", align: "left" },
@@ -507,7 +511,10 @@ const fetchCategories = async (url = "/api/v1/categories") => {
     const response = await axios.get(finalUrl, { params });
 
     if (response.data.success) {
-      categories.value = response.data.data.data;
+      categories.value = response.data.data.data.map((cat, index) => ({
+        ...cat,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from,

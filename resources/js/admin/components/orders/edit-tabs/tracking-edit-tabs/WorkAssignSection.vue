@@ -1,78 +1,262 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-wrap gap-4">
-      <label class="flex items-center gap-2.5 cursor-pointer group">
-        <input
-          type="checkbox"
-          class="w-4 h-4 rounded-md border-slate-300 text-primary focus:ring-primary/20"
-        />
-        <span
-          class="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors"
-          >Content Received</span
+  <form
+    @submit.prevent="save"
+    class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500"
+  >
+    <!-- Status Overview Card -->
+    <div class="bg-slate-50/50 rounded-2xl p-6 border border-slate-100">
+      <h3
+        class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2"
+      >
+        <CheckSquareIcon class="h-4 w-4" />
+        Process Status
+      </h3>
+      <div class="flex flex-wrap gap-4">
+        <label
+          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
+          :class="
+            workAssign.content_received
+              ? 'border-primary bg-primary/5 ring-4 ring-primary/5'
+              : 'border-slate-200 hover:border-slate-300'
+          "
         >
-      </label>
-      <label class="flex items-center gap-2.5 cursor-pointer group">
-        <input
-          type="checkbox"
-          class="w-4 h-4 rounded-md border-slate-300 text-primary focus:ring-primary/20"
-        />
-        <span
-          class="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors"
-          >Clear Content</span
+          <div
+            class="p-2 rounded-lg transition-colors"
+            :class="
+              workAssign.content_received
+                ? 'bg-primary text-white'
+                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+            "
+          >
+            <FilesIcon class="h-4 w-4" />
+          </div>
+          <div class="flex-1">
+            <p class="text-xs font-bold text-slate-900 leading-none">
+              Content Received
+            </p>
+            <input
+              type="checkbox"
+              v-model="workAssign.content_received"
+              class="sr-only"
+            />
+          </div>
+          <div
+            class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+            :class="
+              workAssign.content_received
+                ? 'border-primary bg-primary scale-110'
+                : 'border-slate-200'
+            "
+          >
+            <CheckIcon
+              v-if="workAssign.content_received"
+              class="h-3 w-3 text-white"
+            />
+          </div>
+        </label>
+
+        <label
+          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
+          :class="
+            workAssign.clear_content
+              ? 'border-primary bg-primary/5 ring-4 ring-primary/5'
+              : 'border-slate-200 hover:border-slate-300'
+          "
         >
-      </label>
-      <label class="flex items-center gap-2.5 cursor-pointer group">
-        <input
-          type="checkbox"
-          class="w-4 h-4 rounded-md border-slate-300 text-primary focus:ring-primary/20"
-        />
-        <span
-          class="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors"
-          >Tag</span
+          <div
+            class="p-2 rounded-lg transition-colors"
+            :class="
+              workAssign.clear_content
+                ? 'bg-primary text-white'
+                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+            "
+          >
+            <CheckSquareIcon class="h-4 w-4" />
+          </div>
+          <div class="flex-1">
+            <p class="text-xs font-bold text-slate-900 leading-none">
+              Clear Content
+            </p>
+            <input
+              type="checkbox"
+              v-model="workAssign.clear_content"
+              class="sr-only"
+            />
+          </div>
+          <div
+            class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+            :class="
+              workAssign.clear_content
+                ? 'border-primary bg-primary scale-110'
+                : 'border-slate-200'
+            "
+          >
+            <CheckIcon
+              v-if="workAssign.clear_content"
+              class="h-3 w-3 text-white"
+            />
+          </div>
+        </label>
+
+        <label
+          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
+          :class="
+            workAssign.tag
+              ? 'border-primary bg-primary/5 ring-4 ring-primary/5'
+              : 'border-slate-200 hover:border-slate-300'
+          "
         >
-      </label>
+          <div
+            class="p-2 rounded-lg transition-colors"
+            :class="
+              workAssign.tag
+                ? 'bg-primary text-white'
+                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+            "
+          >
+            <HashIcon class="h-4 w-4" />
+          </div>
+          <div class="flex-1">
+            <p class="text-xs font-bold text-slate-900 leading-none">Tag</p>
+            <input type="checkbox" v-model="workAssign.tag" class="sr-only" />
+          </div>
+          <div
+            class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+            :class="
+              workAssign.tag
+                ? 'border-primary bg-primary scale-110'
+                : 'border-slate-200'
+            "
+          >
+            <CheckIcon v-if="workAssign.tag" class="h-3 w-3 text-white" />
+          </div>
+        </label>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Assignment Details -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-700">Assigned To</label>
-        <input
-          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          placeholder="Designer name"
+        <label class="text-sm font-medium text-slate-700"
+          >Assigned To <span class="text-red-500">*</span></label
+        >
+        <ContextDropdown
+          v-model="workAssign.assigned_to"
+          :options="staffOptions"
+          placeholder="Select designer"
+          :icon="UserIcon"
         />
       </div>
+
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-700">Deadline</label>
-        <input
-          type="date"
-          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+        <label class="text-sm font-medium text-slate-700"
+          >Deadline <span class="text-red-500">*</span></label
+        >
+        <div class="relative group">
+          <CalendarIcon
+            class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+          />
+          <input
+            type="date"
+            v-model="workAssign.deadline"
+            class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700"
+          >Content By <span class="text-red-500">*</span></label
+        >
+        <ContextDropdown
+          v-model="workAssign.content_by"
+          :options="staffOptions"
+          placeholder="Select staff"
+          :icon="FilesIcon"
         />
       </div>
-      <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-700">Content By</label>
-        <input
-          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          placeholder="Enter name"
-        />
-      </div>
-      <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-700">Completed By</label>
-        <input
-          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          placeholder="Enter name"
+
+      <div class="space-y-2 text-slate-900 font-medium">
+        <label class="text-sm font-medium text-slate-700"
+          >Completed By <span class="text-red-500">*</span></label
+        >
+        <ContextDropdown
+          v-model="workAssign.completed_by"
+          :options="staffOptions"
+          placeholder="Select staff"
+          :icon="UserPlusIcon"
         />
       </div>
     </div>
-  </div>
+
+    <!-- Audit Footer -->
+    <div
+      v-if="workAssign._audit"
+      class="pt-4 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400"
+    >
+      <span class="flex items-center gap-2">
+        <ClockIcon class="h-3.5 w-3.5" />
+        Last updated
+        <span
+          class="font-medium bg-slate-100 px-2 py-0.5 rounded-full text-slate-600"
+          >{{ formatAuditDate(workAssign._audit.updated_at) }}</span
+        >
+        by
+        <span
+          class="font-medium text-slate-600 underline decoration-slate-200 underline-offset-2"
+          >{{ workAssign._audit.updated_by }}</span
+        >
+      </span>
+    </div>
+  </form>
 </template>
 
 <script setup>
+import { computed } from "vue";
+import {
+  User as UserIcon,
+  Calendar as CalendarIcon,
+  CheckSquare as CheckSquareIcon,
+  Files as FilesIcon,
+  Hash as HashIcon,
+  UserPlus as UserPlusIcon,
+  Clock as ClockIcon,
+  Check as CheckIcon,
+} from "lucide-vue-next";
+import ContextDropdown from "../../../ui/ContextDropdown.vue";
+
 const props = defineProps({
   order: {
     type: Object,
     required: true,
   },
+  staffOptions: {
+    type: Array,
+    default: () => [],
+  },
 });
 
-const emit = defineEmits(["update:order"]);
+const workAssign = computed(() => {
+  if (!props.order.tracking) {
+    props.order.tracking = {};
+  }
+  if (!props.order.tracking.work_assign) {
+    props.order.tracking.work_assign = {};
+  }
+  return props.order.tracking.work_assign;
+});
+
+const formatAuditDate = (dateString) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const save = () => {
+  // Save handled by parent
+};
 </script>

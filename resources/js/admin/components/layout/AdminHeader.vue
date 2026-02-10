@@ -208,6 +208,7 @@ import {
   Wallet as PaymentsIcon,
   Users as UsersIcon,
   Settings as SettingsIcon,
+  Shield as ShieldIcon,
   PieChart as ChartIcon,
 } from "lucide-vue-next";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
@@ -217,7 +218,7 @@ import { useAuth } from "../../composables/useAuth";
 import { usePermissions } from "../../composables/usePermissions";
 
 const router = useRouter();
-const { isAdmin } = usePermissions();
+const { isSuperAdmin } = usePermissions();
 const isConfirmOpen = ref(false);
 const isLoading = ref(false);
 const { user, logout } = useAuth();
@@ -231,6 +232,7 @@ const activeIndex = ref(0);
 const allModules = [
   { title: "Dashboard", url: "/", icon: DashboardIcon, category: "Core" },
   { title: "Users", url: "/users", icon: UsersIcon, category: "Management" },
+  { title: "Roles", url: "/roles", icon: ShieldIcon, category: "Management" },
   { title: "Orders", url: "/orders", icon: OrdersIcon, category: "Sales" },
   {
     title: "Payments",
@@ -263,7 +265,7 @@ const filteredModules = computed(() => {
   if (!searchQuery.value) return [];
   const query = searchQuery.value.toLowerCase();
   return allModules.filter((m) => {
-    if (m.adminOnly && !isAdmin.value) return false;
+    if (m.adminOnly && !isSuperAdmin.value) return false;
     return (
       m.title.toLowerCase().includes(query) ||
       m.category.toLowerCase().includes(query)

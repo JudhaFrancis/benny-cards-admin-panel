@@ -7,9 +7,9 @@
   >
     <!-- Custom Row Cells -->
     <template #cell-order_number="{ item: order }">
-      <span class="font-semibold text-slate-900 italic"
-        >{{ order.order_number }}</span
-      >
+      <span class="font-semibold text-slate-900 italic">{{
+        order.order_number
+      }}</span>
     </template>
 
     <template #cell-customer="{ item: order }">
@@ -35,12 +35,13 @@
         :class="
           cn(
             'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-            (order.status && orderStatusStyles[order.status.toLowerCase()]) ||
+            (order.tracking_status_label &&
+              orderStatusStyles[order.tracking_status_label.toLowerCase()]) ||
               'bg-slate-100 text-slate-800 border-slate-200',
           )
         "
       >
-        {{ capitalize(order.status) }}
+        {{ order.tracking_status_label || "New" }}
       </span>
     </template>
 
@@ -74,6 +75,7 @@
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
         <button
+          v-if="canView"
           @click="$emit('view-info', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
           title="View Info"
@@ -119,10 +121,12 @@ const props = defineProps({
 
 defineEmits(["view-info", "edit", "delete"]);
 
-const { canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canView, canEdit, canDelete } = getModulePermissions("Order");
 
 const columns = [
-  { key: "order_number", label: "Order", align: "left" },
+  { key: "sn", label: "S.No", width: "80px" },
+  { key: "order_number", label: "Order ID", align: "left" },
   { key: "customer", label: "Customer", align: "left" },
   { key: "orderDate", label: "Order Date", align: "left" },
   { key: "items", label: "Items", align: "center" },
@@ -134,10 +138,14 @@ const columns = [
 ];
 
 const orderStatusStyles = {
+  new: "bg-slate-500/10 text-slate-500 border-slate-500/20",
   pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  confirmed: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  assigned: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
   processing: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  shipped: "bg-primary/10 text-primary border-primary/20",
-  delivered: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  packed: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  dispatched: "bg-primary/10 text-primary border-primary/20",
+  completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   cancelled: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 

@@ -10,7 +10,7 @@
     >
       <template #actions>
         <button
-          v-if="isAdmin"
+          v-if="isSuperAdmin"
           @click="handleSave"
           :disabled="saving"
           class="inline-flex items-center justify-center gap-2 px-6 h-12 rounded-2xl bg-primary text-white font-bold shadow-xl shadow-primary/20 hover:opacity-95 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none group"
@@ -297,7 +297,7 @@ import PageHeader from "../../components/ui/PageHeader.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useSettings } from "../../composables/useSettings";
 
-const { isAdmin, isModerator, isStaff } = usePermissions();
+const { isSuperAdmin } = usePermissions();
 const { settings, fetchSettings: loadSettings, setSettings } = useSettings();
 const saving = ref(false);
 const successMessage = ref(null);

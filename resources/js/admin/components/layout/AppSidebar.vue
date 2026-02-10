@@ -35,7 +35,7 @@
         </span>
         <span
           class="text-[10px] text-white font-bold uppercase tracking-[0.2em] mt-1.5 opacity-60"
-          >{{ user?.role ? user.role + " Portal" : "HQ Portal" }}</span
+          >{{ user?.role ? user.role?.name + " Portal" : "HQ Portal" }}</span
         >
       </div>
     </div>
@@ -54,7 +54,7 @@
       </div>
 
       <!-- Section: Order Management -->
-      <div class="space-y-2">
+      <div v-if="navOrders.length > 0" class="space-y-2">
         <p
           v-if="!isCollapsed"
           class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
@@ -73,7 +73,10 @@
       </div>
 
       <!-- Section: Product Management -->
-      <div class="space-y-2">
+      <div
+        v-if="navProducts.length > 0 || navCatalog.length > 0"
+        class="space-y-2"
+      >
         <p
           v-if="!isCollapsed"
           class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
@@ -93,7 +96,7 @@
         </div>
 
         <!-- Catalog Management Dropdown -->
-        <div class="px-2 mt-2">
+        <div v-if="navCatalog.length > 0" class="px-2 mt-2">
           <div
             @click="toggleCatalog"
             :class="
@@ -148,7 +151,7 @@
       </div>
 
       <!-- Section: Analytics & Reports -->
-      <!-- <div class="space-y-2">
+      <div v-if="navReports.length > 0" class="space-y-2">
         <p
           v-if="!isCollapsed"
           class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
@@ -157,6 +160,7 @@
         </p>
         <div class="px-2">
           <div
+            v-if="navReports.length > 0"
             @click="toggleReports"
             :class="
               cn(
@@ -191,10 +195,10 @@
                 "
               />
             </div>
-          </div> -->
+          </div>
 
-      <!-- Report Children -->
-      <!-- <div
+          <!-- Report Children -->
+          <div
             v-if="reportsOpen && !isCollapsed"
             class="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500"
           >
@@ -207,17 +211,25 @@
             />
           </div>
         </div>
-      </div> -->
+      </div>
 
-      <!-- Bottom Items: Settings & Users -->
-      <div class="space-y-1">
-        <SidebarNavItem
-          v-for="item in navBottom"
-          :key="item.title"
-          :item="item"
-          :isCollapsed="isCollapsed"
-          :isActive="isActive(item.url)"
-        />
+      <!-- Section: Administration -->
+      <div v-if="navBottom.length > 0" class="space-y-2">
+        <p
+          v-if="!isCollapsed"
+          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
+        >
+          Administration
+        </p>
+        <div class="space-y-1">
+          <SidebarNavItem
+            v-for="item in navBottom"
+            :key="item.title"
+            :item="item"
+            :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)"
+          />
+        </div>
       </div>
     </div>
 
@@ -300,6 +312,8 @@ import {
   Wallet as PaymentsIcon,
   PieChart as PieChartIcon,
   User as UserIcon,
+  Users as UsersIcon,
+  Shield as ShieldIcon,
   LogOut as LogOutIcon,
   Settings as SettingsIcon,
   ChevronDown as ChevronDownIcon,
@@ -319,7 +333,7 @@ import { useSettings } from "../../composables/useSettings";
 
 const route = useRoute();
 const router = useRouter();
-const { isAdmin, isModerator, isStaff } = usePermissions();
+const { isSuperAdmin, hasPermission } = usePermissions();
 const { user, setUser } = useAuth();
 const { settings, fetchSettings, getLogoSource } = useSettings();
 const isCollapsed = ref(false);
@@ -356,43 +370,68 @@ onMounted(() => {
 const navDashboard = { title: "Dashboard", url: "/", icon: DashboardIcon };
 
 // Order Management section
-const navOrders = [
-  { title: "Orders", url: "/orders", icon: OrdersIcon },
-  { title: "Payments", url: "/payments", icon: PaymentsIcon },
-];
+const navOrders = computed(() => {
+  const items = [
+    { title: "Orders", url: "/orders", icon: OrdersIcon, module: "Order" },
+    {
+      title: "Payments",
+      url: "/payments",
+      icon: PaymentsIcon,
+      module: "Payment",
+    },
+  ];
+  return items.filter((item) => hasPermission(item.module));
+});
 
 // Product Management - standalone items
-const navProducts = [
-  { title: "Products", url: "/products", icon: BoxIcon },
-  // { title: "File Manager", url: "/file-manager", icon: FolderOpenIcon },
-];
+const navProducts = computed(() => {
+  const items = [
+    { title: "Products", url: "/products", icon: BoxIcon, module: "Product" },
+  ];
+  return items.filter((item) => hasPermission(item.module));
+});
 
 // Product Management - Catalog dropdown
-const navCatalog = [
-  { title: "Categories", url: "/catalog/categories" },
-  { title: "Price Range", url: "/catalog/price-ranges" },
-  { title: "Brands", url: "/catalog/brands" },
-  { title: "Banners", url: "/catalog/banners" },
-  // { title: "Reviews", url: "/catalog/reviews" },
-  { title: "Coupons", url: "/catalog/coupons" },
-];
+const navCatalog = computed(() => {
+  const items = [
+    { title: "Categories", url: "/catalog/categories", module: "Category" },
+    {
+      title: "Price Range",
+      url: "/catalog/price-ranges",
+      module: "Price Range",
+    },
+    { title: "Brands", url: "/catalog/brands", module: "Brands" },
+    { title: "Banners", url: "/catalog/banners", module: "Banners" },
+    { title: "Reviews", url: "/catalog/reviews", module: "Review" },
+    { title: "Coupons", url: "/catalog/coupons", module: "Coupons" },
+  ];
+  return items.filter((item) => hasPermission(item.module));
+});
 
 // Analytics - Intelligence dropdown
-const navReports = [
-  { title: "Order Trends", url: "/reports/orders" },
-  { title: "Payment Logs", url: "/reports/payments" },
-];
+const navReports = computed(() => {
+  const items = [
+    { title: "Order Trends", url: "/reports/orders", module: "Order" },
+    { title: "Payment Logs", url: "/reports/payments", module: "Payment" },
+  ];
+  return items.filter((item) => hasPermission(item.module));
+});
 
 // Bottom items
 const navBottom = computed(() => {
-  const items = [
-    { title: "Users", url: "/users", icon: UserIcon },
-    { title: "Settings", url: "/settings", icon: SettingsIcon },
-  ];
+  const items = [];
 
-  if (!isAdmin.value) {
-    return items.filter((item) => item.title !== "Settings");
+  if (hasPermission("User")) {
+    items.push({ title: "Users", url: "/users", icon: UsersIcon });
   }
+
+  if (hasPermission("Role")) {
+    items.push({ title: "Roles", url: "/roles", icon: ShieldIcon });
+  }
+
+  // Settings/Profile accessible to all authenticated dashboard users
+  items.push({ title: "Settings", url: "/settings", icon: SettingsIcon });
+
   return items;
 });
 

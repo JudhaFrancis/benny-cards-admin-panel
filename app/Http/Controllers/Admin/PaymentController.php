@@ -22,10 +22,10 @@ class PaymentController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('payment_number', 'like', "%{$search}%")
-                      ->orWhere('transaction_id', 'like', "%{$search}%")
-                      ->orWhereHas('order', function ($o) use ($search) {
-                          $o->where('order_number', 'like', "%{$search}%");
-                      });
+                        ->orWhere('transaction_id', 'like', "%{$search}%")
+                        ->orWhereHas('order', function ($o) use ($search) {
+                            $o->where('order_number', 'like', "%{$search}%");
+                        });
                 });
             }
 
@@ -73,11 +73,9 @@ class PaymentController extends Controller
         try {
             DB::beginTransaction();
 
-            $paymentNumber = 'PAY-' . strtoupper(uniqid());
-
             $payment = Payment::create([
                 'order_id' => $request->order_id,
-                'payment_number' => $paymentNumber,
+                'payment_number' => 'TEMP-' . uniqid(),
                 'amount' => $request->amount,
                 'payment_date' => $request->payment_date,
                 'payment_method' => $request->payment_method,
@@ -85,6 +83,11 @@ class PaymentController extends Controller
                 'transaction_id' => $request->transaction_id,
                 'notes' => $request->notes,
                 'added_by' => auth()->id(),
+            ]);
+
+            // Update with real structured number using the payment ID
+            $payment->update([
+                'payment_number' => 'PAY' . $payment->id . '-' . date('dmY')
             ]);
 
             // Update order financial fields and status
@@ -195,7 +198,16 @@ class PaymentController extends Controller
     {
         try {
             $payment = Payment::findOrFail($id);
+            $orderId = $payment->order_id;
             $payment->delete();
+
+            // Update order financial fields and status after deletion
+            if ($orderId) {
+                $order = \App\Models\Order::find($orderId);
+                if ($order) {
+                    $order->updatePaymentStatus();
+                }
+            }
 
             return response()->json([
                 'success' => true,

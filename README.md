@@ -113,3 +113,10 @@ All API responses must follow this JSON format:
 - All Admin routes are protected by `auth:sanctum`.
 - Use `FormRequests` for validation.
 - Use `RoleMiddleware` for permission checks.
+
+Confirmed (Order Details, Client Info, Card Specs)
+Assigned (Work Assign Process)
+Processing (Design, Printing)
+Packed (Packaging & Logistics, Packaging Status)
+Dispatched (Delivery Location, Mode of Dispatch, Dispatch Details)
+Paid/Completed (Payment)

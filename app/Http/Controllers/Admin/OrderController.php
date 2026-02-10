@@ -124,6 +124,22 @@ class OrderController extends Controller
     }
 
     /**
+     * Update tracking details for an order.
+     */
+    public function updateTracking(Request $request, int $id): JsonResponse
+    {
+        $order = $this->orderService->getOrder($id);
+
+        $updatedOrder = $this->orderService->updateTracking($order, $request->all());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order tracking updated successfully.',
+            'data' => $updatedOrder,
+        ]);
+    }
+
+    /**
      * Update the status of the specified order.
      */
     public function updateStatus(Request $request, int $id): JsonResponse

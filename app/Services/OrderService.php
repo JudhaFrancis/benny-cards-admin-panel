@@ -17,7 +17,7 @@ class OrderService
     public function listOrders(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return Order::query()
-            ->with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon'])
+            ->with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon', 'tracking'])
             ->when(isset($filters['status']) && $filters['status'] !== 'all', function (Builder $query) use ($filters) {
                 $query->where('status', $filters['status']);
             })
@@ -37,7 +37,7 @@ class OrderService
      */
     public function getOrder(int $id): Order
     {
-        return Order::with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon'])
+        return Order::with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon', 'tracking'])
             ->findOrFail($id);
     }
 
@@ -55,15 +55,10 @@ class OrderService
             $discount = $data['discount'] ?? 0;
             $totalAmount = (float) max(0, $totals['net_amount'] - $discount);
 
-            // Generate custom numbers
-            $orderNumber = $this->generateOrderNumber();
-            $trackingNumber = $this->generateTrackingNumber();
-            $trackingNumber = $this->generateTrackingNumber();
-
-            // Create Order
+            // Create Order with temporary numbers
             $order = Order::create([
-                'order_number' => $orderNumber,
-                'tracking_number' => $trackingNumber,
+                'order_number' => 'TEMP-' . uniqid(),
+                'tracking_number' => 'TEMP-' . uniqid(),
                 'order_date' => $data['order_date'] ?? now(),
                 'user_id' => $data['user_id'] ?? null,
                 'items_count' => $totals['items_count'],
@@ -78,6 +73,12 @@ class OrderService
                 'status' => $data['status'] ?? 'pending',
                 'added_by' => auth()->id(),
                 'modified_by' => auth()->id(),
+            ]);
+
+            // Update with real structured numbers using the order ID
+            $order->update([
+                'order_number' => 'ORD' . $order->id . '-' . date('dmY'),
+                'tracking_number' => 'TRK' . $order->id . '-' . date('dmY'),
             ]);
 
             // Create Order Items
@@ -148,7 +149,7 @@ class OrderService
             }
 
             // Recalculate total amount
-            $order->total_amount = (float) max(0, $order->net_amount - $order->discount);
+            $order->total_amount = max(0, $order->net_amount - $order->discount);
 
             // Update coupon
             if (isset($data['coupon_id'])) {
@@ -230,7 +231,115 @@ class OrderService
         );
         $order->modified_by = auth()->id();
         $order->save();
-        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon']);
+        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'tracking']);
+    }
+
+    /**
+     * Update order tracking details.
+     */
+    public function updateTracking(Order $order, array $data): Order
+    {
+        // Allowed tracking sections (columns in order_trackings table)
+        $allowedSections = [
+            'job_details',
+            'client_info',
+            'card_specs',
+            'work_assign',
+            'design_print',
+            'printing_status',
+            'packaging_logistics',
+            'packaging_status',
+            'delivery_location',
+            'dispatch_mode',
+            'dispatch_details',
+            'payment_info',
+        ];
+
+        // Prepare data for update
+        $updateData = [];
+        foreach ($data as $section => $content) {
+            if (in_array($section, $allowedSections)) {
+                // Inject Audit Info
+                $content['_audit'] = [
+                    'updated_by' => auth()->user()->name ?? 'Unknown',
+                    'updated_at' => now()->toDateTimeString(),
+                ];
+                $updateData[$section] = $content;
+            }
+        }
+
+        if (!empty($updateData)) {
+            $order->tracking()->updateOrCreate(
+                ['order_id' => $order->id],
+                $updateData
+            );
+
+            // Sync payment_info with payments table if present
+            if (isset($updateData['payment_info'])) {
+                $paymentInfo = $updateData['payment_info'];
+                $payments = $paymentInfo['payments'] ?? $paymentInfo;
+
+                // Ensure $payments is an array
+                if (!is_array($payments)) {
+                    $payments = [$payments];
+                }
+
+                // Get current completed payment IDs for this order to handle deletions
+                $existingPaymentIds = $order->payments()
+                    ->where('payment_status', 'completed')
+                    ->pluck('id')
+                    ->toArray();
+
+                $processedIds = [];
+
+                foreach ($payments as $payInfo) {
+                    $amount = $payInfo['amount'] ?? 0;
+
+                    // Skip empty or zero amount payments
+                    if ($amount <= 0) {
+                        continue;
+                    }
+
+                    $paymentData = [
+                        'payment_method' => $payInfo['payment_method'] ?? 'cash',
+                        'transaction_id' => $payInfo['transaction_id'] ?? null,
+                        'signature_name' => $payInfo['signature_name'] ?? null,
+                        'payment_status' => 'completed',
+                        'payment_date' => $payInfo['payment_date'] ?? now(),
+                        'amount' => $amount,
+                        'added_by' => auth()->id(),
+                        'modified_by' => auth()->id(),
+                    ];
+
+                    if (isset($payInfo['id'])) {
+                        $payment = $order->payments()->find($payInfo['id']);
+                        if ($payment) {
+                            $payment->update($paymentData);
+                            $processedIds[] = $payment->id;
+                        }
+                    } else {
+                        // Generate a temporary payment number to satisfy DB constraints
+                        $paymentData['payment_number'] = 'TEMP-' . time() . '-' . rand(1000, 9999);
+                        $newPayment = $order->payments()->create($paymentData);
+                        $newPayment->update([
+                            'payment_number' => 'PAY' . $newPayment->id . '-' . date('dmY')
+                        ]);
+                        $processedIds[] = $newPayment->id;
+                    }
+                }
+
+                // Delete payments that were removed from the tracking list
+                $idsToDelete = array_diff($existingPaymentIds, $processedIds);
+                if (!empty($idsToDelete)) {
+                    $order->payments()->whereIn('id', $idsToDelete)->delete();
+                }
+
+                // Update order financial status (this also triggers syncTrackingWithPayments)
+                $order->updatePaymentStatus();
+            }
+        }
+
+        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'tracking']);
     }
 
     /**
@@ -288,32 +397,20 @@ class OrderService
 
     /**
      * Generate unique order number.
+     * @deprecated Use post-creation update logic
      */
     protected function generateOrderNumber(): string
     {
-        $date = date('d');
-        $month = date('m');
-        $year = date('Y');
-
-        // Count total orders today to increment
-        $countToday = Order::whereDate('created_at', today())->count() + 1;
-
-        return sprintf('ORD-%s%s%s-%d', $date, $month, $year, $countToday);
+        return 'ORD-' . date('dmY') . '-' . uniqid();
     }
 
     /**
      * Generate unique tracking number.
+     * @deprecated Use post-creation update logic
      */
     protected function generateTrackingNumber(): string
     {
-        $date = date('d');
-        $month = date('m');
-        $year = date('Y');
-
-        // Count total orders today to increment
-        $countToday = Order::whereDate('created_at', today())->count() + 1;
-
-        return sprintf('TRK-%s%s%s-%d', $date, $month, $year, $countToday);
+        return 'TRK-' . date('dmY') . '-' . uniqid();
     }
 
 }

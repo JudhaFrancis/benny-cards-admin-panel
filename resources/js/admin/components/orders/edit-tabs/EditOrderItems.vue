@@ -219,12 +219,6 @@
                         >
                           ₹{{ parseFloat(product.price).toFixed(2) }}
                         </p>
-                        <p
-                          v-if="product.stock !== undefined"
-                          class="text-[10px] font-bold text-slate-400 mt-0.5"
-                        >
-                          {{ product.stock }} in stock
-                        </p>
                       </div>
                     </div>
 

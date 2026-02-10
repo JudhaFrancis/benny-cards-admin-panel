@@ -46,12 +46,14 @@ Route::prefix('v1')->group(function () {
         Route::delete('orders/{id}', [OrderController::class, 'destroy']);
         Route::patch('orders/{id}/status', [OrderController::class, 'updateStatus']);
         Route::put('orders/{id}/customer-details', [OrderController::class, 'updateCustomerDetails']);
+        Route::put('orders/{id}/tracking', [OrderController::class, 'updateTracking']);
 
         // Settings
         Route::get('settings', [SettingController::class, 'show']);
         Route::put('settings', [SettingController::class, 'update']);
 
         // Users
+        Route::get('users/roles', [UserController::class, 'roles']);
         Route::apiResource('users', UserController::class);
 
         // Categories

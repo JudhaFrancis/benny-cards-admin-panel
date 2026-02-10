@@ -32,37 +32,47 @@
             >
               <!-- Header -->
               <div
-                class="px-8 pt-8 pb-6 bg-white border-b border-gray-100 sticky top-0 z-10"
+                class="relative bg-primary text-white overflow-hidden shrink-0 sticky top-0 z-10"
               >
-                <button
-                  @click="closeModal"
-                  class="absolute top-6 right-6 p-2 rounded-xl hover:bg-white/80 transition-colors group"
-                >
-                  <XIcon
-                    class="h-5 w-5 text-gray-400 group-hover:text-gray-600"
-                  />
-                </button>
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent"
+                ></div>
+                <div
+                  class="absolute -right-20 -top-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+                ></div>
 
-                <div class="flex items-start gap-4">
-                  <div
-                    class="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20"
+                <div
+                  class="relative px-8 py-8 flex items-center justify-between"
+                >
+                  <div class="flex items-center gap-5">
+                    <div
+                      class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-inner"
+                    >
+                      <DollarSignIcon class="h-7 w-7 text-white" />
+                    </div>
+                    <div>
+                      <h3
+                        class="text-2xl font-bold tracking-tight text-white mb-1"
+                      >
+                        {{
+                          editRange ? "Edit Price Range" : "Create Price Range"
+                        }}
+                      </h3>
+                      <p class="text-sm text-white/80">
+                        {{
+                          editRange
+                            ? "Update range information and pricing settings"
+                            : "Add a new price range to filter your collection"
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    @click="closeModal"
+                    class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-all border border-white/5 active:scale-95"
                   >
-                    <DollarSignIcon class="h-7 w-7" />
-                  </div>
-                  <div class="flex-1">
-                    <h3 class="text-2xl font-bold text-gray-700">
-                      {{
-                        editRange ? "Edit Price Range" : "Create Price Range"
-                      }}
-                    </h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                      {{
-                        editRange
-                          ? "Update range information and pricing settings"
-                          : "Add a new price range to filter your collection"
-                      }}
-                    </p>
-                  </div>
+                    <XIcon class="h-6 w-6" />
+                  </button>
                 </div>
               </div>
 
@@ -76,9 +86,7 @@
                 >
                   <!-- Title -->
                   <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
                       <div class="flex items-center gap-2">
                         <TagIcon class="h-4 w-4 text-gray-400" />
                         Range Title
@@ -89,7 +97,7 @@
                       v-model="form.title"
                       type="text"
                       required
-                      placeholder="e.g. Under $100"
+                      placeholder="e.g. Under ₹100"
                       class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
                       style="color: #475569 !important"
                       @input="generateSlug"
@@ -98,9 +106,7 @@
 
                   <!-- Slug -->
                   <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
                       <div class="flex items-center gap-2">
                         <LinkIcon class="h-4 w-4 text-gray-400" />
                         URL Slug

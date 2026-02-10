@@ -174,29 +174,22 @@
         </div>
       </template>
 
-      <!-- Price & Stock Cell -->
+      <!-- Price Cell -->
       <template #cell-price="{ item: product }">
         <div class="flex flex-col">
           <div class="text-sm font-black text-gray-700 flex items-center gap-1">
-            ${{ product.price }}
+            ₹{{
+              Number(product.price).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })
+            }}
             <span
               v-if="product.discount > 0"
               class="text-[10px] font-bold text-emerald-500"
               >(-{{ product.discount }}%)</span
             >
           </div>
-          <span
-            :class="[
-              'text-[10px] font-bold uppercase tracking-wider mt-0.5',
-              product.stock > 0
-                ? 'text-gray-400'
-                : 'text-rose-500 animate-pulse',
-            ]"
-          >
-            {{
-              product.stock > 0 ? `${product.stock} in stock` : "Out of Stock"
-            }}
-          </span>
         </div>
       </template>
 
@@ -251,8 +244,9 @@
 
       <!-- Actions Cell -->
       <template #cell-actions="{ item: product }">
-        <div class="flex justify-end gap-1.5">
+        <div class="flex justify-end gap-1.5 transition-opacity duration-200">
           <button
+            v-if="canView"
             @click="viewProduct(product)"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
             title="View Details"
@@ -360,12 +354,14 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InfoSection title="Pricing & Inventory" :icon="TagIcon">
-            <InfoItem label="Base Price" :value="`$${selectedProduct.price}`" />
+            <InfoItem
+              label="Base Price"
+              :value="`₹${Number(selectedProduct.price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`"
+            />
             <InfoItem
               label="Discount"
               :value="`${selectedProduct.discount || 0}%`"
             />
-            <InfoItem label="Stock Level" :value="selectedProduct.stock" />
             <InfoItem
               label="Condition"
               :value="selectedProduct.condition"
@@ -460,7 +456,7 @@
     <ConfirmationModal
       :isOpen="isDeleteModalOpen"
       title="Delete Product"
-      :description="`Are you sure you want to remove '${selectedProduct?.title}'? Current stock is ${selectedProduct?.stock}. The product image file will also be permanently deleted from the storage.`"
+      :description="`Are you sure you want to remove '${selectedProduct?.title}'? The product image file will also be permanently deleted from the storage.`"
       confirmLabel="Confirm Delete"
       variant="danger"
       :loading="isDeleting"
@@ -512,7 +508,8 @@ import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 
 const { success: toastSuccess, error: toastError } = useToast();
-const { canAdd, canEdit, canDelete } = usePermissions();
+const { getModulePermissions } = usePermissions();
+const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Product");
 
 // State
 const products = ref([]);
@@ -547,9 +544,10 @@ const tabOptions = [
 ];
 
 const columns = [
+  { key: "sn", label: "S.No", width: "80px" },
   { key: "photo", label: "Product", width: "80px" },
   { key: "title", label: "Title & Meta", sortable: true },
-  { key: "price", label: "Price / Stock" },
+  { key: "price", label: "Price" },
   { key: "status", label: "Status" },
   { key: "created_at", label: "Created" },
   { key: "updated_at", label: "Modified" },
@@ -585,7 +583,10 @@ const fetchProducts = async (url = "/api/v1/products") => {
       },
     });
     if (response.data.success) {
-      products.value = response.data.data.data;
+      products.value = response.data.data.data.map((product, index) => ({
+        ...product,
+        sn: index + (response.data.data.from || 1),
+      }));
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from,

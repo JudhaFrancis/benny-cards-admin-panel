@@ -29,7 +29,7 @@ class AuthController extends Controller
             $user = Auth::user();
 
             // Prevent standard users from logging into admin panel
-            if ($user->role === 'user') {
+            if ($user->role->name === 'User') {
                 Auth::guard('web')->logout();
                 return response()->json([
                     'success' => false,
@@ -39,12 +39,19 @@ class AuthController extends Controller
 
             $token = $user->createToken('admin-token')->plainTextToken;
 
+            $user->load(['role.permissions.module', 'role.permissions.action']);
+            $permissions = $user->permission_names;
+            if ($user->role) {
+                $user->role->makeHidden('permissions');
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Login successful',
                 'data' => [
                     'user' => $user,
                     'token' => $token,
+                    'permissions' => $permissions,
                 ]
             ]);
         }
@@ -73,10 +80,17 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
+        $user = $request->user()->load(['role.permissions.module', 'role.permissions.action']);
+        $permissions = $user->permission_names;
+        if ($user->role) {
+            $user->role->makeHidden('permissions');
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'permissions' => $permissions,
             ]
         ]);
     }

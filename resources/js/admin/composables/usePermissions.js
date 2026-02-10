@@ -4,24 +4,31 @@ import { useAuth } from "./useAuth";
 export function usePermissions() {
     const { user } = useAuth();
 
-    const isModerator = computed(() => user.value?.role === "moderator");
-    const isAdmin = computed(() => user.value?.role === "admin");
-    const isStaff = computed(() => user.value?.role === "staff");
+    const permissions = computed(() => {
+        return user.value?.permission_names || user.value?.permissions || [];
+    });
+    const userRole = computed(() => user.value?.role?.name?.toLowerCase() || user.value?.role?.toLowerCase() || "");
+    const isSuperAdmin = computed(() => userRole.value === "super-admin");
 
-    const canEdit = computed(() => !isModerator.value);
-    const canDelete = computed(() => !isModerator.value);
-    const canAdd = computed(() => !isModerator.value);
+    const hasPermission = (module, action = 'list') => {
+        if (isSuperAdmin.value) return true;
+        const permissionName = `${module.toLowerCase()}-${action.toLowerCase()}`;
+        return permissions.value.includes(permissionName);
+    };
 
-    // Allow View for everyone (including moderators)
-    const canView = computed(() => true);
+    const getModulePermissions = (module) => {
+        return {
+            canView: computed(() => hasPermission(module, 'view')),
+            canAdd: computed(() => hasPermission(module, 'create')),
+            canEdit: computed(() => hasPermission(module, 'edit')),
+            canDelete: computed(() => hasPermission(module, 'delete')),
+        };
+    };
 
     return {
-        isModerator,
-        isAdmin,
-        isStaff,
-        canEdit,
-        canDelete,
-        canAdd,
-        canView,
+        isSuperAdmin,
+        permissions,
+        hasPermission,
+        getModulePermissions,
     };
 }
