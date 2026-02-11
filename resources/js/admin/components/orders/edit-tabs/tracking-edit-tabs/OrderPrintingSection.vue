@@ -267,19 +267,18 @@
       v-if="printingStatus._audit"
       class="pt-4 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400"
     >
-      <span>
-        Last updated by
-        <strong>{{ printingStatus._audit.updated_by }}</strong> on
-        <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          new Date(printingStatus._audit.updated_at).toLocaleDateString(
-            "en-GB",
-            {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            },
-          )
-        }}</span>
+      <span class="flex items-center gap-2">
+        <ClockIcon class="h-3.5 w-3.5" />
+        Last updated
+        <span
+          class="font-medium bg-slate-100 px-2 py-0.5 rounded-full text-slate-600"
+          >{{ formatAuditDate(printingStatus._audit.updated_at) }}</span
+        >
+        by
+        <span
+          class="font-medium text-slate-600 underline decoration-slate-200 underline-offset-2"
+          >{{ printingStatus._audit.updated_by }}</span
+        >
       </span>
     </div>
   </div>
@@ -287,6 +286,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { Clock as ClockIcon } from "lucide-vue-next";
 
 const props = defineProps({
   order: {
@@ -301,6 +301,15 @@ const printingStatus = computed(() => {
   }
   return props.order.tracking.printing_status;
 });
+
+const formatAuditDate = (dateString) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const readymadeFollowUpList = computed({
   get: () =>

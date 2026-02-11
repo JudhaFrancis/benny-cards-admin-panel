@@ -240,35 +240,20 @@
     <!-- Audit Footer -->
     <div
       v-if="jobDetails._audit"
-      class="pt-6 mt-4 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
+      class="pt-4 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-      </svg>
-      <span>
-        Last updated by
-        <strong class="text-slate-600">{{
-          jobDetails._audit.updated_by
-        }}</strong>
-        on
-        <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          new Date(jobDetails._audit.updated_at).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })
-        }}</span>
+      <span class="flex items-center gap-2">
+        <ClockIcon class="h-3.5 w-3.5" />
+        Last updated
+        <span
+          class="font-medium bg-slate-100 px-2 py-0.5 rounded-full text-slate-600"
+          >{{ formatAuditDate(jobDetails._audit.updated_at) }}</span
+        >
+        by
+        <span
+          class="font-medium text-slate-600 underline decoration-slate-200 underline-offset-2"
+          >{{ jobDetails._audit.updated_by }}</span
+        >
       </span>
     </div>
   </div>
@@ -276,7 +261,7 @@
 
 <script setup>
 import { computed } from "vue";
-import { User as UserIcon } from "lucide-vue-next";
+import { User as UserIcon, Clock as ClockIcon } from "lucide-vue-next";
 import ContextDropdown from "../../../ui/ContextDropdown.vue";
 
 const props = defineProps({
@@ -301,6 +286,15 @@ const jobDetails = computed(() => {
   }
   return props.order.tracking.job_details;
 });
+
+const formatAuditDate = (dateString) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const formattedOrderDate = computed({
   get: () => {
