@@ -17,4 +17,22 @@ export default defineConfig({
             },
         }),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('apexcharts') || id.includes('vue3-apexcharts')) {
+                            return 'charts';
+                        }
+                        // Remove manual grouping for editors to avoid false positive virus detection
+                        // and potential circular referencing issues in the chunk.
+
+                        return 'vendor';
+                    }
+                }
+            }
+        },
+        chunkSizeWarningLimit: 1000,
+    }
 });

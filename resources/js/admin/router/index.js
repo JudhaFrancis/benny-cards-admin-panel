@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Login from '../views/auth/Login.vue';
-import UserList from '../views/users/UserList.vue';
-import OrderList from '../views/orders/OrderList.vue';
-import Dashboard from '../views/dashboard/Dashboard.vue';
-import RoleList from '../views/roles/RoleList.vue';
-import RoleForm from '../views/roles/RoleForm.vue';
-import Settings from '../views/settings/CompanySettings.vue';
-import Profile from '../views/profile/Profile.vue';
-import AdminLayout from '../layouts/AdminLayout.vue';
-import PlaceholderView from '../views/PlaceholderView.vue';
+const Login = () => import('../views/auth/Login.vue');
+const UserList = () => import('../views/users/UserList.vue');
+const OrderList = () => import('../views/orders/OrderList.vue');
+const Dashboard = () => import('../views/dashboard/Dashboard.vue');
+const RoleList = () => import('../views/roles/RoleList.vue');
+const RoleForm = () => import('../views/roles/RoleForm.vue');
+const Settings = () => import('../views/settings/CompanySettings.vue');
+const Profile = () => import('../views/profile/Profile.vue');
+const AdminLayout = () => import('../layouts/AdminLayout.vue');
+const PlaceholderView = () => import('../views/PlaceholderView.vue');
 
 const routes = [
     {
