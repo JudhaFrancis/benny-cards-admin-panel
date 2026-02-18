@@ -27,6 +27,13 @@ Route::prefix('v1')->group(function () {
     // Public Routes
     Route::post('login', [AuthController::class, 'login']);
     Route::get('settings/logo', [SettingController::class, 'getPublicLogo']);
+    
+    // WhatsApp Send Route
+    Route::post('whatsapp/send', [App\Http\Controllers\Api\WhatsAppController::class, 'sendMessage']);
+    
+    // WhatsApp Logs Routes
+    Route::get('whatsapp-logs', [App\Http\Controllers\Api\WhatsAppLogController::class, 'index']);
+    Route::post('whatsapp-logs/resend/{id}', [App\Http\Controllers\Api\WhatsAppLogController::class, 'resend']);
 
     // Protected Routes
     Route::middleware(['auth:sanctum', 'is_admin'])->group(function () {

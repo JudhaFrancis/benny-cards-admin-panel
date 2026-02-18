@@ -304,11 +304,18 @@ const printingStatus = computed(() => {
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString("en-GB", {
+  const date = new Date(dateString);
+  const d = date.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+  const t = date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).toUpperCase();
+  return `${d} at ${t}`;
 };
 
 const readymadeFollowUpList = computed({
@@ -333,3 +340,4 @@ const customizeFollowUpList = computed({
 
 const days = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
 </script>
+

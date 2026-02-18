@@ -229,6 +229,29 @@ watch(
   },
 );
 
+// Watch for dispatch expense changes to update total amount
+watch(
+  () => editedOrder.value?.tracking?.dispatch_mode?.expense,
+  (newVal) => {
+    if (!editedOrder.value) return;
+    
+    // Calculate items subtotal
+    const itemsSubtotal = (editedOrder.value.items || []).reduce((acc, item) => {
+       return acc + ((parseFloat(item.unit_price) || 0) * (parseInt(item.quantity) || 0));
+    }, 0);
+    
+    const discount = parseFloat(editedOrder.value.discount) || 0;
+    const expense = parseFloat(newVal) || 0; // Use the new expense value
+    
+    const newTotal = Math.max(0, itemsSubtotal - discount + expense);
+    editedOrder.value.total_amount = newTotal;
+    
+    // Update balance due
+    const paid = parseFloat(editedOrder.value.paid_amount) || 0;
+    editedOrder.value.balance_due = Math.max(0, newTotal - paid);
+  }
+);
+
 const formatDate = (dateString) => {
   if (!dateString) return "";
   return new Date(dateString).toLocaleDateString("en-GB", {

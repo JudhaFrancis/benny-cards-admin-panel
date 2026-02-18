@@ -1,6 +1,6 @@
 <template>
   <TransitionRoot appear :show="isOpen" as="template">
-    <Dialog as="div" @close="onClose" class="relative z-[60]">
+    <Dialog as="div" @close="onClose" class="relative z-[150]">
       <TransitionChild
         as="template"
         enter="duration-300 ease-out"
@@ -36,7 +36,7 @@
                 
                 <div class="mt-2">
                   <p class="text-sm text-slate-500">
-                    {{ description }}
+                    {{ description || message }}
                   </p>
                 </div>
 
@@ -58,7 +58,7 @@
                     :disabled="loading"
                   >
                     <Loader2Icon v-if="loading" class="h-4 w-4 animate-spin mr-2" />
-                    <span>{{ confirmLabel }}</span>
+                    <span>{{ confirmLabel || confirmText }}</span>
                   </button>
                 </div>
               </div>
@@ -96,6 +96,8 @@ const props = defineProps({
     type: [Object, Function],
     default: () => LogOutIcon
   },
+  message: String,
+  confirmText: String,
   loading: Boolean
 });
 

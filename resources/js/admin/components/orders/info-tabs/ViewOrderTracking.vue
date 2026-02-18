@@ -197,7 +197,7 @@ import {
   Truck as TruckIcon,
   Navigation as NavigationIcon,
   Bus as BusIcon,
-  Banknote as BanknoteIcon,
+  IndianRupee as IndianRupeeIcon,
 } from "lucide-vue-next";
 
 // Section Views
@@ -292,7 +292,7 @@ const trackingSections = [
     id: "payment",
     label: "Payment Information",
     shortLabel: "Pay",
-    icon: BanknoteIcon,
+    icon: IndianRupeeIcon,
   },
 ];
 

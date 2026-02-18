@@ -96,6 +96,20 @@
               >
             </div>
 
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-bold text-slate-500">Extra Charges</span>
+              <span class="text-sm font-bold text-slate-900"
+                >+₹{{ Number(order.extra_charges || 0).toFixed(2) }}</span
+              >
+            </div>
+
+            <div v-if="dispatchExpense > 0" class="flex justify-between items-center">
+              <span class="text-sm font-bold text-slate-500">Courier Charge</span>
+              <span class="text-sm font-bold text-slate-900"
+                >+₹{{ dispatchExpense.toFixed(2) }}</span
+              >
+            </div>
+
             <div class="h-px bg-slate-200 my-4"></div>
 
             <div class="flex justify-between items-center">
@@ -107,6 +121,8 @@
                 >₹{{ total.toFixed(2) }}</span
               >
             </div>
+
+
           </div>
         </div>
       </div>
@@ -132,8 +148,14 @@ const subtotal = computed(() => {
   );
 });
 
+const dispatchExpense = computed(() => {
+  return parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+});
+
 const total = computed(() => {
-  return Math.max(0, subtotal.value - (props.order.discount || 0));
+  const discount = parseFloat(props.order.discount) || 0;
+  const extraCharges = parseFloat(props.order.extra_charges) || 0;
+  return Math.max(0, subtotal.value - discount + extraCharges + dispatchExpense.value);
 });
 
 const getImageSource = (path) => {

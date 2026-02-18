@@ -12,6 +12,7 @@
         Process Status
       </h3>
       <div class="flex flex-wrap gap-4">
+        <!-- Content Received -->
         <label
           class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
           :class="
@@ -37,6 +38,7 @@
             <input
               type="checkbox"
               v-model="workAssign.content_received"
+              @change="workAssign.content_received ? (workAssign.content_not_received = false) : null"
               class="sr-only"
             />
           </div>
@@ -55,6 +57,52 @@
           </div>
         </label>
 
+        <!-- Content Not Received -->
+        <label
+          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
+          :class="
+            workAssign.content_not_received
+              ? 'border-primary bg-primary/5 ring-4 ring-primary/5'
+              : 'border-slate-200 hover:border-slate-300'
+          "
+        >
+          <div
+            class="p-2 rounded-lg transition-colors"
+            :class="
+              workAssign.content_not_received
+                ? 'bg-primary text-white'
+                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+            "
+          >
+            <FileXIcon class="h-4 w-4" />
+          </div>
+          <div class="flex-1">
+            <p class="text-xs font-bold text-slate-900 leading-none">
+              Content Not Received
+            </p>
+            <input
+              type="checkbox"
+              v-model="workAssign.content_not_received"
+              @change="workAssign.content_not_received ? (workAssign.content_received = false) : null"
+              class="sr-only"
+            />
+          </div>
+          <div
+            class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+            :class="
+              workAssign.content_not_received
+                ? 'border-primary bg-primary scale-110'
+                : 'border-slate-200'
+            "
+          >
+            <CheckIcon
+              v-if="workAssign.content_not_received"
+              class="h-3 w-3 text-white"
+            />
+          </div>
+        </label>
+
+        <!-- Clear Content -->
         <label
           class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
           :class="
@@ -98,6 +146,7 @@
           </div>
         </label>
 
+        <!-- Tag -->
         <label
           class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
           :class="
@@ -219,6 +268,7 @@ import {
   Calendar as CalendarIcon,
   CheckSquare as CheckSquareIcon,
   Files as FilesIcon,
+  FileX as FileXIcon,
   Hash as HashIcon,
   UserPlus as UserPlusIcon,
   Clock as ClockIcon,
@@ -249,11 +299,18 @@ const workAssign = computed(() => {
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString("en-GB", {
+  const date = new Date(dateString);
+  const d = date.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+  const t = date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).toUpperCase();
+  return `${d} at ${t}`;
 };
 
 const save = () => {

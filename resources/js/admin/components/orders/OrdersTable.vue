@@ -47,13 +47,13 @@
 
     <template #cell-amount="{ item: order }">
       <span class="font-bold text-slate-900"
-        >${{ Number(order.total_amount).toFixed(2) }}</span
+        >₹{{ Number(order.total_amount).toFixed(2) }}</span
       >
     </template>
 
     <template #cell-paid="{ item: order }">
       <span class="font-medium text-slate-600"
-        >${{ Number(order.paid_amount).toFixed(2) }}</span
+        >₹{{ Number(order.paid_amount).toFixed(2) }}</span
       >
     </template>
 
@@ -75,6 +75,16 @@
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
         <button
+          v-if="canEdit"
+          @click="sendWhatsApp(order)"
+          :disabled="sendingWhatsapp === order.id"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-600 transition-all duration-200 disabled:opacity-50"
+          title="Send WhatsApp"
+        >
+          <Loader2 v-if="sendingWhatsapp === order.id" class="h-4 w-4 animate-spin" />
+          <MessageCircle v-else class="h-4 w-4" />
+        </button>
+        <button
           v-if="canView"
           @click="$emit('view-info', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
@@ -82,6 +92,7 @@
         >
           <Eye class="h-4 w-4" />
         </button>
+        
         <button
           v-if="canEdit"
           @click="$emit('edit', order)"
@@ -104,8 +115,11 @@
 </template>
 
 <script setup>
-import { Eye, Pencil, Trash2 } from "lucide-vue-next";
+import { ref } from "vue";
+import { Eye, Pencil, Trash2, MessageCircle, Loader2 } from "lucide-vue-next";
 import { usePermissions } from "../../composables/usePermissions";
+import { useToast } from "../../composables/useToast";
+import axios from "axios";
 import DataTable from "../ui/DataTable.vue";
 
 const props = defineProps({
@@ -123,6 +137,37 @@ defineEmits(["view-info", "edit", "delete"]);
 
 const { getModulePermissions } = usePermissions();
 const { canView, canEdit, canDelete } = getModulePermissions("Order");
+const toast = useToast();
+
+const sendingWhatsapp = ref(null);
+
+const sendWhatsApp = async (order) => {
+  if (!order.customer_details?.phone) {
+    toast.error("Customer phone number not found");
+    return;
+  }
+
+  sendingWhatsapp.value = order.id;
+  try {
+    const response = await axios.post("/api/v1/whatsapp/send", {
+      phone: order.customer_details.phone,
+      event: "NEW_ORDER",
+      data: {
+        customerName: order.customer_details.name,
+        order_id: order.order_number,
+      },
+    });
+
+    if (response.data.success) {
+      toast.success("WhatsApp message sent successfully");
+    }
+  } catch (error) {
+    console.error("WhatsApp Error:", error);
+    toast.error(error.response?.data?.message || "Failed to send WhatsApp message");
+  } finally {
+    sendingWhatsapp.value = null;
+  }
+};
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },

@@ -48,11 +48,20 @@
                 {{ item.product_name }}
               </p>
               <div class="flex items-center gap-4">
-                <p
-                  class="text-xs text-slate-500 font-medium bg-slate-50 px-2 py-1 rounded-lg"
-                >
-                  ₹{{ Number(item.unit_price || 0).toFixed(2) }} / unit
-                </p>
+                <div class="relative w-32">
+                  <span
+                    class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]"
+                    >₹</span
+                  >
+                  <input
+                    type="number"
+                    :value="item.unit_price"
+                    @input="updateUnitPriceValue(item.id, $event.target.value)"
+                    class="w-full pl-6 pr-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-primary transition-all font-bold text-xs"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
                 <p class="text-xs text-slate-500 font-bold">
                   Subtotal: ₹{{ Number(item.total_price || 0).toFixed(2) }}
                 </p>
@@ -72,10 +81,15 @@
                 >
                   <MinusIcon class="h-3.5 w-3.5" />
                 </button>
-                <div class="w-8 text-center">
-                  <span class="text-sm font-black text-slate-900">{{
-                    item.quantity
-                  }}</span>
+                <div class="w-12 text-center">
+                  <input
+                    type="number"
+                    :value="item.quantity"
+                    @input="updateQuantityValue(item.id, $event.target.value)"
+                    class="w-full text-center text-sm font-black text-slate-900 bg-transparent border-none focus:ring-0 p-0 appearance-none [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+                    @keypress="isNumber($event)"
+                    min="1"
+                  />
                 </div>
                 <button
                   @click="updateQuantity(item.id, 1)"
@@ -240,28 +254,57 @@
     <!-- Totals & Summary -->
     <div class="mt-8 border-t border-slate-100 pt-8">
       <div class="flex flex-col md:flex-row gap-8 justify-end">
-        <!-- Discount Section -->
-        <div class="w-full md:w-72">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block"
-          >
-            Discount & Adjustment
-          </label>
-          <div class="relative">
-            <div
-              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+        <!-- Discount & Extra Charges Section -->
+        <div class="w-full md:w-72 space-y-4">
+          <div>
+            <label
+              class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block"
             >
-              <span class="text-slate-400 font-bold">₹</span>
+              Discount & Adjustment
+            </label>
+            <div class="relative">
+              <div
+                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+              >
+                <span class="text-slate-400 font-bold">₹</span>
+              </div>
+              <input
+                type="number"
+                :value="order.discount || 0"
+                @input="handleDiscountChange($event.target.value)"
+                class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-bold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
             </div>
-            <input
-              type="number"
-              :value="order.discount || 0"
-              @input="handleDiscountChange($event.target.value)"
-              class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-bold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-              placeholder="0.00"
-              min="0"
-            />
           </div>
+
+          <div>
+            <label
+              class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block"
+            >
+              Extra Charges
+            </label>
+            <div class="relative">
+              <div
+                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+              >
+                <span class="text-slate-400 font-bold">₹</span>
+              </div>
+              <input
+                type="number"
+                :value="order.extra_charges || 0"
+                @input="handleExtraChargesChange($event.target.value)"
+                class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-bold focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+
         </div>
 
         <!-- Totals Section -->
@@ -283,6 +326,20 @@
               >
             </div>
 
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-bold text-slate-500">Extra Charges</span>
+              <span class="text-sm font-bold text-slate-900"
+                >+₹{{ Number(order.extra_charges || 0).toFixed(2) }}</span
+              >
+            </div>
+
+            <div v-if="dispatchExpense > 0" class="flex justify-between items-center">
+              <span class="text-sm font-bold text-slate-500">Courier Charge</span>
+              <span class="text-sm font-bold text-slate-900"
+                >+₹{{ dispatchExpense.toFixed(2) }}</span
+              >
+            </div>
+
             <div class="h-px bg-slate-200 my-4"></div>
 
             <div class="flex justify-between items-center">
@@ -294,6 +351,8 @@
                 >₹{{ total.toFixed(2) }}</span
               >
             </div>
+
+
           </div>
         </div>
       </div>
@@ -397,6 +456,10 @@ onMounted(() => {
   fetchProducts();
 });
 
+const dispatchExpense = computed(() => {
+  return parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+});
+
 const subtotal = computed(() => {
   return (props.order.items || []).reduce(
     (acc, item) => acc + (parseFloat(item.unit_price) || 0) * item.quantity,
@@ -405,7 +468,9 @@ const subtotal = computed(() => {
 });
 
 const total = computed(() => {
-  return Math.max(0, subtotal.value - (props.order.discount || 0));
+  const discount = parseFloat(props.order.discount) || 0;
+  const extraCharges = parseFloat(props.order.extra_charges) || 0;
+  return Math.max(0, subtotal.value - discount + extraCharges + dispatchExpense.value);
 });
 
 const filteredProducts = computed(() => {
@@ -418,18 +483,98 @@ const filteredProducts = computed(() => {
 });
 
 const updateQuantity = (itemId, delta) => {
-  const updatedItems = props.order.items.map((item) =>
-    item.id === itemId
-      ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-      : item,
-  );
+  const item = props.order.items.find((i) => i.id === itemId);
+  if (!item) return;
+  const newQuantity = Math.max(1, item.quantity + delta);
+  updateQuantityValue(itemId, String(newQuantity));
+};
 
-  updateOrderItems(updatedItems);
+const updateQuantityValue = (itemId, value) => {
+  // Remove any non-numeric characters
+  const cleanedValue = value.replace(/\D/g, "");
+
+  // If empty, return to prevent state update until valid number
+  if (cleanedValue === "") return;
+
+  const newQuantity = parseInt(cleanedValue);
+  
+  if (isNaN(newQuantity) || newQuantity < 1) return;
+
+  // We need to emit both the item update AND recalculate totals
+  const updatedItems = props.order.items.map((item) => {
+    if (item.id === itemId) {
+      return { 
+        ...item, 
+        quantity: newQuantity,
+        total_price: (parseFloat(item.unit_price) || 0) * newQuantity
+      };
+    }
+    return item;
+  });
+
+  // Calculate new subtotal
+  const newSubtotal = updatedItems.reduce(
+    (acc, item) => acc + (parseFloat(item.total_price) || 0),
+    0
+  );
+  
+  const discount = props.order.discount || 0;
+  // Use current dispatch expense
+  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+
+  // Emit updated order
+  emit("update:order", {
+    ...props.order,
+    items: updatedItems,
+    total_amount: Math.max(0, newSubtotal - discount + expense)
+  });
+};
+
+const updateUnitPriceValue = (itemId, value) => {
+  const newPrice = parseFloat(value) || 0;
+  
+  const updatedItems = props.order.items.map((item) => {
+    if (item.id === itemId) {
+      return { 
+        ...item, 
+        unit_price: newPrice,
+        total_price: newPrice * item.quantity
+      };
+    }
+    return item;
+  });
+
+  const newSubtotal = updatedItems.reduce(
+    (acc, item) => acc + (parseFloat(item.total_price) || 0),
+    0
+  );
+  
+  const discount = props.order.discount || 0;
+  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+
+  emit("update:order", {
+    ...props.order,
+    items: updatedItems,
+    total_amount: Math.max(0, newSubtotal - discount + expense)
+  });
 };
 
 const removeItem = (itemId) => {
   const updatedItems = props.order.items.filter((item) => item.id !== itemId);
-  updateOrderItems(updatedItems);
+  
+  // Recalculate totals after removal
+  const newSubtotal = updatedItems.reduce(
+    (acc, item) => acc + (parseFloat(item.unit_price) || 0) * item.quantity,
+    0
+  );
+  const discount = props.order.discount || 0;
+  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+
+  emit("update:order", {
+     ...props.order,
+     items: updatedItems,
+     total_amount: Math.max(0, newSubtotal - discount + expense)
+  });
 };
 
 const handleAddProduct = (product) => {
@@ -469,12 +614,27 @@ const addItem = (product) => {
 
 const handleDiscountChange = (value) => {
   const discount = parseFloat(value) || 0;
+  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  const extraCharges = parseFloat(props.order.extra_charges) || 0;
   emit("update:order", {
     ...props.order,
     discount: discount,
-    total_amount: Math.max(0, subtotal.value - discount),
+    total_amount: Math.max(0, subtotal.value + extraCharges - discount + expense),
   });
 };
+
+const handleExtraChargesChange = (value) => {
+  const extraCharges = parseFloat(value) || 0;
+  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  const discount = parseFloat(props.order.discount) || 0;
+  emit("update:order", {
+    ...props.order,
+    extra_charges: extraCharges,
+    total_amount: Math.max(0, subtotal.value + extraCharges - discount + expense),
+  });
+};
+
+
 
 const updateOrderItems = (items) => {
   const newSubtotal = items.reduce(
@@ -482,6 +642,7 @@ const updateOrderItems = (items) => {
     0,
   );
   const discount = props.order.discount || 0;
+  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
 
   emit("update:order", {
     ...props.order,
@@ -490,7 +651,7 @@ const updateOrderItems = (items) => {
       total_price: (parseFloat(item.unit_price) || 0) * item.quantity,
     })),
     // Update top level total amount
-    total_amount: Math.max(0, newSubtotal - discount),
+    total_amount: Math.max(0, newSubtotal - discount + expense),
   });
 };
 
@@ -509,6 +670,16 @@ const handleImageError = (e) => {
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='9' cy='9' r='2'%3E%3C/circle%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'%3E%3C/path%3E%3C/svg%3E";
   if (e.target.src === fallback) return;
   e.target.src = fallback;
+};
+const isNumber = (evt) => {
+  const keys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab'];
+  if (keys.includes(evt.key)) return true;
+  
+  // Create a regex that only allows digits 0-9
+  const regex = /^[0-9]$/;
+  if (!regex.test(evt.key)) {
+    evt.preventDefault();
+  }
 };
 </script>
 
