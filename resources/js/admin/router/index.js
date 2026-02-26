@@ -61,14 +61,28 @@ const routes = [
                 component: () => import('../views/payments/PaymentList.vue')
             },
             {
-                path: 'reports/payments',
-                name: 'PaymentReports',
-                component: PlaceholderView
+                path: 'reports',
+                name: 'ReportsOverview',
+                component: () => import('../views/reports/ReportsOverview.vue'),
+                meta: { module: 'Order' }
             },
             {
                 path: 'reports/orders',
                 name: 'OrderReports',
-                component: PlaceholderView
+                component: () => import('../views/reports/OrderReports.vue'),
+                meta: { module: 'Order' }
+            },
+            {
+                path: 'reports/invoices',
+                name: 'InvoiceReports',
+                component: () => import('../views/reports/InvoiceReports.vue'),
+                meta: { module: 'Order' }
+            },
+            {
+                path: 'reports/profit-loss',
+                name: 'ProfitLossReports',
+                component: () => import('../views/reports/ProfitLossReports.vue'),
+                meta: { module: 'Order' }
             },
             {
                 path: 'settings',

@@ -172,50 +172,44 @@ class Order extends Model
             return 'New';
         }
 
-        // 6. Paid/Completed
+        // Payment Stage
         if (isset($tracking->payment_info['_audit'])) {
-            return (float) $this->total_amount == (float) $this->paid_amount ? 'Completed' : 'Pending';
+             if ((float)$this->total_amount > (float)$this->paid_amount) {
+                 return 'Payment Pending';
+             }
+             return 'Completed';
         }
 
-        // 5. Dispatched
-        if (
-            isset($tracking->dispatch_details['_audit']) ||
-            isset($tracking->dispatch_mode['_audit']) ||
-            isset($tracking->delivery_location['_audit'])
-        ) {
-            return 'Dispatched';
+        // Dispatch Stage
+        if (isset($tracking->dispatch_details['_audit']) || isset($tracking->dispatch_mode['_audit'])) {
+             return 'Dispatched';
         }
 
-        // 4. Packed
-        if (
-            isset($tracking->packaging_status['_audit']) ||
-            isset($tracking->packaging_logistics['_audit'])
-        ) {
-            return 'Packed';
+        // Packaging Process: Logistics OR Packaging Status OR Location saved
+        if (isset($tracking->delivery_location['_audit']) || isset($tracking->packaging_status['_audit']) || isset($tracking->packaging_logistics['_audit'])) {
+            return 'Packaging Process';
         }
 
-        // 3. Processing
-        if (
-            isset($tracking->printing_status['_audit']) ||
-            isset($tracking->design_print['_audit'])
-        ) {
-            return 'Processing';
+        // Printing Process: Printing status section saved
+        if (isset($tracking->printing_status['_audit'])) {
+            return 'Printing Process';
         }
 
-        // 2. Assigned
-        if (isset($tracking->work_assign['_audit'])) {
-            return 'Assigned';
+        // Designing Process / Content Not Received: Work assign OR Design section saved
+        if (isset($tracking->design_print['_audit']) || isset($tracking->work_assign['_audit'])) {
+            $workAssign = $tracking->work_assign ?? [];
+            if (isset($workAssign['content_not_received']) && $workAssign['content_not_received']) {
+                return 'Content Not Received';
+            }
+            return 'Designing Process';
         }
 
-        // 1. Confirmed
-        if (
-            isset($tracking->card_specs['_audit']) ||
-            isset($tracking->client_info['_audit']) ||
-            isset($tracking->job_details['_audit'])
-        ) {
+        // Confirmed: Specs details finished
+        if (isset($tracking->card_specs['_audit'])) {
             return 'Confirmed';
         }
 
+        // Default to New
         return 'New';
     }
 

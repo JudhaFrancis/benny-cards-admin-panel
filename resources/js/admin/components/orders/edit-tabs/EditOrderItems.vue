@@ -568,12 +568,13 @@ const removeItem = (itemId) => {
     0
   );
   const discount = props.order.discount || 0;
+  const extraCharges = props.order.extra_charges || 0;
   const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
 
   emit("update:order", {
      ...props.order,
      items: updatedItems,
-     total_amount: Math.max(0, newSubtotal - discount + expense)
+     total_amount: Math.max(0, newSubtotal + extraCharges - discount + expense)
   });
 };
 
@@ -642,6 +643,7 @@ const updateOrderItems = (items) => {
     0,
   );
   const discount = props.order.discount || 0;
+  const extraCharges = props.order.extra_charges || 0;
   const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
 
   emit("update:order", {
@@ -651,7 +653,7 @@ const updateOrderItems = (items) => {
       total_price: (parseFloat(item.unit_price) || 0) * item.quantity,
     })),
     // Update top level total amount
-    total_amount: Math.max(0, newSubtotal - discount + expense),
+    total_amount: Math.max(0, newSubtotal + extraCharges - discount + expense),
   });
 };
 

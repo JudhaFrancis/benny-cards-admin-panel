@@ -1,44 +1,55 @@
 <template>
   <DataTable :columns="columns" :items="recentOrders" :loading="loading" no-wrapper>
     <template #cell-order_number="{ item: order }">
-      <span
-        class="text-sm font-bold text-slate-900 leading-none group-hover:text-primary transition-colors cursor-pointer tracking-tight"
-      >
+      <span class="font-semibold text-slate-900 italic">
         {{ order.order_number }}
       </span>
     </template>
 
     <template #cell-customer="{ item: order }">
-      <div class="flex items-center gap-2">
-        <div
-          class="h-6 w-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500"
-        >
-          {{ (order.customer_details?.name || "C").substring(0, 1) }}
-        </div>
-        <span class="text-sm font-medium text-slate-700">{{
-          order.customer_details?.name || "Guest"
+      <div class="flex flex-col">
+        <span class="text-sm font-medium text-slate-900">{{
+          order.customer_details?.name || "N/A"
         }}</span>
       </div>
     </template>
 
     <template #cell-order_date="{ item: order }">
-      <span class="text-sm text-slate-500 font-medium">{{ formatDate(order.order_date) }}</span>
+      <span class="text-slate-500">{{ formatDate(order.order_date) }}</span>
     </template>
 
     <template #cell-total_amount="{ item: order }">
-      <span class="font-bold text-slate-900 text-sm">${{ Number(order.total_amount).toFixed(2) }}</span>
+      <span class="font-bold text-slate-900">₹{{ Number(order.total_amount).toFixed(2) }}</span>
     </template>
 
     <template #cell-status="{ item: order }">
-      <Badge variant="outline" :class="statusStyles[order.status?.toLowerCase()] || 'bg-slate-50 text-slate-600'">
-        {{ order.status }}
-      </Badge>
+      <span
+        :class="
+          cn(
+            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
+            (order.tracking_status_label &&
+              orderStatusStyles[order.tracking_status_label.toLowerCase()]) ||
+              'bg-slate-100 text-slate-800 border-slate-200',
+          )
+        "
+      >
+        {{ order.tracking_status_label || order.status || "New" }}
+      </span>
     </template>
 
     <template #cell-payment="{ item: order }">
-      <Badge variant="outline" :class="paymentStyles[order.payment_status?.toLowerCase()] || 'bg-slate-50 text-slate-600'">
-        {{ order.payment_status }}
-      </Badge>
+      <span
+        :class="
+          cn(
+            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
+            (order.payment_status &&
+              paymentStatusStyles[order.payment_status.toLowerCase()]) ||
+              'bg-slate-100 text-slate-800 border-slate-200',
+          )
+        "
+      >
+        {{ capitalize(order.payment_status) }}
+      </span>
     </template>
   </DataTable>
 </template>
@@ -46,7 +57,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
-import Badge from "../ui/Badge.vue";
 import DataTable from "../ui/DataTable.vue";
 
 const loading = ref(true);
@@ -79,26 +89,34 @@ onMounted(fetchRecentOrders);
 
 const formatDate = (date) => {
   if (!date) return "N/A";
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  return new Date(date).toLocaleDateString();
 };
 
-const statusStyles = {
-  completed:
-    "bg-emerald-50 text-emerald-600 border-emerald-100 uppercase tracking-widest text-[9px]",
-  pending:
-    "bg-amber-50 text-amber-600 border-amber-100 uppercase tracking-widest text-[9px]",
-  processing:
-    "bg-blue-50 text-blue-600 border-blue-100 uppercase tracking-widest text-[9px]",
-  cancelled:
-    "bg-rose-50 text-rose-600 border-rose-100 uppercase tracking-widest text-[9px]",
+const orderStatusStyles = {
+  new: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  confirmed: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  "content not received": "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  "designing process": "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  "printing process": "bg-sky-500/10 text-sky-500 border-sky-500/20",
+  "packaging process": "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  dispatched: "bg-primary/10 text-primary border-primary/20",
+  "payment pending": "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  cancelled: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 
-const paymentStyles = {
-  paid: "bg-emerald-50 text-emerald-600 border-emerald-100 uppercase tracking-widest text-[9px]",
-  due: "bg-amber-50 text-amber-600 border-amber-100 uppercase tracking-widest text-[9px]",
-  unpaid: "bg-rose-50 text-rose-600 border-rose-100 uppercase tracking-widest text-[9px]",
+const paymentStatusStyles = {
+  paid: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  due: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  unpaid: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+};
+
+function cn(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+const capitalize = (str) => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
 };
 </script>

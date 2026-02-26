@@ -206,13 +206,20 @@ const staffOptions = ref([]);
 const fetchStaff = async () => {
   try {
     const response = await axios.get("/api/v1/users", {
-      params: { role_id: 4, per_page: 100 },
+      params: { per_page: 100 }, // No role_id filter here, we'll filter in JS
     });
     if (response.data.success) {
-      staffOptions.value = response.data.data.data.map((user) => ({
-        label: user.name,
-        value: user.name,
-      }));
+      // Include Super Admin, Admin and Staff
+      const managementRoles = ['super-admin', 'admin', 'staff'];
+      staffOptions.value = response.data.data.data
+        .filter((user) => {
+          const roleName = user.role?.name?.toLowerCase() || '';
+          return managementRoles.includes(roleName);
+        })
+        .map((user) => ({
+          label: user.name,
+          value: user.name,
+        }));
     }
   } catch (e) {
     console.error("Failed to fetch staff", e);
@@ -392,6 +399,7 @@ const getSectionErrors = (sectionId) => {
     case "work-assign":
       const work = tracking.work_assign || {};
       if (!work.assigned_to) errors.push("Assigned To");
+      if (!work.assigned_date) errors.push("Assigned Date");
       if (!work.deadline) errors.push("Deadline");
       if (!work.content_by) errors.push("Content By");
       if (!work.completed_by) errors.push("Completed By");

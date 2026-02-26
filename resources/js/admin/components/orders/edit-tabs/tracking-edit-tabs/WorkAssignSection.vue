@@ -199,6 +199,23 @@
 
       <div class="space-y-2">
         <label class="text-sm font-medium text-slate-700"
+          >Assigned Date <span class="text-red-500">*</span></label
+        >
+        <div class="relative group">
+          <CalendarIcon
+            class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+          />
+          <input
+            type="date"
+            v-model="workAssign.assigned_date"
+            class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700"
           >Deadline <span class="text-red-500">*</span></label
         >
         <div class="relative group">
@@ -294,6 +311,13 @@ const workAssign = computed(() => {
   if (!props.order.tracking.work_assign) {
     props.order.tracking.work_assign = {};
   }
+  
+  // Auto-fill assigned_date with today's date if not already set
+  if (!props.order.tracking.work_assign.assigned_date) {
+    const today = new Date().toISOString().split('T')[0];
+    props.order.tracking.work_assign.assigned_date = today;
+  }
+  
   return props.order.tracking.work_assign;
 });
 

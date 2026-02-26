@@ -184,12 +184,13 @@ const columns = [
 
 const orderStatusStyles = {
   new: "bg-slate-500/10 text-slate-500 border-slate-500/20",
-  pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  confirmed: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  assigned: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
-  processing: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  packed: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  confirmed: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  "content not received": "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  "designing process": "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  "printing process": "bg-sky-500/10 text-sky-500 border-sky-500/20",
+  "packaging process": "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
   dispatched: "bg-primary/10 text-primary border-primary/20",
+  "payment pending": "bg-orange-500/10 text-orange-500 border-orange-500/20",
   completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   cancelled: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
