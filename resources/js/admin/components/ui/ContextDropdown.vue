@@ -35,7 +35,7 @@
               class="block truncate text-sm font-semibold"
               :class="value ? 'text-slate-900' : 'text-slate-400'"
             >
-              {{ selectedOption?.label || placeholder }}
+              {{ selectedOption?.label || props.modelValue || placeholder }}
             </span>
 
             <span
@@ -180,7 +180,8 @@ const props = defineProps({
 defineEmits(["update:modelValue"]);
 
 const selectedOption = computed(() => {
-  return props.options.find((opt) => opt.value === props.modelValue);
+  if (props.modelValue === null || props.modelValue === undefined) return null;
+  return props.options.find((opt) => String(opt.value) == String(props.modelValue)) || null;
 });
 
 function cn(...classes) {

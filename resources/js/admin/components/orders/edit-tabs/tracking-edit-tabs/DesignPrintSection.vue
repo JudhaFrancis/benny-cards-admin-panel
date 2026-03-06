@@ -26,12 +26,30 @@
     </div>
 
     <div class="space-y-4">
-      <label class="text-sm font-medium text-slate-700"
-        >Print & Add-ons <span class="text-red-500">*</span></label
-      >
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-slate-700"
+          >Print & Add-ons <span class="text-red-500">*</span></label
+        >
+        <div class="flex items-center gap-2">
+          <input
+            v-model="newAddon"
+            @keyup.enter="addAddon"
+            type="text"
+            placeholder="Add new addon..."
+            class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 w-40 transition-all font-medium"
+          />
+          <button
+            @click="addAddon"
+            type="button"
+            class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-sm shadow-primary/20"
+          >
+            Add
+          </button>
+        </div>
+      </div>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         <label
-          v-for="addon in printAddons"
+          v-for="addon in allAddons"
           :key="addon"
           class="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50 transition-colors"
         >
@@ -69,8 +87,8 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { Clock as ClockIcon } from "lucide-vue-next";
+import { computed, ref } from "vue";
+import { Clock as ClockIcon, PlusCircle as PlusCircleIcon } from "lucide-vue-next";
 
 const props = defineProps({
   order: {
@@ -90,11 +108,18 @@ const designPrint = computed(() => {
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString("en-GB", {
+  const date = new Date(dateString);
+  const d = date.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+  const t = date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).toUpperCase();
+  return `${d} at ${t}`;
 };
 
 const designOutputsList = computed({
@@ -124,7 +149,7 @@ const designOutputs = [
   "PDF",
 ];
 
-const printAddons = [
+const defaultAddons = [
   "Sticker",
   "Band",
   "Satin Ribbon",
@@ -145,4 +170,42 @@ const printAddons = [
   "Special Paper",
   "Custom Seal",
 ];
+
+const newAddon = ref("");
+const customAddons = ref([]);
+
+const allAddons = computed(() => {
+  const selected = printAddonsList.value;
+  // Get any selected options that are NOT in defaults and NOT in our tracked customAddons
+  const legacyExtras = selected.filter(
+    (s) => !defaultAddons.includes(s) && !customAddons.value.includes(s)
+  );
+  
+  // Return unique set of everything
+  return [...new Set([...defaultAddons, ...customAddons.value, ...legacyExtras])];
+});
+
+const addAddon = () => {
+  const val = newAddon.value.trim();
+  if (!val) return;
+
+  // Prevent duplicates in the LIST of options
+  if (
+    allAddons.value.some((opt) => opt.toLowerCase() === val.toLowerCase()) 
+  ) {
+    if (!printAddonsList.value.includes(val)) {
+       printAddonsList.value = [...printAddonsList.value, val];
+    }
+    newAddon.value = "";
+    return;
+  }
+
+  // Add to custom options list so it persists
+  customAddons.value.push(val);
+
+  // Add to selected list
+  printAddonsList.value = [...printAddonsList.value, val];
+  newAddon.value = "";
+};
 </script>
+

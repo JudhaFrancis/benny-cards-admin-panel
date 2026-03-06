@@ -158,58 +158,14 @@
         >
           Analytics & Reports
         </p>
-        <div class="px-2">
-          <div
-            v-if="navReports.length > 0"
-            @click="toggleReports"
-            :class="
-              cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 group mx-2',
-                reportsOpen && !isCollapsed
-                  ? 'bg-white/20 text-white backdrop-blur-md'
-                  : 'text-white/60 hover:bg-white/10 hover:text-white',
-              )
-            "
-          >
-            <PieChartIcon
-              class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110"
-              :class="
-                reportsOpen && !isCollapsed
-                  ? 'text-white'
-                  : 'text-white/40 group-hover:text-white'
-              "
-            />
-            <div
-              v-if="!isCollapsed"
-              class="flex flex-1 items-center justify-between"
-            >
-              <span class="text-[14px] font-medium tracking-tight"
-                >Intelligence</span
-              >
-              <ChevronDownIcon
-                :class="
-                  cn(
-                    'h-4 w-4 transition-transform duration-500 opacity-30',
-                    reportsOpen ? 'rotate-180 opacity-100 text-white' : '',
-                  )
-                "
-              />
-            </div>
-          </div>
-
-          <!-- Report Children -->
-          <div
-            v-if="reportsOpen && !isCollapsed"
-            class="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500"
-          >
-            <SidebarNavItem
-              v-for="item in navReports"
-              :key="item.title"
-              :item="item"
-              :isActive="isActive(item.url)"
-              isSubItem
-            />
-          </div>
+        <div class="space-y-1">
+          <SidebarNavItem
+            v-for="item in navReports"
+            :key="item.title"
+            :item="item"
+            :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)"
+          />
         </div>
       </div>
 
@@ -337,7 +293,6 @@ const { isSuperAdmin, hasPermission } = usePermissions();
 const { user, setUser } = useAuth();
 const { settings, fetchSettings, getLogoSource } = useSettings();
 const isCollapsed = ref(false);
-const reportsOpen = ref(false);
 const catalogOpen = ref(false);
 const isLogoutModalOpen = ref(false);
 const logoutLoading = ref(false);
@@ -408,11 +363,9 @@ const navCatalog = computed(() => {
   return items.filter((item) => hasPermission(item.module));
 });
 
-// Analytics - Intelligence dropdown
 const navReports = computed(() => {
   const items = [
-    { title: "Order Trends", url: "/reports/orders", module: "Order" },
-    { title: "Payment Logs", url: "/reports/payments", module: "Payment" },
+    { title: "Reports", url: "/reports", icon: PieChartIcon, module: "Order" },
   ];
   return items.filter((item) => hasPermission(item.module));
 });
@@ -442,15 +395,6 @@ function cn(...classes) {
 const isActive = (path) => {
   if (path === "/") return route.path === "/";
   return route.path.startsWith(path);
-};
-
-const toggleReports = () => {
-  if (isCollapsed.value) isCollapsed.value = false;
-  reportsOpen.value = !reportsOpen.value;
-  // Close other dropdowns
-  if (reportsOpen.value) {
-    catalogOpen.value = false;
-  }
 };
 
 const toggleCatalog = () => {
@@ -485,15 +429,10 @@ watch(
   () => route.path,
   (path) => {
     // Auto-expand if navigating to a dropdown route
-    if (path.startsWith("/reports")) {
-      reportsOpen.value = true;
-      catalogOpen.value = false;
-    } else if (path.startsWith("/catalog")) {
+    if (path.startsWith("/catalog")) {
       catalogOpen.value = true;
-      reportsOpen.value = false;
     } else {
       // Close all dropdowns when navigating to non-dropdown routes
-      reportsOpen.value = false;
       catalogOpen.value = false;
     }
   },

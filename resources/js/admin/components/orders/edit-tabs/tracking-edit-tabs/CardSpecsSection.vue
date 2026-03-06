@@ -168,7 +168,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
           <label class="text-sm font-medium text-slate-700"
-            >Inner GSM <span class="text-red-500">*</span></label
+            >Inner GSM</label
           >
           <input
             v-model="cardSpecs.inner_gsm"
@@ -178,7 +178,7 @@
         </div>
         <div class="space-y-2">
           <label class="text-sm font-medium text-slate-700"
-            >Envelope GSM <span class="text-red-500">*</span></label
+            >Envelope GSM</label
           >
           <input
             v-model="cardSpecs.envelope_gsm"
@@ -191,7 +191,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
           <label class="text-sm font-medium text-slate-700"
-            >Card Lamination <span class="text-red-500">*</span></label
+            >Card Lamination</label
           >
           <ContextDropdown
             v-model="cardSpecs.card_lamination"
@@ -206,7 +206,7 @@
         </div>
         <div class="space-y-2">
           <label class="text-sm font-medium text-slate-700"
-            >Envelope Lamination <span class="text-red-500">*</span></label
+            >Envelope Lamination</label
           >
           <ContextDropdown
             v-model="cardSpecs.envelope_lamination"
@@ -224,17 +224,35 @@
 
     <!-- Options Section -->
     <div class="space-y-4">
-      <label
-        class="text-sm font-semibold text-slate-700 flex items-center gap-2"
-      >
-        <PlusCircleIcon class="h-4 w-4 text-primary" />
-        Additional Options
-      </label>
+      <div class="flex items-center justify-between">
+        <label
+          class="text-sm font-semibold text-slate-700 flex items-center gap-2"
+        >
+          <PlusCircleIcon class="h-4 w-4 text-primary" />
+          Additional Options
+        </label>
+        <div class="flex items-center gap-2">
+          <input
+            v-model="newOption"
+            @keyup.enter="addOption"
+            type="text"
+            placeholder="Add new option..."
+            class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 w-40 transition-all font-medium"
+          />
+          <button
+            @click="addOption"
+            type="button"
+            class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-sm shadow-primary/20"
+          >
+            Add
+          </button>
+        </div>
+      </div>
       <div
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100"
       >
         <label
-          v-for="option in cardOptions"
+          v-for="option in allOptions"
           :key="option"
           class="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-100"
           :class="{
@@ -265,13 +283,7 @@
         Last updated
         <span
           class="font-medium bg-slate-100 px-2 py-0.5 rounded-full text-slate-600"
-          >{{
-            new Date(cardSpecs._audit.updated_at).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          }}</span
+          >{{ formatAuditDate(cardSpecs._audit.updated_at) }}</span
         >
         by
         <span
@@ -284,7 +296,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from "vue";
+import { computed, watch, ref } from "vue";
 import {
   CreditCard as CreditCardIcon,
   Brush as BrushIcon,
@@ -304,6 +316,22 @@ const props = defineProps({
     required: true,
   },
 });
+
+const formatAuditDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  const d = date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const t = date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).toUpperCase();
+  return `${d} at ${t}`;
+};
 
 const cardSpecs = computed(() => {
   if (!props.order.tracking) {
@@ -334,7 +362,7 @@ watch(
   { immediate: true },
 );
 
-const cardOptions = [
+const defaultOptions = [
   "Sticker",
   "Band",
   "Satin Ribbon",
@@ -358,6 +386,46 @@ const cardOptions = [
   "Others",
 ];
 
+const newOption = ref("");
+
+const customOptions = ref([]);
+
+const allOptions = computed(() => {
+  const selected = cardOptionsList.value;
+  // Get any selected options that are NOT in defaults and NOT in our tracked customOptions
+  // (This handles cases where data was saved previously with custom options)
+  const legacyExtras = selected.filter(
+    (s) => !defaultOptions.includes(s) && !customOptions.value.includes(s)
+  );
+  
+  // Return unique set of everything
+  return [...new Set([...defaultOptions, ...customOptions.value, ...legacyExtras])];
+});
+
+const addOption = () => {
+  const val = newOption.value.trim();
+  if (!val) return;
+
+  // Prevent duplicates in the LIST of options
+  if (
+    allOptions.value.some((opt) => opt.toLowerCase() === val.toLowerCase())
+  ) {
+    // If it exists but isn't selected, select it
+    if (!cardOptionsList.value.includes(val)) {
+       cardOptionsList.value = [...cardOptionsList.value, val];
+    }
+    newOption.value = "";
+    return;
+  }
+
+  // Add to custom options list so it persists
+  customOptions.value.push(val);
+  
+  // Add to selected list
+  cardOptionsList.value = [...cardOptionsList.value, val];
+  newOption.value = "";
+};
+
 const cardOptionsList = computed({
   get: () =>
     cardSpecs.value.card_options ? cardSpecs.value.card_options.split(",") : [],
@@ -366,3 +434,4 @@ const cardOptionsList = computed({
   },
 });
 </script>
+

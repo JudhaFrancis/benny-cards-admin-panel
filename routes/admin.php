@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,13 @@ Route::prefix('v1')->group(function () {
     // Public Routes
     Route::post('login', [AuthController::class, 'login']);
     Route::get('settings/logo', [SettingController::class, 'getPublicLogo']);
+    
+    // WhatsApp Send Route
+    Route::post('whatsapp/send', [App\Http\Controllers\Api\WhatsAppController::class, 'sendMessage']);
+    
+    // WhatsApp Logs Routes
+    Route::get('whatsapp-logs', [App\Http\Controllers\Api\WhatsAppLogController::class, 'index']);
+    Route::post('whatsapp-logs/resend/{id}', [App\Http\Controllers\Api\WhatsAppLogController::class, 'resend']);
 
     // Protected Routes
     Route::middleware(['auth:sanctum', 'is_admin'])->group(function () {
@@ -77,5 +85,11 @@ Route::prefix('v1')->group(function () {
 
         // Payments
         Route::apiResource('payments', PaymentController::class);
+
+        // Reports
+        Route::get('reports/orders', [ReportController::class, 'orderReport']);
+        Route::get('reports/orders/export', [ReportController::class, 'exportOrders']);
+        Route::get('reports/invoices', [ReportController::class, 'invoiceReport']);
+        Route::get('reports/profit-loss', [ReportController::class, 'profitLossReport']);
     });
 });

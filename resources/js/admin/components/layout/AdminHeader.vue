@@ -94,19 +94,18 @@
       <div class="flex items-center gap-4">
         <!-- Notifications -->
         <button
+          @click="isWhatsAppLogsOpen = true"
           class="relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 border group bg-white border-slate-200 text-slate-500 hover:text-primary hover:bg-slate-50 shadow-sm"
         >
           <BellIcon
             class="h-5 w-5 transition-transform group-hover:scale-110"
           />
-          <!-- Pulse Badge -->
-          <span class="absolute top-2.5 right-2.5 flex h-2 w-2">
+          <!-- Notification Badge with Count -->
+          <span v-if="whatsappLogsCount > 0" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center">
             <span
-              class="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"
-            ></span>
-            <span
-              class="relative inline-flex rounded-full h-2 w-2 bg-rose-50"
-            ></span>
+              class="relative inline-flex rounded-full h-5 w-5 bg-rose-500 items-center justify-center text-[10px] font-bold text-white"
+              >{{ whatsappLogsCount > 99 ? '99+' : whatsappLogsCount }}</span
+            >
           </span>
         </button>
 
@@ -193,6 +192,11 @@
     @close="isConfirmOpen = false"
     @confirm="handleLogout"
   />
+
+  <WhatsAppLogsSidebar 
+    :isOpen="isWhatsAppLogsOpen" 
+    @close="isWhatsAppLogsOpen = false" 
+  />
 </template>
 
 <script setup>
@@ -216,12 +220,28 @@ import { useRouter } from "vue-router";
 import ConfirmationModal from "../ui/ConfirmationModal.vue";
 import { useAuth } from "../../composables/useAuth";
 import { usePermissions } from "../../composables/usePermissions";
+import WhatsAppLogsSidebar from "../whatsapp/WhatsAppLogsSidebar.vue";
 
 const router = useRouter();
 const { isSuperAdmin } = usePermissions();
 const isConfirmOpen = ref(false);
 const isLoading = ref(false);
 const { user, logout } = useAuth();
+
+const isWhatsAppLogsOpen = ref(false);
+const whatsappLogsCount = ref(0);
+
+const fetchWhatsAppCount = async () => {
+  try {
+    const response = await fetch('/api/v1/whatsapp-logs?per_page=1');
+    const data = await response.json();
+    if (data.success) {
+      whatsappLogsCount.value = data.data.total || 0;
+    }
+  } catch (error) {
+    console.error('Failed to fetch WhatsApp logs count:', error);
+  }
+};
 
 // Search State
 const searchInput = ref(null);
@@ -345,6 +365,17 @@ const handleLogout = async () => {
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
+  
+  // Fetch WhatsApp logs count on mount
+  fetchWhatsAppCount();
+  
+  // Refresh count every 30 seconds
+  const interval = setInterval(fetchWhatsAppCount, 30000);
+  
+  // Clean up interval on unmount
+  onUnmounted(() => {
+    clearInterval(interval);
+  });
 });
 
 onUnmounted(() => {

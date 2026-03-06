@@ -464,7 +464,7 @@
                                                   : 'text-gray-900'
                                               "
                                             >
-                                              ${{ product.price }}
+                                              ₹{{ product.price }}
                                             </p>
                                           </div>
                                         </div>
@@ -506,10 +506,18 @@
                               class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 text-center"
                               >Price</label
                             >
-                            <div
-                              class="py-3 text-sm font-bold text-gray-500 text-center"
-                            >
-                              ${{ (item.unit_price || 0).toFixed(2) }}
+                            <div class="relative">
+                              <span
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs"
+                                >₹</span
+                              >
+                              <input
+                                v-model.number="item.unit_price"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                class="w-full pl-7 pr-2 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-sm"
+                              />
                             </div>
                           </div>
 
@@ -522,7 +530,7 @@
                             <div
                               class="py-3 text-sm font-black text-primary text-center"
                             >
-                              ${{
+                              ₹{{
                                 (item.quantity * item.unit_price || 0).toFixed(
                                   2,
                                 )
@@ -580,7 +588,7 @@
                           >Subtotal</span
                         >
                         <span class="font-bold text-gray-900"
-                          >${{ calculateTotal.toFixed(2) }}</span
+                          >₹{{ calculateTotal.toFixed(2) }}</span
                         >
                       </div>
 
@@ -591,10 +599,30 @@
                         <div class="relative w-32">
                           <span
                             class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold"
-                            >$</span
+                            >₹</span
                           >
                           <input
                             v-model.number="form.discount"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            class="w-full pl-7 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-primary font-bold text-gray-700 text-right"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-semibold"
+                          >Extra Charges</span
+                        >
+                        <div class="relative w-32">
+                          <span
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold"
+                            >₹</span
+                          >
+                          <input
+                            v-model.number="form.extra_charges"
                             type="number"
                             min="0"
                             step="0.01"
@@ -609,11 +637,11 @@
                       >
                         <span class="text-gray-900 font-bold">Grand Total</span>
                         <span class="text-2xl font-black text-primary"
-                          >${{
-                            (calculateTotal - (form.discount || 0)).toFixed(2)
-                          }}</span
+                          >₹{{ finalTotal.toFixed(2) }}</span
                         >
                       </div>
+
+
                     </div>
 
                     <!-- Additional Info -->
@@ -724,6 +752,8 @@ const form = reactive({
   },
   items: [],
   discount: 0,
+  extra_charges: 0,
+  paid_amount: 0,
   remarks: "",
   payment_method: "cash",
   status: "pending",
@@ -731,9 +761,15 @@ const form = reactive({
 
 const calculateTotal = computed(() => {
   return form.items.reduce(
-    (total, item) => total + (item.quantity * item.unit_price || 0),
+    (total, item) => total + (item.quantity * (parseFloat(item.unit_price) || 0)),
     0,
   );
+});
+
+const finalTotal = computed(() => {
+  const discount = parseFloat(form.discount) || 0;
+  const extraCharges = parseFloat(form.extra_charges) || 0;
+  return Math.max(0, calculateTotal.value - discount + extraCharges);
 });
 
 const fetchProducts = async () => {
@@ -818,6 +854,8 @@ const handleImageError = (e) => {
 const resetForm = () => {
   form.items = [];
   form.discount = 0;
+  form.extra_charges = 0;
+  form.paid_amount = 0;
   form.remarks = "";
   form.customer = {
     name: "",

@@ -32,15 +32,25 @@ class UserController extends Controller
         // Check if user is super admin - utilizing the loaded role relationship or checking directly
         $isSuperAdmin = $currentUser->role && strtolower($currentUser->role->name) === 'super-admin';
 
+        $isManagement = $currentUser->role && in_array(strtolower($currentUser->role->name), ['super-admin', 'admin', 'staff']);
+
         $users = User::when($request->search, function ($query, $search) {
             $query->where('name', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%");
         })
-            ->when(!$isSuperAdmin, function ($query) use ($currentUser) {
+            ->when(!$isSuperAdmin && !$isManagement, function ($query) use ($currentUser) {
                 $query->where('id', $currentUser->id);
             })
             ->when($request->role_id, function ($query, $role_id) {
-                $query->where('role_id', $role_id);
+                if (is_array($role_id)) {
+                    $query->whereIn('role_id', $role_id);
+                } else {
+                    $query->where('role_id', $role_id);
+                }
+            })
+            ->when($request->role_ids, function ($query, $role_ids) {
+                $ids = is_string($role_ids) ? explode(',', $role_ids) : $role_ids;
+                $query->whereIn('role_id', $ids);
             })
             ->with('role')
             ->latest()

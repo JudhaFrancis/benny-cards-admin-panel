@@ -9,14 +9,14 @@
       </template>
       <template #actions>
         <div class="flex items-center gap-3">
-          <router-link
+          <!-- <router-link
             to="/live-operations"
             target="_blank"
             class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-2xl hover:bg-primary/20 transition-all font-bold text-[10px] uppercase tracking-widest"
           >
             <Activity class="h-3 w-3" />
             Live Operations
-          </router-link>
+          </router-link> -->
           <div
             class="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl"
           >
@@ -137,7 +137,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
-import { ShoppingCart, CheckCircle, Clock, DollarSign, Activity } from "lucide-vue-next";
+import { ShoppingCart, CheckCircle, Clock, IndianRupee, Activity } from "lucide-vue-next";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import Card from "../../components/ui/Card.vue";
 import CardHeader from "../../components/ui/CardHeader.vue";
@@ -199,10 +199,10 @@ const stats = computed(() => [
   },
   {
     title: "Total Revenue",
-    value: `$${Number(realStats.value.total_revenue).toLocaleString()}`,
+    value: `₹${Number(realStats.value.total_revenue).toLocaleString()}`,
     change: "+15.3%",
     changeType: "positive",
-    icon: DollarSign,
+    icon: IndianRupee,
   },
 ]);
 </script>

@@ -166,7 +166,7 @@ import {
   MapPin as MapPinIcon,
   Truck as TruckIcon,
   FileText as FileTextIcon,
-  DollarSign as DollarSignIcon,
+  IndianRupee as IndianRupeeIcon,
   Check as CheckIcon,
   Loader2 as Loader2Icon,
 } from "lucide-vue-next";
@@ -206,13 +206,20 @@ const staffOptions = ref([]);
 const fetchStaff = async () => {
   try {
     const response = await axios.get("/api/v1/users", {
-      params: { role_id: 4, per_page: 100 },
+      params: { per_page: 100 }, // No role_id filter here, we'll filter in JS
     });
     if (response.data.success) {
-      staffOptions.value = response.data.data.data.map((user) => ({
-        label: user.name,
-        value: user.name,
-      }));
+      // Include Super Admin, Admin and Staff
+      const managementRoles = ['super-admin', 'admin', 'staff'];
+      staffOptions.value = response.data.data.data
+        .filter((user) => {
+          const roleName = user.role?.name?.toLowerCase() || '';
+          return managementRoles.includes(roleName);
+        })
+        .map((user) => ({
+          label: user.name,
+          value: user.name,
+        }));
     }
   } catch (e) {
     console.error("Failed to fetch staff", e);
@@ -290,7 +297,7 @@ const trackingSections = [
     id: "payment",
     label: "Payment",
     shortLabel: "Payment",
-    icon: DollarSignIcon,
+    icon: IndianRupeeIcon,
   },
 ];
 
@@ -327,10 +334,25 @@ const sectionMap = {
 };
 
 // Check if a section is unlocked (accessible)
+// Check if a section is unlocked (accessible)
 const isSectionUnlocked = (index) => {
+  const sectionId = trackingSections[index].id;
+  
   // First section is always unlocked
   if (index === 0) return true;
-  // Unlock if previous section is completed
+
+  // EXCEPTION: Payment section ONLY unlocks if its predecessor (Dispatch Details) is completed.
+  // We don't auto-unlock it based on DB data alone.
+  if (sectionId === 'payment') {
+      const prevSectionId = trackingSections[index - 1].id;
+      return completedSections.value.includes(prevSectionId);
+  }
+
+  // For all other sections (Smart Unlocking):
+  // 1. Unlock if this section already has valid data in DB
+  if (completedSections.value.includes(sectionId)) return true;
+  
+  // 2. Unlock if previous section is completed (to allow moving forward)
   const prevSectionId = trackingSections[index - 1].id;
   return completedSections.value.includes(prevSectionId);
 };
@@ -371,15 +393,13 @@ const getSectionErrors = (sectionId) => {
       if (!specs.card_size) errors.push("Card Size");
       if (!specs.quantity) errors.push("Quantity");
       if (!specs.specifications) errors.push("Specifications");
-      if (!specs.inner_gsm) errors.push("Inner GSM");
-      if (!specs.envelope_gsm) errors.push("Envelope GSM");
-      if (!specs.card_lamination) errors.push("Card Lamination");
-      if (!specs.envelope_lamination) errors.push("Envelope Lamination");
+      // Inner GSM, Envelope GSM, Card Lamination, and Envelope Lamination are all optional
       break;
 
     case "work-assign":
       const work = tracking.work_assign || {};
       if (!work.assigned_to) errors.push("Assigned To");
+      if (!work.assigned_date) errors.push("Assigned Date");
       if (!work.deadline) errors.push("Deadline");
       if (!work.content_by) errors.push("Content By");
       if (!work.completed_by) errors.push("Completed By");
@@ -412,8 +432,8 @@ const getSectionErrors = (sectionId) => {
         const followUpCount = printing.customize_follow_up
           ? printing.customize_follow_up.split(",").filter((d) => d).length
           : 0;
-        if (followUpCount < 7)
-          errors.push("Customize Card: All 7 Follow Up days must be checked");
+        if (followUpCount < 1)
+          errors.push("Customize Card: At least Day 1 status must be checked");
       }
 
       // Validate Readymade section if any data is present
@@ -427,8 +447,8 @@ const getSectionErrors = (sectionId) => {
         const followUpCount = printing.readymade_follow_up
           ? printing.readymade_follow_up.split(",").filter((d) => d).length
           : 0;
-        if (followUpCount < 7)
-          errors.push("Readymade Card: All 7 Follow Up days must be checked");
+        if (followUpCount < 1)
+          errors.push("Readymade Card: At least Day 1 status must be checked");
       }
 
       // Fallback: If absolutely nothing is entered, but a card type is known,
@@ -444,7 +464,6 @@ const getSectionErrors = (sectionId) => {
       if (!logistics.qty_cards) errors.push("Qty of Cards");
       if (!logistics.logistics_details)
         errors.push("Envelope / Ribbon / Tag / Sticker");
-      if (!logistics.card_issues) errors.push("Issues in Card");
       break;
 
     case "packaging-status":
@@ -522,13 +541,11 @@ const calculateCompletedStatus = () => {
     const sectionData = tracking[dbCol];
 
     if (
-      sectionData &&
-      sectionData._audit &&
+      sectionData && 
+      (sectionData._audit || Object.keys(sectionData).length > 0) &&
       getSectionErrors(section.id).length === 0
     ) {
       filled.push(section.id);
-    } else {
-      break;
     }
   }
   return filled;
@@ -583,6 +600,18 @@ onMounted(() => {
   initCompletedSections();
   fetchStaff();
 });
+
+// Defensive fix for Laravel returning [] for empty JSON objects
+watch(() => props.order?.tracking, (newTracking) => {
+  if (newTracking && typeof newTracking === 'object') {
+    Object.keys(sectionMap).forEach(key => {
+      const dbCol = sectionMap[key];
+      if (Array.isArray(newTracking[dbCol]) && newTracking[dbCol].length === 0) {
+        newTracking[dbCol] = {};
+      }
+    });
+  }
+}, { immediate: true, deep: true });
 
 const handleSaveSection = () => {
   const errors = getSectionErrors(selectedSection.value);

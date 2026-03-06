@@ -51,9 +51,11 @@ class OrderService
             $itemsData = $this->prepareOrderItems($data['items'] ?? []);
             $totals = $this->calculateOrderTotals($itemsData);
 
-            // Calculate discount and final total
+            // Calculate discount, extra charges and final total
             $discount = $data['discount'] ?? 0;
-            $totalAmount = (float) max(0, $totals['net_amount'] - $discount);
+            $extraCharges = $data['extra_charges'] ?? 0;
+            $totalAmount = (float) max(0, $totals['net_amount'] + $extraCharges - $discount);
+            $paidAmount = $data['paid_amount'] ?? 0;
 
             // Create Order with temporary numbers
             $order = Order::create([
@@ -66,10 +68,11 @@ class OrderService
                 'net_amount' => $totals['net_amount'],
                 'coupons_id' => $data['coupon_id'] ?? null,
                 'discount' => $discount,
+                'extra_charges' => $extraCharges,
                 'total_amount' => $totalAmount,
-                'paid_amount' => 0, // Force 0 on creation
-                'balance_due' => (float) $totalAmount, // All due on creation
-                'payment_status' => 'unpaid',
+                'paid_amount' => $paidAmount,
+                'balance_due' => (float) max(0, $totalAmount - $paidAmount),
+                'payment_status' => $paidAmount <= 0 ? 'unpaid' : ($paidAmount < $totalAmount ? 'due' : 'paid'),
                 'status' => $data['status'] ?? 'pending',
                 'added_by' => auth()->id(),
                 'modified_by' => auth()->id(),
@@ -148,8 +151,17 @@ class OrderService
                 $order->discount = $data['discount'];
             }
 
+            if (isset($data['extra_charges'])) {
+                $order->extra_charges = $data['extra_charges'];
+            }
+
+            if (isset($data['paid_amount'])) {
+                $order->paid_amount = $data['paid_amount'];
+            }
+
             // Recalculate total amount
-            $order->total_amount = max(0, $order->net_amount - $order->discount);
+            $expense = (float) ($order->tracking->dispatch_mode['expense'] ?? 0);
+            $order->total_amount = max(0, $order->net_amount + ($order->extra_charges ?? 0) - $order->discount + $expense);
 
             // Update coupon
             if (isset($data['coupon_id'])) {
@@ -257,6 +269,8 @@ class OrderService
 
         // Prepare data for update
         $updateData = [];
+        $dispatchExpense = 0;
+        
         foreach ($data as $section => $content) {
             if (in_array($section, $allowedSections)) {
                 // Inject Audit Info
@@ -265,6 +279,11 @@ class OrderService
                     'updated_at' => now()->toDateTimeString(),
                 ];
                 $updateData[$section] = $content;
+
+                // Capture dispatch expense if being updated
+                if ($section === 'dispatch_mode' && isset($content['expense'])) {
+                    $dispatchExpense = (float) $content['expense'];
+                }
             }
         }
 
@@ -273,6 +292,17 @@ class OrderService
                 ['order_id' => $order->id],
                 $updateData
             );
+
+            // Recalculate order totals to include courier charge
+            $tracking = $order->tracking()->first();
+            $expense = (float) ($tracking->dispatch_mode['expense'] ?? 0);
+            $totalAmount = max(0, $order->net_amount + ($order->extra_charges ?? 0) - $order->discount + $expense);
+            
+            $order->update([
+                'total_amount' => $totalAmount,
+                'balance_due' => max(0, $totalAmount - $order->paid_amount),
+                'modified_by' => auth()->id()
+            ]);
 
             // Sync payment_info with payments table if present
             if (isset($updateData['payment_info'])) {
