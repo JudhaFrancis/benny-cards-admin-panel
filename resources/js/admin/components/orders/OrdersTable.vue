@@ -72,10 +72,37 @@
       </span>
     </template>
 
+    <template #cell-assigned_name="{ item: order }">
+      <span class="text-sm font-medium text-slate-700">
+        {{ order.tracking?.work_assign?.assigned_to || "Not Assigned" }}
+      </span>
+    </template>
+
+    <template #cell-assigned_date="{ item: order }">
+      <span class="text-xs font-mono text-slate-500">
+        {{ formatDate(order.tracking?.work_assign?.assigned_date) }}
+      </span>
+    </template>
+
+    <template #cell-created_at="{ item: order }">
+      <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">
+        {{ formatDate(order.created_at) }}
+      </span>
+    </template>
+
+    <template #cell-modified_by="{ item: order }">
+      <div class="flex flex-col">
+        <span class="text-[10px] text-slate-600 font-bold uppercase tracking-wider">
+          {{  order.tracking?.work_assign?._audit?.updated_by || order.updated_by_name || "N/A" }}
+        </span>
+      </div>
+    </template>
+
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
+        <!-- Main Actions (Always show view/edit, show others if in main 'Orders' view) -->
         <button
-          v-if="canEdit"
+          v-if="canEdit && statusFilter === 'all'"
           @click="sendWhatsApp(order)"
           :disabled="sendingWhatsapp === order.id"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-600 transition-all duration-200 disabled:opacity-50"
@@ -84,6 +111,7 @@
           <Loader2 v-if="sendingWhatsapp === order.id" class="h-4 w-4 animate-spin" />
           <MessageCircle v-else class="h-4 w-4" />
         </button>
+
         <button
           v-if="canView"
           @click="$emit('view-info', order)"
@@ -92,7 +120,7 @@
         >
           <Eye class="h-4 w-4" />
         </button>
-        
+
         <button
           v-if="canEdit"
           @click="$emit('edit', order)"
@@ -101,8 +129,9 @@
         >
           <Pencil class="h-4 w-4" />
         </button>
+
         <button
-          v-if="canDelete"
+          v-if="canDelete && statusFilter === 'all'"
           @click="$emit('delete', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
           title="Delete Order"
@@ -115,7 +144,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { Eye, Pencil, Trash2, MessageCircle, Loader2 } from "lucide-vue-next";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
@@ -130,6 +159,10 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false,
+  },
+  statusFilter: {
+    type: String,
+    default: "all",
   },
 });
 
@@ -169,18 +202,43 @@ const sendWhatsApp = async (order) => {
   }
 };
 
-const columns = [
-  { key: "sn", label: "S.No", width: "80px" },
-  { key: "order_number", label: "Order ID", align: "left" },
-  { key: "customer", label: "Customer", align: "left" },
-  { key: "orderDate", label: "Order Date", align: "left" },
-  { key: "items", label: "Items", align: "center" },
-  { key: "status", label: "Order Status", align: "left" },
-  { key: "amount", label: "Amount", align: "right" },
-  { key: "paid", label: "Paid", align: "right" },
-  { key: "payment", label: "Payment", align: "left" },
-  { key: "actions", label: "Actions", align: "right" },
-];
+const columns = computed(() => {
+  if (props.statusFilter === "all") {
+    return [
+      { key: "sn", label: "S.No", width: "80px" },
+      { key: "order_number", label: "Order ID", align: "left" },
+      { key: "customer", label: "Customer", align: "left" },
+      { key: "orderDate", label: "Order Date", align: "left" },
+      { key: "items", label: "Items", align: "center" },
+      { key: "status", label: "Order Status", align: "left" },
+      { key: "amount", label: "Amount", align: "right" },
+      { key: "paid", label: "Paid", align: "right" },
+      { key: "payment", label: "Payment", align: "left" },
+      { key: "actions", label: "Actions", align: "right" },
+    ];
+  }
+
+  // Workflow Columns for Tracking Tabs
+  return [
+    { key: "sn", label: "S.No", width: "80px" },
+    { key: "order_number", label: "Order ID", align: "left" },
+    { key: "assigned_name", label: "Assigned Name", align: "left" },
+    { key: "assigned_date", label: "Assigned Date", align: "left" },
+    { key: "status", label: "Status", align: "left" },
+    { key: "created_at", label: "Created At", align: "left" },
+    { key: "modified_by", label: "Modified By", align: "left" },
+    { key: "actions", label: "Action", align: "right" },
+  ];
+});
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const orderStatusStyles = {
   new: "bg-slate-500/10 text-slate-500 border-slate-500/20",

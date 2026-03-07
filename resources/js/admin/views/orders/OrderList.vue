@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 animate-in fade-in duration-500">
     <!-- Header Section -->
-    <PageHeader title="Orders" subtitle="Manage and track customer purchases">
+    <PageHeader :title="pageTitle" subtitle="Manage and track customer purchases">
       <template #actions>
         <button
           v-if="canCreate"
@@ -76,6 +76,7 @@
 
     <!-- Table Section -->
     <OrdersTable
+      :status-filter="statusFilter"
       :orders="filteredOrders"
       :loading="loading"
       @view-info="handleViewInfo"
@@ -125,7 +126,7 @@ import {
   Activity as ActivityIcon,
   CreditCard as CreditCardIcon,
 } from "lucide-vue-next";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
@@ -143,6 +144,7 @@ const { getModulePermissions } = usePermissions();
 const { canAdd: canCreate, canEdit, canDelete } = getModulePermissions("Order");
 const toast = useToast();
 const router = useRouter();
+const route = useRoute();
 
 const orders = ref([]);
 const loading = ref(true);
@@ -183,7 +185,23 @@ const fetchOrders = async () => {
   }
 };
 
-onMounted(fetchOrders);
+onMounted(() => {
+  if (route.query.status) {
+    statusFilter.value = route.query.status;
+  }
+  fetchOrders();
+});
+
+watch(
+  () => route.query.status,
+  (val) => {
+    if (val) {
+      statusFilter.value = val;
+    } else {
+        statusFilter.value = 'all';
+    }
+  },
+);
 
 const isInfoModalOpen = ref(false);
 const isCreateModalOpen = ref(false);
@@ -341,4 +359,15 @@ const handleDelete = async () => {
     toast.error("Failed to delete order");
   }
 };
+const pageTitle = computed(() => {
+  if (statusFilter.value === "all") return "All Orders";
+  const options = {
+    client_info: "Client Information",
+    designing: "Designing Process",
+    printing: "Printing Process",
+    packaging: "Packaging & Logistics",
+    delivered: "Delivery & Dispatch",
+  };
+  return options[statusFilter.value] || "Orders";
+});
 </script>

@@ -280,6 +280,9 @@ import {
   Box as BoxIcon,
   Image as ImageIcon,
   FolderOpen as FolderOpenIcon,
+  Printer as PrinterIcon,
+  Truck as TruckIcon,
+  Palette as PaletteIcon,
 } from "lucide-vue-next";
 import SidebarNavItem from "./SidebarNavItem.vue";
 import ConfirmationModal from "../ui/ConfirmationModal.vue";
@@ -328,6 +331,36 @@ const navDashboard = { title: "Dashboard", url: "/", icon: DashboardIcon };
 const navOrders = computed(() => {
   const items = [
     { title: "Orders", url: "/orders", icon: OrdersIcon, module: "Order" },
+    {
+      title: "Client Information",
+      url: "/orders?status=client_info",
+      icon: UserIcon,
+      module: "Order",
+    },
+    {
+      title: "Designing",
+      url: "/orders?status=designing",
+      icon: PaletteIcon,
+      module: "Order",
+    },
+    {
+      title: "Printing",
+      url: "/orders?status=printing",
+      icon: PrinterIcon,
+      module: "Order",
+    },
+    {
+      title: "Packaging",
+      url: "/orders?status=packaging",
+      icon: PackageIcon,
+      module: "Order",
+    },
+    {
+      title: "Delivered",
+      url: "/orders?status=delivered",
+      icon: TruckIcon,
+      module: "Order",
+    },
     {
       title: "Payments",
       url: "/payments",
@@ -392,9 +425,17 @@ function cn(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-const isActive = (path) => {
-  if (path === "/") return route.path === "/";
-  return route.path.startsWith(path);
+const isActive = (url) => {
+  if (url === "/") return route.path === "/";
+  if (url.includes("?")) {
+    return route.fullPath.includes(url);
+  }
+  // If the current route has a status filter, the base "Orders" link (which has no ?status=)
+  // should not be active.
+  if (route.query.status && !url.includes("status=")) {
+    return false;
+  }
+  return route.path.startsWith(url);
 };
 
 const toggleCatalog = () => {
