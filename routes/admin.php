@@ -15,81 +15,86 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReportController;
 
-/*
-|--------------------------------------------------------------------------
-| Admin API Routes
-|--------------------------------------------------------------------------
-|
-| Prefix: /api/admin
-*/
+/* |-------------------------------------------------------------------------- | Admin API Routes |-------------------------------------------------------------------------- | | Prefix: /api/admin */
 
 Route::prefix('v1')->group(function () {
 
     // Public Routes
-    Route::post('login', [AuthController::class, 'login']);
-    Route::get('settings/logo', [SettingController::class, 'getPublicLogo']);
-    
+    Route::post('login', [AuthController::class , 'login']);
+    Route::get('settings/logo', [SettingController::class , 'getPublicLogo']);
+
     // WhatsApp Send Route
-    Route::post('whatsapp/send', [App\Http\Controllers\Api\WhatsAppController::class, 'sendMessage']);
-    
+    Route::post('whatsapp/send', [App\Http\Controllers\Api\WhatsAppController::class , 'sendMessage']);
+
     // WhatsApp Logs Routes
-    Route::get('whatsapp-logs', [App\Http\Controllers\Api\WhatsAppLogController::class, 'index']);
-    Route::post('whatsapp-logs/resend/{id}', [App\Http\Controllers\Api\WhatsAppLogController::class, 'resend']);
+    Route::get('whatsapp-logs', [App\Http\Controllers\Api\WhatsAppLogController::class , 'index']);
+    Route::post('whatsapp-logs/resend/{id}', [App\Http\Controllers\Api\WhatsAppLogController::class , 'resend']);
 
     // Protected Routes
     Route::middleware(['auth:sanctum', 'is_admin'])->group(function () {
 
-        Route::post('logout', [AuthController::class, 'logout']);
-        Route::get('me', [AuthController::class, 'me']);
-        Route::put('me', [AuthController::class, 'updateProfile']);
+            Route::post('logout', [AuthController::class , 'logout']);
+            Route::get('me', [AuthController::class , 'me']);
+            Route::put('me', [AuthController::class , 'updateProfile']);
 
-        // Dashboard
-        Route::get('dashboard/stats', [DashboardController::class, 'index']);
+            // Dashboard
+            Route::get('dashboard/stats', [DashboardController::class , 'index']);
 
-        // Orders
-        Route::get('orders', [OrderController::class, 'index']);
-        Route::post('orders', [OrderController::class, 'store']);
-        Route::get('orders/{id}', [OrderController::class, 'show']);
-        Route::put('orders/{id}', [OrderController::class, 'update']);
-        Route::delete('orders/{id}', [OrderController::class, 'destroy']);
-        Route::patch('orders/{id}/status', [OrderController::class, 'updateStatus']);
-        Route::put('orders/{id}/customer-details', [OrderController::class, 'updateCustomerDetails']);
-        Route::put('orders/{id}/tracking', [OrderController::class, 'updateTracking']);
+            // Orders
+            Route::get('orders', [OrderController::class , 'index']);
+            Route::post('orders', [OrderController::class , 'store']);
+            Route::get('orders/{id}', [OrderController::class , 'show']);
+            Route::put('orders/{id}', [OrderController::class , 'update']);
+            Route::delete('orders/{id}', [OrderController::class , 'destroy']);
+            Route::patch('orders/{id}/status', [OrderController::class , 'updateStatus']);
+            Route::put('orders/{id}/customer-details', [OrderController::class , 'updateCustomerDetails']);
+            Route::put('orders/{id}/tracking', [OrderController::class , 'updateTracking']);
 
-        // Settings
-        Route::get('settings', [SettingController::class, 'show']);
-        Route::put('settings', [SettingController::class, 'update']);
+            // Order Stages Tracking
+            Route::prefix('orders/{id}/stages')->group(function () {
+                    Route::put('client-information', [App\Http\Controllers\Admin\OrderStages\ClientInformationController::class , 'update']);
+                    Route::put('designing', [App\Http\Controllers\Admin\OrderStages\DesigningController::class , 'update']);
+                    Route::put('printing', [App\Http\Controllers\Admin\OrderStages\PrintingController::class , 'update']);
+                    Route::put('packaging', [App\Http\Controllers\Admin\OrderStages\PackagingController::class , 'update']);
+                    Route::put('delivery', [App\Http\Controllers\Admin\OrderStages\DispatchDeliveryController::class , 'update']);
+                }
+                );
 
-        // Users
-        Route::get('users/roles', [UserController::class, 'roles']);
-        Route::apiResource('users', UserController::class);
+                // Settings
+                Route::get('settings', [SettingController::class , 'show']);
+                Route::put('settings', [SettingController::class , 'update']);
 
-        // Categories
-        Route::apiResource('categories', CategoryController::class);
+                // Users
+                Route::get('users/roles', [UserController::class , 'roles']);
+                Route::apiResource('users', UserController::class);
 
-        // Price Ranges
-        Route::apiResource('price-ranges', PriceRangeController::class);
+                // Categories
+                Route::apiResource('categories', CategoryController::class);
 
-        // Brands
-        Route::apiResource('brands', BrandController::class);
+                // Price Ranges
+                Route::apiResource('price-ranges', PriceRangeController::class);
 
-        // Coupons
-        Route::apiResource('coupons', CouponController::class);
+                // Brands
+                Route::apiResource('brands', BrandController::class);
 
-        // Banners
-        Route::apiResource('banners', BannerController::class);
+                // Coupons
+                Route::apiResource('coupons', CouponController::class);
 
-        // Products
-        Route::get('products/options', [ProductController::class, 'options']);
-        Route::apiResource('products', ProductController::class);
+                // Banners
+                Route::apiResource('banners', BannerController::class);
 
-        // Payments
-        Route::apiResource('payments', PaymentController::class);
+                // Products
+                Route::get('products/options', [ProductController::class , 'options']);
+                Route::apiResource('products', ProductController::class);
 
-        // Reports
-        Route::get('reports/orders', [ReportController::class, 'orderReport']);
-        Route::get('reports/orders/export', [ReportController::class, 'exportOrders']);
-        Route::get('reports/invoices', [ReportController::class, 'invoiceReport']);
-        Route::get('reports/profit-loss', [ReportController::class, 'profitLossReport']);
-    });
-});
+                // Payments
+                Route::apiResource('payments', PaymentController::class);
+
+                // Reports
+                Route::get('reports/orders', [ReportController::class , 'orderReport']);
+                Route::get('reports/orders/export', [ReportController::class , 'exportOrders']);
+                Route::get('reports/invoices', [ReportController::class , 'invoiceReport']);
+                Route::get('reports/profit-loss', [ReportController::class , 'profitLossReport']);
+            }
+            );
+        });

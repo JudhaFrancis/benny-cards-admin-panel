@@ -82,6 +82,37 @@ class Order extends Model
         return $this->belongsTo(Coupon::class, 'coupons_id');
     }
 
+    public function tracking(): HasOne
+    {
+        return $this->hasOne(OrderTracking::class);
+    }
+
+    // Individual Stage Tracking Relationships
+    public function clientInformation(): HasOne
+    {
+        return $this->hasOne(OrderClientInformation::class);
+    }
+
+    public function designing(): HasOne
+    {
+        return $this->hasOne(OrderDesigning::class);
+    }
+
+    public function printing(): HasOne
+    {
+        return $this->hasOne(OrderPrinting::class);
+    }
+
+    public function packaging(): HasOne
+    {
+        return $this->hasOne(OrderPackaging::class);
+    }
+
+    public function dispatchDelivery(): HasOne
+    {
+        return $this->hasOne(OrderDispatchDelivery::class);
+    }
+
     // Helper methods
     public function calculatePaidAmount(): float
     {
@@ -109,9 +140,6 @@ class Order extends Model
         $this->syncTrackingWithPayments();
     }
 
-    /**
-     * Sync order tracking payment_info with the latest payment details.
-     */
     public function syncTrackingWithPayments(): void
     {
         $payments = $this->payments()
@@ -148,7 +176,6 @@ class Order extends Model
                 ]
             );
         } else {
-            // Clear payment info if no completed payments exist
             if ($this->tracking) {
                 $this->tracking->update([
                     'payment_info' => [
@@ -168,59 +195,32 @@ class Order extends Model
     public function getTrackingStatusLabelAttribute(): string
     {
         $tracking = $this->tracking;
-        if (!$tracking) {
-            return 'New';
-        }
+        if (!$tracking) return 'New';
 
-        // Payment Stage
         if (isset($tracking->payment_info['_audit'])) {
-             if ((float)$this->total_amount > (float)$this->paid_amount) {
-                 return 'Payment Pending';
-             }
+             if ((float)$this->total_amount > (float)$this->paid_amount) return 'Payment Pending';
              return 'Completed';
         }
 
-        // Dispatch Stage
-        if (isset($tracking->dispatch_details['_audit']) || isset($tracking->dispatch_mode['_audit'])) {
-             return 'Dispatched';
-        }
+        if (isset($tracking->dispatch_details['_audit']) || isset($tracking->dispatch_mode['_audit'])) return 'Dispatched';
 
-        // Packaging Process: Logistics OR Packaging Status OR Location saved
-        if (isset($tracking->delivery_location['_audit']) || isset($tracking->packaging_status['_audit']) || isset($tracking->packaging_logistics['_audit'])) {
-            return 'Packaging Process';
-        }
+        if (isset($tracking->delivery_location['_audit']) || isset($tracking->packaging_status['_audit']) || isset($tracking->packaging_logistics['_audit'])) return 'Packaging Process';
 
-        // Printing Process: Printing status section saved
-        if (isset($tracking->printing_status['_audit'])) {
-            return 'Printing Process';
-        }
+        if (isset($tracking->printing_status['_audit'])) return 'Printing Process';
 
-        // Designing Process / Content Not Received: Work assign OR Design section saved
         if (isset($tracking->design_print['_audit']) || isset($tracking->work_assign['_audit'])) {
             $workAssign = $tracking->work_assign ?? [];
-            if (isset($workAssign['content_not_received']) && $workAssign['content_not_received']) {
-                return 'Content Not Received';
-            }
+            if (isset($workAssign['content_not_received']) && $workAssign['content_not_received']) return 'Content Not Received';
             return 'Designing Process';
         }
 
-        // Confirmed: Specs details finished
-        if (isset($tracking->card_specs['_audit'])) {
-            return 'Confirmed';
-        }
+        if (isset($tracking->card_specs['_audit'])) return 'Confirmed';
 
-        // Default to New
         return 'New';
-    }
-
-    public function tracking(): HasOne
-    {
-        return $this->hasOne(OrderTracking::class);
     }
 
     public function updatePaymentMethod(): void
     {
-        // Note: payment_method column was removed from orders table
-        // This is now handled via payments relationship
+        // Handled via payments relationship
     }
 }

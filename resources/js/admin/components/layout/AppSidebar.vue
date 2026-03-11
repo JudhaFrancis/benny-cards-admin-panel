@@ -280,9 +280,10 @@ import {
   Box as BoxIcon,
   Image as ImageIcon,
   FolderOpen as FolderOpenIcon,
-  Printer as PrinterIcon,
-  Truck as TruckIcon,
   Palette as PaletteIcon,
+  Printer as PrinterIcon,
+  CheckCircle as CheckCircleIcon,
+  Truck as TruckIcon,
 } from "lucide-vue-next";
 import SidebarNavItem from "./SidebarNavItem.vue";
 import ConfirmationModal from "../ui/ConfirmationModal.vue";
@@ -333,32 +334,32 @@ const navOrders = computed(() => {
     { title: "Orders", url: "/orders", icon: OrdersIcon, module: "Order" },
     {
       title: "Client Information",
-      url: "/orders?status=client_info",
+      url: "/order-management/client-information",
       icon: UserIcon,
       module: "Order",
     },
     {
       title: "Designing",
-      url: "/orders?status=designing",
+      url: "/order-management/designing",
       icon: PaletteIcon,
       module: "Order",
     },
     {
       title: "Printing",
-      url: "/orders?status=printing",
+      url: "/order-management/printing",
       icon: PrinterIcon,
       module: "Order",
     },
     {
       title: "Packaging",
-      url: "/orders?status=packaging",
+      url: "/order-management/packaging",
       icon: PackageIcon,
       module: "Order",
     },
     {
-      title: "Delivered",
-      url: "/orders?status=delivered",
-      icon: TruckIcon,
+      title: "Dispatch & Delivery",
+      url: "/order-management/delivery",
+      icon: CheckCircleIcon,
       module: "Order",
     },
     {

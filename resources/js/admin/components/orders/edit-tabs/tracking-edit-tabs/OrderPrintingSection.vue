@@ -262,25 +262,7 @@
       ></textarea>
     </div>
 
-    <!-- Audit Footer -->
-    <div
-      v-if="printingStatus._audit"
-      class="pt-4 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400"
-    >
-      <span class="flex items-center gap-2">
-        <ClockIcon class="h-3.5 w-3.5" />
-        Last updated
-        <span
-          class="font-medium bg-slate-100 px-2 py-0.5 rounded-full text-slate-600"
-          >{{ formatAuditDate(printingStatus._audit.updated_at) }}</span
-        >
-        by
-        <span
-          class="font-medium text-slate-600 underline decoration-slate-200 underline-offset-2"
-          >{{ printingStatus._audit.updated_by }}</span
-        >
-      </span>
-    </div>
+
   </div>
 </template>
 

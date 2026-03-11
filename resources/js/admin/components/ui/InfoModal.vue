@@ -28,11 +28,10 @@
             <DialogPanel
               :class="
                 cn(
-                  'w-full transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col',
+                  'w-full transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh]',
                   maxWidthClass,
                 )
               "
-              :style="{ maxHeight: 'calc(100vh - 4rem)' }"
             >
               <!-- Header -->
               <div
@@ -46,7 +45,7 @@
                 ></div>
 
                 <div
-                  class="relative px-8 py-8 flex items-center justify-between"
+                  class="relative px-8 py-6 flex items-center justify-between"
                 >
                   <div class="flex items-center gap-5">
                     <div
@@ -65,6 +64,9 @@
                       <p v-if="subtitle" class="text-sm text-white/80">
                         {{ subtitle }}
                       </p>
+                      <div v-if="$slots['header-extra']" class="mt-2 flex items-center gap-3">
+                        <slot name="header-extra" />
+                      </div>
                     </div>
                   </div>
                   <button

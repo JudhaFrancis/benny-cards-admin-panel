@@ -57,6 +57,7 @@
                   :name="`cell-${column.key}`"
                   :item="item"
                   :column="column"
+                  :index="index"
                 >
                   {{ item[column.key] }}
                 </slot>

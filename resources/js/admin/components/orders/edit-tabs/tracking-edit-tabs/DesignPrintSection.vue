@@ -66,7 +66,7 @@
 
     <!-- Audit Footer -->
     <div
-      v-if="designPrint._audit"
+      v-if="designPrint._audit && !hideAudit"
       class="pt-4 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400"
     >
       <span class="flex items-center gap-2">
@@ -94,6 +94,10 @@ const props = defineProps({
   order: {
     type: Object,
     required: true,
+  },
+  hideAudit: {
+    type: Boolean,
+    default: false,
   },
 });
 

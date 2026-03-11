@@ -51,16 +51,20 @@
     v-else
     :class="
       cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group cursor-default text-slate-400',
-        isSubItem ? 'py-2 px-3 text-xs' : 'text-sm',
+        'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group cursor-default text-white/50',
+        isSubItem ? 'py-2 px-3 text-[13px]' : 'text-[14px]',
         isCollapsed ? 'justify-center px-0 mx-auto w-11 h-11' : '',
       )
     "
   >
-    <component v-if="item.icon" :is="item.icon" class="h-5 w-5 shrink-0" />
+    <component
+      v-if="item.icon"
+      :is="item.icon"
+      class="h-5 w-5 shrink-0 opacity-70"
+    />
     <span
       v-if="!isCollapsed"
-      class="font-medium tracking-wide truncate opacity-60"
+      class="font-medium tracking-tight truncate opacity-90"
       >{{ item.title }}</span
     >
   </div>

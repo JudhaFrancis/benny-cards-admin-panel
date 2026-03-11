@@ -61,6 +61,46 @@ const routes = [
                 component: () => import('../views/payments/PaymentList.vue')
             },
             {
+                path: 'order-management/client-information',
+                component: () => import('../views/order-management/StageListPage.vue'),
+                props: { stage: 'client-information', title: 'Client Information', subtitle: 'Manage client details and specifications' },
+                meta: { module: 'Order' }
+            },
+            {
+                path: 'order-management/designing',
+                component: () => import('../views/order-management/StageListPage.vue'),
+                props: { stage: 'designing', title: 'Designing', subtitle: 'Track design progress and assignments' },
+                meta: { module: 'Order' }
+            },
+            {
+                path: 'order-management/printing',
+                component: () => import('../views/order-management/StageListPage.vue'),
+                props: { stage: 'printing', title: 'Printing', subtitle: 'Monitor printing and production status' },
+                meta: { module: 'Order' }
+            },
+            {
+                path: 'order-management/packaging',
+                component: () => import('../views/order-management/StageListPage.vue'),
+                props: { stage: 'packaging', title: 'Packaging', subtitle: 'Logistics and packing details' },
+                meta: { module: 'Order' }
+            },
+            {
+                path: 'order-management/delivery',
+                component: () => import('../views/order-management/StageListPage.vue'),
+                props: { stage: 'delivery', title: 'Dispatch & Delivery', subtitle: 'Location and dispatch information' },
+                meta: { module: 'Order' }
+            },
+            {
+                path: 'order-management/:stage/:id/view',
+                component: () => import('../views/order-management/StageViewPage.vue'),
+                meta: { module: 'Order' }
+            },
+            {
+                path: 'order-management/:stage/:id/edit',
+                component: () => import('../views/order-management/StageEditPage.vue'),
+                meta: { module: 'Order' }
+            },
+            {
                 path: 'reports',
                 name: 'ReportsOverview',
                 component: () => import('../views/reports/ReportsOverview.vue'),

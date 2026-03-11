@@ -239,7 +239,7 @@
 
     <!-- Audit Footer -->
     <div
-      v-if="jobDetails._audit"
+      v-if="jobDetails._audit && !hideAudit"
       class="pt-4 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400"
     >
       <span class="flex items-center gap-2">
@@ -272,6 +272,10 @@ const props = defineProps({
   staffOptions: {
     type: Array,
     default: () => [],
+  },
+  hideAudit: {
+    type: Boolean,
+    default: false,
   },
 });
 

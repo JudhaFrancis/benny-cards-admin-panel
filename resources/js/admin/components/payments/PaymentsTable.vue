@@ -7,7 +7,7 @@
   >
     <!-- Custom Row Cells -->
     <template #cell-sn="{ item: payment }">
-      <span class="font-bold text-slate-900"> #{{ payment.sn }} </span>
+      <span class="text-slate-500 font-medium">{{ payment.sn }}</span>
     </template>
 
     <template #cell-payment_number="{ item: payment }">

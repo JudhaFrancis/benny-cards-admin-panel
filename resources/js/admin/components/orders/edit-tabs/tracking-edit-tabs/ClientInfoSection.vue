@@ -87,7 +87,7 @@
 
     <!-- Audit Footer -->
     <div
-      v-if="clientInfo._audit"
+      v-if="clientInfo._audit && !hideAudit"
       class="pt-4 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400"
     >
       <span class="flex items-center gap-2">
@@ -127,6 +127,10 @@ const props = defineProps({
     required: true,
   },
   isSaving: {
+    type: Boolean,
+    default: false,
+  },
+  hideAudit: {
     type: Boolean,
     default: false,
   },
