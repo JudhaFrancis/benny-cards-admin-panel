@@ -1,14 +1,28 @@
 <template>
   <div class="space-y-8">
-    <div class="space-y-2">
-      <label class="text-sm font-medium text-slate-700"
-        >Assigned Date <span class="text-red-500">*</span></label
-      >
-      <input
-        type="date"
-        v-model="printingStatus.assigned_date"
-        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-      />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700"
+          >Assigned To <span class="text-red-500">*</span></label
+        >
+        <ContextDropdown
+          v-model="printingStatus.assigned_to"
+          :options="staffOptions"
+          placeholder="Select printer"
+          :icon="UserIcon"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700"
+          >Assigned Date <span class="text-red-500">*</span></label
+        >
+        <input
+          type="date"
+          v-model="printingStatus.assigned_date"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+        />
+      </div>
     </div>
 
     <!-- Readymade Card -->
@@ -267,13 +281,18 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { Clock as ClockIcon } from "lucide-vue-next";
+import { computed, watch, onMounted } from "vue";
+import { Clock as ClockIcon, User as UserIcon } from "lucide-vue-next";
+import ContextDropdown from "../../../ui/ContextDropdown.vue";
 
 const props = defineProps({
   order: {
     type: Object,
     required: true,
+  },
+  staffOptions: {
+    type: Array,
+    default: () => [],
   },
 });
 
@@ -318,6 +337,56 @@ const customizeFollowUpList = computed({
   set: (val) => {
     printingStatus.value.customize_follow_up = val.join(",");
   },
+});
+
+const autoSelectDays = () => {
+  const baseDateStr = printingStatus.value.assigned_date;
+  if (!baseDateStr) return;
+
+  const baseDate = new Date(baseDateStr);
+  baseDate.setHours(0, 0, 0, 0);
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffTime = today - baseDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays >= 0) {
+    const maxDay = Math.min(diffDays + 1, 7);
+    
+    // Auto add for Readymade
+    const currentReadymade = [...readymadeFollowUpList.value];
+    let changedR = false;
+    for (let i = 1; i <= maxDay; i++) {
+        const dayStr = `Day ${i}`;
+        if (!currentReadymade.includes(dayStr)) {
+            currentReadymade.push(dayStr);
+            changedR = true;
+        }
+    }
+    if (changedR) readymadeFollowUpList.value = currentReadymade;
+
+    // Auto add for Customize
+    const currentCustomize = [...customizeFollowUpList.value];
+    let changedC = false;
+    for (let i = 1; i <= maxDay; i++) {
+        const dayStr = `Day ${i}`;
+        if (!currentCustomize.includes(dayStr)) {
+            currentCustomize.push(dayStr);
+            changedC = true;
+        }
+    }
+    if (changedC) customizeFollowUpList.value = currentCustomize;
+  }
+};
+
+watch(() => printingStatus.value.assigned_date, () => {
+  autoSelectDays();
+});
+
+onMounted(() => {
+  autoSelectDays();
 });
 
 const days = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];

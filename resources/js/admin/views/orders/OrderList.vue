@@ -360,7 +360,7 @@ const handleDelete = async () => {
   }
 };
 const pageTitle = computed(() => {
-  if (statusFilter.value === "all") return "All Orders";
+  if (statusFilter.value === "all") return "Orders";
   const options = {
     client_info: "Client Information",
     designing: "Designing Process",

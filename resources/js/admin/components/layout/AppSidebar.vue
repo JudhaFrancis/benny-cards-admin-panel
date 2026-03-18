@@ -54,7 +54,7 @@
       </div>
 
       <!-- Section: Order Management -->
-      <div v-if="navOrders.length > 0" class="space-y-2">
+      <div v-if="navOrders.length > 0 || navStages.length > 0" class="space-y-2">
         <p
           v-if="!isCollapsed"
           class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
@@ -64,6 +64,69 @@
         <div class="space-y-1">
           <SidebarNavItem
             v-for="item in navOrders"
+            :key="item.title"
+            :item="item"
+            :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)"
+          />
+
+          <!-- Stage Tracking Dropdown -->
+          <div v-if="navStages.length > 0" class="px-2 mt-2">
+            <div
+              @click="toggleTracking"
+              :class="
+                cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 group mx-2',
+                  trackingOpen && !isCollapsed
+                    ? 'bg-white/20 text-white backdrop-blur-md'
+                    : 'text-white/40 hover:bg-white/10 hover:text-white',
+                )
+              "
+            >
+              <DashboardIcon
+                class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110"
+                :class="
+                  trackingOpen && !isCollapsed
+                    ? 'text-white'
+                    : 'text-white/40 group-hover:text-white'
+                "
+              />
+              <div
+                v-if="!isCollapsed"
+                class="flex flex-1 items-center justify-between"
+              >
+                <span class="text-[14px] font-medium tracking-tight"
+                  >Order Management</span
+                >
+                <ChevronDownIcon
+                  :class="
+                    cn(
+                      'h-4 w-4 transition-transform duration-500 opacity-100 text-white',
+                      trackingOpen ? 'rotate-180' : '',
+                    )
+                  "
+                />
+              </div>
+            </div>
+
+            <!-- Stage Children -->
+            <div
+              v-if="trackingOpen && !isCollapsed"
+              class="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500"
+            >
+              <SidebarNavItem
+                v-for="item in navStages"
+                :key="item.title"
+                :item="item"
+                :isActive="isActive(item.url)"
+                isSubItem
+              />
+            </div>
+          </div>
+
+          <!-- Standalone Payments Link -->
+          <SidebarNavItem
+            v-for="item in navPayments"
             :key="item.title"
             :item="item"
             :isCollapsed="isCollapsed"
@@ -126,8 +189,8 @@
               <ChevronDownIcon
                 :class="
                   cn(
-                    'h-4 w-4 transition-transform duration-500 opacity-30',
-                    catalogOpen ? 'rotate-180 opacity-100 text-white' : '',
+                    'h-4 w-4 transition-transform duration-500 opacity-100 text-white',
+                    catalogOpen ? 'rotate-180' : '',
                   )
                 "
               />
@@ -298,6 +361,7 @@ const { user, setUser } = useAuth();
 const { settings, fetchSettings, getLogoSource } = useSettings();
 const isCollapsed = ref(false);
 const catalogOpen = ref(false);
+const trackingOpen = ref(false);
 const isLogoutModalOpen = ref(false);
 const logoutLoading = ref(false);
 
@@ -332,6 +396,13 @@ const navDashboard = { title: "Dashboard", url: "/", icon: DashboardIcon };
 const navOrders = computed(() => {
   const items = [
     { title: "Orders", url: "/orders", icon: OrdersIcon, module: "Order" },
+  ];
+  return items.filter((item) => hasPermission(item.module));
+});
+
+// Order Stage Tracking dropdown
+const navStages = computed(() => {
+  const items = [
     {
       title: "Client Information",
       url: "/order-management/client-information",
@@ -362,6 +433,12 @@ const navOrders = computed(() => {
       icon: CheckCircleIcon,
       module: "Order",
     },
+  ];
+  return items.filter((item) => hasPermission(item.module));
+});
+
+const navPayments = computed(() => {
+  const items = [
     {
       title: "Payments",
       url: "/payments",
@@ -439,12 +516,21 @@ const isActive = (url) => {
   return route.path.startsWith(url);
 };
 
+const toggleTracking = () => {
+  if (isCollapsed.value) isCollapsed.value = false;
+  trackingOpen.value = !trackingOpen.value;
+  // Close other dropdowns
+  if (trackingOpen.value) {
+    catalogOpen.value = false;
+  }
+};
+
 const toggleCatalog = () => {
   if (isCollapsed.value) isCollapsed.value = false;
   catalogOpen.value = !catalogOpen.value;
   // Close other dropdowns
   if (catalogOpen.value) {
-    reportsOpen.value = false;
+    trackingOpen.value = false;
   }
 };
 
@@ -473,9 +559,12 @@ watch(
     // Auto-expand if navigating to a dropdown route
     if (path.startsWith("/catalog")) {
       catalogOpen.value = true;
+    } else if (path.startsWith("/order-management")) {
+      trackingOpen.value = true;
     } else {
       // Close all dropdowns when navigating to non-dropdown routes
       catalogOpen.value = false;
+      trackingOpen.value = false;
     }
   },
   { immediate: true },

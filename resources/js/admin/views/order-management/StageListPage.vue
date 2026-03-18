@@ -11,7 +11,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search Order ID..."
+              placeholder="Search Order ID or Name..."
               class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
@@ -103,6 +103,9 @@ import FilterSectionHelper from "../../components/ui/FilterSection.vue";
 import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import StageViewDialog from "../../components/order-management/StageViewDialog.vue";
 import StageEditDialog from "../../components/order-management/StageEditDialog.vue";
+import { useAuth } from "../../composables/useAuth";
+
+const { user } = useAuth();
 
 const props = defineProps({
   stage: { type: String, required: true },
@@ -167,7 +170,8 @@ const fetchOrders = async () => {
   loading.value = true;
   try {
     const params = {
-      per_page: 100, // Load enough for frontend filtering
+      per_page: 100, 
+      stage: props.stage,
     };
     
     // We can filter basic order status on backend if supported
@@ -193,7 +197,9 @@ const filteredOrders = computed(() => {
   // Frontend filtering for complex stage logic
   items = items.filter(o => {
     // Search
-    const searchMatch = !searchQuery.value || o.order_number?.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const searchMatch = !searchQuery.value || 
+      o.order_number?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      o.customer_details?.name?.toLowerCase().includes(searchQuery.value.toLowerCase());
     
     // Payment Status
     const paymentMatch = paymentFilter.value === 'all' || o.payment_status === paymentFilter.value;
@@ -208,8 +214,38 @@ const filteredOrders = computed(() => {
     return searchMatch && paymentMatch && stageMatch;
   });
 
+  // Role based filtering: If not super-admin or admin, only show orders assigned to this user
+  const userRole = user.value?.role?.name?.toLowerCase();
+  const userName = user.value?.name;
+
+  if (userRole && userRole !== 'super-admin' && userRole !== 'admin') {
+    items = items.filter(o => {
+       const assignedName = getAssignedNameHelper(o, props.stage);
+       return assignedName === userName;
+    });
+  }
+
   return items;
 });
+
+// Helper to get assigned name for filtering
+const getAssignedNameHelper = (order, stage) => {
+  const tracking = order.tracking || {};
+  switch (stage) {
+    case 'client-information':
+      return tracking.job_details?.order_taken_by;
+    case 'designing':
+      return tracking.work_assign?.assigned_to;
+    case 'printing':
+      return tracking.printing_status?.assigned_to || tracking.work_assign?.assigned_to;
+    case 'packaging':
+      return tracking.packaging_logistics?.crafted_by;
+    case 'delivery':
+      return tracking.dispatch_mode?.signature_name;
+    default:
+      return null;
+  }
+};
 
 // Helper for stage status to match table component logic
 const getStageStatus = (order, stage) => {

@@ -16,8 +16,22 @@ class OrderService
      */
     public function listOrders(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
+        $user = auth()->user();
+        $isStaff = $user && $user->role && $user->role->name === 'Staff';
+
         return Order::query()
             ->with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon', 'tracking', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery'])
+            ->when($isStaff, function (Builder $query) use ($user) {
+                $userName = $user->name;
+                $query->whereHas('tracking', function ($q) use ($userName) {
+                    $q->where('job_details->order_taken_by', $userName)
+                      ->orWhere('work_assign->assigned_to', $userName)
+                      ->orWhere('printing_status->assigned_to', $userName)
+                      ->orWhere('packaging_logistics->crafted_by', $userName)
+                      ->orWhere('packaging_status->packed_by', $userName)
+                      ->orWhere('dispatch_mode->signature_name', $userName);
+                });
+            })
             ->when(isset($filters['status']) && $filters['status'] !== 'all', function (Builder $query) use ($filters) {
                 $query->where('status', $filters['status']);
             })

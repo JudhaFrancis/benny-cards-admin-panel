@@ -209,12 +209,10 @@ const fetchStaff = async () => {
       params: { per_page: 100 }, // No role_id filter here, we'll filter in JS
     });
     if (response.data.success) {
-      // Include Super Admin, Admin and Staff
-      const managementRoles = ['super-admin', 'admin', 'staff'];
       staffOptions.value = response.data.data.data
         .filter((user) => {
           const roleName = user.role?.name?.toLowerCase() || '';
-          return managementRoles.includes(roleName);
+          return roleName !== 'user'; // Allow all roles EXCEPT 'user'
         })
         .map((user) => ({
           label: user.name,

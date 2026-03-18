@@ -13,6 +13,14 @@
       </span>
     </template>
 
+    <template #cell-customer="{ item: order }">
+      <div class="flex flex-col">
+        <span class="text-sm font-medium text-slate-900">{{
+          order.customer_details?.name || "N/A"
+        }}</span>
+      </div>
+    </template>
+
     <template #cell-assigned_name="{ item: order }">
       <div class="flex flex-col">
         <span class="text-sm font-semibold text-slate-900">{{ getAssignedName(order) }}</span>
@@ -84,6 +92,7 @@ defineEmits(["view", "edit"]);
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
   { key: "order_number", label: "Order ID", align: "left" },
+  { key: "customer", label: "Customer", align: "left" },
   { key: "assigned_name", label: "Assigned Name", align: "left" },
   { key: "assigned_date", label: "Assigned Date", align: "left" },
   { key: "status", label: "Status", align: "left" },
@@ -116,7 +125,7 @@ const getAssignedName = (order) => {
     case 'designing':
       return tracking.work_assign?.assigned_to || "N/A";
     case 'printing':
-      return tracking.work_assign?.assigned_to || "N/A"; // Printing often shares same assignee or isn't specifically named
+      return tracking.printing_status?.assigned_to || tracking.work_assign?.assigned_to || "N/A"; // Printing often shares same assignee or isn't specifically named
     case 'packaging':
       return tracking.packaging_logistics?.crafted_by || "N/A";
     case 'delivery':

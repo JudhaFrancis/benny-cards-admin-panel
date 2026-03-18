@@ -158,6 +158,34 @@
           />
         </div>
       </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700">Start Time</label>
+        <div class="relative group">
+          <ClockIcon
+            class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+          />
+          <input
+            type="time"
+            v-model="packagingLogistics.start_time"
+            class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700">End Time</label>
+        <div class="relative group">
+          <ClockIcon
+            class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+          />
+          <input
+            type="time"
+            v-model="packagingLogistics.end_time"
+            class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- Textareas -->

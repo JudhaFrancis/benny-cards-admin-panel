@@ -47,6 +47,11 @@ class PermissionSeeder extends Seeder
             'Banners',
             'Coupons',
             'Review',
+            'Client Information',
+            'Designing',
+            'Printing',
+            'Packaging',
+            'Dispatch Delivery',
         ];
 
         // 2. Define Actions
