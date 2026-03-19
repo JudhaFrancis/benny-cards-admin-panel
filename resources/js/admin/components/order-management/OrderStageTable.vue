@@ -90,15 +90,15 @@ const props = defineProps({
 defineEmits(["view", "edit"]);
 
 const columns = [
-  { key: "sn", label: "S.No", width: "80px" },
-  { key: "order_number", label: "Order ID", align: "left" },
-  { key: "customer", label: "Customer", align: "left" },
-  { key: "assigned_name", label: "Assigned Name", align: "left" },
-  { key: "assigned_date", label: "Assigned Date", align: "left" },
-  { key: "status", label: "Status", align: "left" },
-  { key: "created_at", label: "Created", align: "left" },
-  { key: "modified_by", label: "Modified", align: "left" },
-  { key: "actions", label: "Action", align: "right" }
+  { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
+  { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
+  { key: "customer", label: "Customer", align: "left", width: "200px" },
+  { key: "assigned_name", label: "Assigned Name", align: "left", width: "180px" },
+  { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap" },
+  { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },
+  { key: "created_at", label: "Created", align: "left", width: "150px" },
+  { key: "modified_by", label: "Modified", align: "left", width: "150px" },
+  { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" }
 ];
 
 const statusStyles = {

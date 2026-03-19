@@ -7,7 +7,7 @@
     ]"
   >
     <div class="overflow-x-auto custom-scrollbar">
-      <table class="w-full border-separate border-spacing-0 text-left">
+      <table class="min-w-full border-separate border-spacing-0 text-left">
         <DataTableHeader :columns="columns">
           <template v-for="(_, name) in $slots" #[name]="slotData">
             <slot :name="name" v-bind="slotData"></slot>
@@ -17,7 +17,7 @@
         <tbody class="divide-y divide-slate-100">
           <template v-if="loading">
             <tr v-for="i in skeletonRows" :key="i" class="animate-pulse">
-              <td :colspan="columns.length" class="px-6 py-8">
+              <td :colspan="columns.length" class="px-3 py-8">
                 <div class="h-4 bg-slate-100 rounded w-full"></div>
               </td>
             </tr>
@@ -27,7 +27,7 @@
             <tr>
               <td
                 :colspan="columns.length"
-                class="px-6 py-12 text-center text-slate-400 italic text-sm"
+                class="px-3 py-12 text-center text-slate-400 italic text-sm"
               >
                 {{ emptyText }}
               </td>
@@ -44,7 +44,7 @@
                 v-for="column in columns"
                 :key="column.key"
                 :class="[
-                  'px-6 py-4 text-sm',
+                  'px-3 py-4 text-sm whitespace-nowrap',
                   column.align === 'center'
                     ? 'text-center'
                     : column.align === 'right'
@@ -52,6 +52,7 @@
                       : 'text-left',
                   column.cellClass,
                 ]"
+                :style="column.width ? { width: column.width } : {}"
               >
                 <slot
                   :name="`cell-${column.key}`"

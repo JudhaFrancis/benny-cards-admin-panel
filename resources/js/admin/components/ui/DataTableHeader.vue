@@ -5,7 +5,7 @@
         v-for="column in columns"
         :key="column.key"
         :class="[
-          'px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 select-none transition-colors duration-200',
+          'px-3 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 select-none transition-colors duration-200 whitespace-nowrap',
           column.align === 'center'
             ? 'text-center'
             : column.align === 'right'
@@ -13,6 +13,7 @@
               : 'text-left',
           column.class,
         ]"
+        :style="column.width ? { width: column.width } : {}"
       >
         <div
           :class="[

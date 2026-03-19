@@ -205,29 +205,29 @@ const sendWhatsApp = async (order) => {
 const columns = computed(() => {
   if (props.statusFilter === "all") {
     return [
-      { key: "sn", label: "S.No", width: "80px" },
-      { key: "order_number", label: "Order ID", align: "left" },
-      { key: "customer", label: "Customer", align: "left" },
-      { key: "orderDate", label: "Order Date", align: "left" },
-      { key: "items", label: "Items", align: "center" },
-      { key: "status", label: "Order Status", align: "left" },
-      { key: "amount", label: "Amount", align: "right" },
-      { key: "paid", label: "Paid", align: "right" },
-      { key: "payment", label: "Payment", align: "left" },
-      { key: "actions", label: "Actions", align: "right" },
+      { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
+      { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
+      { key: "customer", label: "Customer", align: "left", width: "200px" },
+      { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap" },
+      { key: "items", label: "Items", align: "center", width: "100px", class: "whitespace-nowrap" },
+      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap" },
+      { key: "amount", label: "Amount", align: "right", width: "120px", class: "whitespace-nowrap" },
+      { key: "paid", label: "Paid", align: "right", width: "120px", class: "whitespace-nowrap" },
+      { key: "payment", label: "Payment", align: "left", width: "120px", class: "whitespace-nowrap" },
+      { key: "actions", label: "Actions", align: "right", width: "130px", class: "whitespace-nowrap" },
     ];
   }
 
   // Workflow Columns for Tracking Tabs
   return [
-    { key: "sn", label: "S.No", width: "80px" },
-    { key: "order_number", label: "Order ID", align: "left" },
-    { key: "assigned_name", label: "Assigned Name", align: "left" },
-    { key: "assigned_date", label: "Assigned Date", align: "left" },
-    { key: "status", label: "Status", align: "left" },
-    { key: "created_at", label: "Created At", align: "left" },
-    { key: "modified_by", label: "Modified By", align: "left" },
-    { key: "actions", label: "Action", align: "right" },
+    { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
+    { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
+    { key: "assigned_name", label: "Assigned Name", align: "left", width: "200px" },
+    { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap" },
+    { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },
+    { key: "created_at", label: "Created At", align: "left", width: "150px" },
+    { key: "modified_by", label: "Modified By", align: "left", width: "150px" },
+    { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" },
   ];
 });
 
