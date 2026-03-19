@@ -1,253 +1,147 @@
 <template>
-  <aside
-    :class="
-      cn(
-        'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-500 ease-in-out border-r bg-primary text-white/70',
-        isCollapsed ? 'w-24' : 'w-64',
-        'border-white/10 shadow-[8px_0_32px_rgba(0,0,0,0.1)]',
-      )
-    "
-  >
+  <aside :class="cn(
+    'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-500 ease-in-out border-r bg-primary text-white/70',
+    isCollapsed ? 'w-24' : 'w-64',
+    'border-white/10 shadow-[8px_0_32px_rgba(0,0,0,0.1)]',
+  )
+    ">
     <!-- Brand / Logo Area -->
-    <div
-      class="h-24 flex items-center px-6 gap-4 shrink-0 border-b border-white/10 bg-white/5 backdrop-blur-md"
-    >
+    <div class="h-24 flex items-center px-6 gap-4 shrink-0 border-b border-white/10 bg-white/5 backdrop-blur-md">
       <div
-        class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-xl shadow-black/10 shrink-0 transform transition-all hover:scale-105 hover:rotate-2 duration-500 cursor-pointer group overflow-hidden"
-      >
-        <img
-          v-if="settings.logo"
-          :src="getLogoSource()"
-          class="w-full h-full object-contain p-1.5"
-          alt="Logo"
-        />
-        <ScrollTextIcon
-          v-else
-          class="h-6 w-6 text-primary group-hover:scale-110 transition-transform"
-        />
+        class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-xl shadow-black/10 shrink-0 transform transition-all hover:scale-105 hover:rotate-2 duration-500 cursor-pointer group overflow-hidden">
+        <img v-if="settings.logo" :src="getLogoSource()" class="w-full h-full object-contain p-1.5" alt="Logo" />
+        <ScrollTextIcon v-else class="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
       </div>
-      <div
-        v-if="!isCollapsed"
-        class="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500"
-      >
+      <div v-if="!isCollapsed"
+        class="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
         <span class="font-bold text-lg text-white tracking-tight leading-none">
           {{ settings.company_name || "Agoo Order" }}
         </span>
-        <span
-          class="text-[10px] text-white font-bold uppercase tracking-[0.2em] mt-1.5 opacity-60"
-          >{{ user?.role ? user.role?.name + " Portal" : "HQ Portal" }}</span
-        >
+        <span class="text-[10px] text-white font-bold uppercase tracking-[0.2em] mt-1.5 opacity-60">{{ user?.role ?
+          user.role?.name + " Portal" : "HQ Portal" }}</span>
       </div>
     </div>
 
     <!-- Navigation Area -->
-    <div
-      class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-8 px-2 space-y-10"
-    >
+    <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-8 px-2 space-y-10">
       <!-- Dashboard - Standalone -->
       <div class="space-y-1">
-        <SidebarNavItem
-          :item="navDashboard"
-          :isCollapsed="isCollapsed"
-          :isActive="isActive(navDashboard.url)"
-        />
+        <SidebarNavItem :item="navDashboard" :isCollapsed="isCollapsed" :isActive="isActive(navDashboard.url)" />
       </div>
 
       <!-- Section: Order Management -->
       <div v-if="navOrders.length > 0 || navStages.length > 0" class="space-y-2">
-        <p
-          v-if="!isCollapsed"
-          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
-        >
+        <p v-if="!isCollapsed"
+          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none">
           Order Management
         </p>
         <div class="space-y-1">
-          <SidebarNavItem
-            v-for="item in navOrders"
-            :key="item.title"
-            :item="item"
-            :isCollapsed="isCollapsed"
-            :isActive="isActive(item.url)"
-          />
+          <SidebarNavItem v-for="item in navOrders" :key="item.title" :item="item" :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)" />
 
           <!-- Stage Tracking Dropdown -->
           <div v-if="navStages.length > 0" class="px-2 mt-2">
-            <div
-              @click="toggleTracking"
-              :class="
-                cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 group mx-2',
-                  trackingOpen && !isCollapsed
-                    ? 'bg-white/20 text-white backdrop-blur-md'
-                    : 'text-white/40 hover:bg-white/10 hover:text-white',
+            <div @click="toggleTracking" :class="cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 group',
+              trackingOpen && !isCollapsed
+                ? 'bg-white/20 text-white backdrop-blur-md'
+                : 'text-white/40 hover:bg-white/10 hover:text-white',
+            )
+              ">
+              <DashboardIcon class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110" :class="trackingOpen && !isCollapsed
+                ? 'text-white'
+                : 'text-white/40 group-hover:text-white'
+                " />
+              <div v-if="!isCollapsed" class="flex flex-1 items-center justify-between">
+                <span class="text-[14px] font-medium tracking-tight">Order Management</span>
+                <ChevronDownIcon :class="cn(
+                  'h-4 w-4 transition-transform duration-500 opacity-100 text-white',
+                  trackingOpen ? 'rotate-180' : '',
                 )
-              "
-            >
-              <DashboardIcon
-                class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110"
-                :class="
-                  trackingOpen && !isCollapsed
-                    ? 'text-white'
-                    : 'text-white/40 group-hover:text-white'
-                "
-              />
-              <div
-                v-if="!isCollapsed"
-                class="flex flex-1 items-center justify-between"
-              >
-                <span class="text-[14px] font-medium tracking-tight"
-                  >Order Management</span
-                >
-                <ChevronDownIcon
-                  :class="
-                    cn(
-                      'h-4 w-4 transition-transform duration-500 opacity-100 text-white',
-                      trackingOpen ? 'rotate-180' : '',
-                    )
-                  "
-                />
+                  " />
               </div>
             </div>
 
             <!-- Stage Children -->
-            <div
-              v-if="trackingOpen && !isCollapsed"
-              class="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500"
-            >
-              <SidebarNavItem
-                v-for="item in navStages"
-                :key="item.title"
-                :item="item"
-                :isActive="isActive(item.url)"
-                isSubItem
-              />
+            <div v-if="trackingOpen && !isCollapsed"
+              class="mt-2 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500">
+              <SidebarNavItem v-for="item in navStages" :key="item.title" :item="item" :isActive="isActive(item.url)"
+                isSubItem />
             </div>
           </div>
 
           <!-- Standalone Payments Link -->
-          <SidebarNavItem
-            v-for="item in navPayments"
-            :key="item.title"
-            :item="item"
-            :isCollapsed="isCollapsed"
-            :isActive="isActive(item.url)"
-          />
+          <SidebarNavItem v-for="item in navPayments" :key="item.title" :item="item" :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)" />
         </div>
       </div>
 
       <!-- Section: Product Management -->
-      <div
-        v-if="navProducts.length > 0 || navCatalog.length > 0"
-        class="space-y-2"
-      >
-        <p
-          v-if="!isCollapsed"
-          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
-        >
+      <div v-if="navProducts.length > 0 || navCatalog.length > 0" class="space-y-2">
+        <p v-if="!isCollapsed"
+          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none">
           Product Management
         </p>
 
         <!-- Standalone Product Items -->
         <div class="space-y-1">
-          <SidebarNavItem
-            v-for="item in navProducts"
-            :key="item.title"
-            :item="item"
-            :isCollapsed="isCollapsed"
-            :isActive="isActive(item.url)"
-          />
+          <SidebarNavItem v-for="item in navProducts" :key="item.title" :item="item" :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)" />
         </div>
 
         <!-- Catalog Management Dropdown -->
         <div v-if="navCatalog.length > 0" class="px-2 mt-2">
-          <div
-            @click="toggleCatalog"
-            :class="
-              cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 group mx-2',
-                catalogOpen && !isCollapsed
-                  ? 'bg-white/20 text-white backdrop-blur-md'
-                  : 'text-white/40 hover:bg-white/10 hover:text-white',
+          <div @click="toggleCatalog" :class="cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 group',
+            catalogOpen && !isCollapsed
+              ? 'bg-white/20 text-white backdrop-blur-md'
+              : 'text-white/40 hover:bg-white/10 hover:text-white',
+          )
+            ">
+            <PackageIcon class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110" :class="catalogOpen && !isCollapsed
+              ? 'text-white'
+              : 'text-white/40 group-hover:text-white'
+              " />
+            <div v-if="!isCollapsed" class="flex flex-1 items-center justify-between">
+              <span class="text-[14px] font-medium tracking-tight">Catalog Management</span>
+              <ChevronDownIcon :class="cn(
+                'h-4 w-4 transition-transform duration-500 opacity-100 text-white',
+                catalogOpen ? 'rotate-180' : '',
               )
-            "
-          >
-            <PackageIcon
-              class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110"
-              :class="
-                catalogOpen && !isCollapsed
-                  ? 'text-white'
-                  : 'text-white/40 group-hover:text-white'
-              "
-            />
-            <div
-              v-if="!isCollapsed"
-              class="flex flex-1 items-center justify-between"
-            >
-              <span class="text-[14px] font-medium tracking-tight"
-                >Catalog Management</span
-              >
-              <ChevronDownIcon
-                :class="
-                  cn(
-                    'h-4 w-4 transition-transform duration-500 opacity-100 text-white',
-                    catalogOpen ? 'rotate-180' : '',
-                  )
-                "
-              />
+                " />
             </div>
           </div>
 
           <!-- Catalog Children -->
-          <div
-            v-if="catalogOpen && !isCollapsed"
-            class="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500"
-          >
-            <SidebarNavItem
-              v-for="item in navCatalog"
-              :key="item.title"
-              :item="item"
-              :isActive="isActive(item.url)"
-              isSubItem
-            />
+          <div v-if="catalogOpen && !isCollapsed"
+            class="mt-2 ml-4 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-top-4 duration-500">
+            <SidebarNavItem v-for="item in navCatalog" :key="item.title" :item="item" :isActive="isActive(item.url)"
+              isSubItem />
           </div>
         </div>
       </div>
 
       <!-- Section: Analytics & Reports -->
       <div v-if="navReports.length > 0" class="space-y-2">
-        <p
-          v-if="!isCollapsed"
-          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
-        >
+        <p v-if="!isCollapsed"
+          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none">
           Analytics & Reports
         </p>
         <div class="space-y-1">
-          <SidebarNavItem
-            v-for="item in navReports"
-            :key="item.title"
-            :item="item"
-            :isCollapsed="isCollapsed"
-            :isActive="isActive(item.url)"
-          />
+          <SidebarNavItem v-for="item in navReports" :key="item.title" :item="item" :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)" />
         </div>
       </div>
 
       <!-- Section: Administration -->
       <div v-if="navBottom.length > 0" class="space-y-2">
-        <p
-          v-if="!isCollapsed"
-          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none"
-        >
+        <p v-if="!isCollapsed"
+          class="px-5 mb-4 text-[10px] font-bold text-white/90 uppercase tracking-[0.3em] leading-none">
           Administration
         </p>
         <div class="space-y-1">
-          <SidebarNavItem
-            v-for="item in navBottom"
-            :key="item.title"
-            :item="item"
-            :isCollapsed="isCollapsed"
-            :isActive="isActive(item.url)"
-          />
+          <SidebarNavItem v-for="item in navBottom" :key="item.title" :item="item" :isCollapsed="isCollapsed"
+            :isActive="isActive(item.url)" />
         </div>
       </div>
     </div>
@@ -255,69 +149,39 @@
     <!-- Footer / User Area -->
     <div class="p-4 border-t border-white/10 bg-white/5 backdrop-blur-md">
       <div class="flex gap-3 px-1">
-        <button
-          @click="isLogoutModalOpen = true"
-          :class="
-            cn(
-              'flex-1 flex items-center justify-center h-12 rounded-xl transition-all duration-300 border bg-white/10 active:scale-95 group shadow-sm',
-              isCollapsed
-                ? 'border-white/10 text-white/60 hover:text-white hover:bg-rose-500/20 hover:border-rose-500/30'
-                : 'border-white/10 text-white/50 hover:bg-rose-500/20 hover:border-rose-500/20 hover:text-white',
-            )
-          "
-          title="Sign Out"
-        >
-          <LogOutIcon
-            :class="
-              cn(
-                'h-5 w-5 transition-all duration-300 group-hover:scale-110',
-                !isCollapsed && 'mr-2',
-              )
-            "
-          />
-          <span
-            v-if="!isCollapsed"
-            class="text-sm font-bold text-white tracking-tight"
-            >Sign Out</span
-          >
+        <button @click="isLogoutModalOpen = true" :class="cn(
+          'flex-1 flex items-center justify-center h-12 rounded-xl transition-all duration-300 border bg-white/10 active:scale-95 group shadow-sm',
+          isCollapsed
+            ? 'border-white/10 text-white/60 hover:text-white hover:bg-rose-500/20 hover:border-rose-500/30'
+            : 'border-white/10 text-white/50 hover:bg-rose-500/20 hover:border-rose-500/20 hover:text-white',
+        )
+          " title="Sign Out">
+          <LogOutIcon :class="cn(
+            'h-5 w-5 transition-all duration-300 group-hover:scale-110',
+            !isCollapsed && 'mr-2',
+          )
+            " />
+          <span v-if="!isCollapsed" class="text-sm font-bold text-white tracking-tight">Sign Out</span>
         </button>
 
-        <button
-          @click="isCollapsed = !isCollapsed"
-          class="w-12 h-12 flex items-center justify-center rounded-xl bg-white text-primary shadow-xl shadow-black/10 hover:bg-slate-50 transition-all active:scale-90 group"
-        >
-          <ChevronRightIcon
-            v-if="isCollapsed"
-            class="h-5 w-5 group-hover:translate-x-0.5 transition-transform"
-          />
-          <ChevronLeftIcon
-            v-else
-            class="h-5 w-5 group-hover:-translate-x-0.5 transition-transform"
-          />
+        <button @click="isCollapsed = !isCollapsed"
+          class="w-12 h-12 flex items-center justify-center rounded-xl bg-white text-primary shadow-xl shadow-black/10 hover:bg-slate-50 transition-all active:scale-90 group">
+          <ChevronRightIcon v-if="isCollapsed" class="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+          <ChevronLeftIcon v-else class="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />
         </button>
       </div>
     </div>
   </aside>
 
   <!-- Content Spacer -->
-  <div
-    :class="
-      cn('transition-all duration-300 shrink-0', isCollapsed ? 'w-20' : 'w-64')
-    "
-    aria-hidden="true"
-  />
+  <div :class="cn('transition-all duration-300 shrink-0', isCollapsed ? 'w-20' : 'w-64')
+    " aria-hidden="true" />
 
   <!-- Logout Confirmation Modal -->
-  <ConfirmationModal
-    :isOpen="isLogoutModalOpen"
-    title="Sign Out"
+  <ConfirmationModal :isOpen="isLogoutModalOpen" title="Sign Out"
     description="Are you sure you want to sign out of the Benny Cards Admin Panel? Your session will be ended."
-    confirmLabel="Sign Out"
-    variant="danger"
-    :loading="logoutLoading"
-    @close="isLogoutModalOpen = false"
-    @confirm="handleLogout"
-  />
+    confirmLabel="Sign Out" variant="danger" :loading="logoutLoading" @close="isLogoutModalOpen = false"
+    @confirm="handleLogout" />
 </template>
 
 <script setup>
@@ -575,13 +439,16 @@ watch(
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 10px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
 }
@@ -592,39 +459,47 @@ watch(
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   animation-fill-mode: forwards;
 }
+
 @keyframes fade-in {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
+
 @keyframes slide-in-left {
   from {
     transform: translateX(-10px);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
   }
 }
+
 @keyframes slide-in-top {
   from {
     transform: translateY(-10px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
   }
 }
+
 @keyframes zoom-in {
   from {
     transform: scale(0.95);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -634,12 +509,15 @@ watch(
 .fade-in {
   animation-name: fade-in;
 }
+
 .slide-in-from-left-4 {
   animation-name: slide-in-left;
 }
+
 .slide-in-from-top-2 {
   animation-name: slide-in-top;
 }
+
 .zoom-in-95 {
   animation-name: zoom-in;
 }
