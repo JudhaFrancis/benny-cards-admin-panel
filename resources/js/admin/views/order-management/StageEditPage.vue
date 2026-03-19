@@ -164,9 +164,8 @@ const fetchStaff = async () => {
   try {
     const response = await axios.get("/api/v1/users", { params: { per_page: 100 } });
     if (response.data.success) {
-      const managementRoles = ['super-admin', 'admin', 'staff'];
       staffOptions.value = response.data.data.data
-        .filter(u => managementRoles.includes(u.role?.name?.toLowerCase()))
+        .filter(u => u.role?.name?.toLowerCase() !== 'user')
         .map(u => ({ label: u.name, value: u.name }));
     }
   } catch (e) {

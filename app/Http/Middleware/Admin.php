@@ -16,7 +16,7 @@ class Admin
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && ($request->user()->role?->name === 'super-admin' || $request->user()->role?->name === 'Admin' || $request->user()->role?->name === 'Staff')) {
+        if ($request->user() && $request->user()->role && $request->user()->role->name !== 'User') {
             return $next($request);
         }
 
