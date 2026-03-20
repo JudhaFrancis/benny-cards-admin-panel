@@ -8,8 +8,23 @@
 
 
     <template #cell-order_number="{ item: order }">
-      <span class="font-semibold text-slate-900 italic hover:text-primary transition-colors cursor-pointer" @click="$emit('view', order)">
-        {{ order.order_number }}
+      <div class="flex flex-col">
+        <span class="font-semibold text-slate-900 italic hover:text-primary transition-colors cursor-pointer" @click="$emit('view', order)">
+          {{ order.order_number }}
+        </span>
+        <span 
+          v-if="order.tracking?.client_info?.expected_delivery_date" 
+          class="text-[10px] mt-0.5"
+          :class="getCountdownColor(order.tracking.client_info.expected_delivery_date)"
+        >
+          {{ getCountdownText(order.tracking.client_info.expected_delivery_date) }}
+        </span>
+      </div>
+    </template>
+
+    <template #cell-printing_days="{ item: order }">
+      <span :class="cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200', getPrintingDaysColor(order))">
+        {{ getDaysFromAssigned(order) }}
       </span>
     </template>
 
@@ -78,6 +93,7 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import { Eye, Pencil } from "lucide-vue-next";
 import DataTable from "../ui/DataTable.vue";
 
@@ -89,17 +105,77 @@ const props = defineProps({
 
 defineEmits(["view", "edit"]);
 
-const columns = [
-  { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
-  { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
-  { key: "customer", label: "Customer", align: "left", width: "200px" },
-  { key: "assigned_name", label: "Assigned Name", align: "left", width: "180px" },
-  { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap" },
-  { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },
-  { key: "created_at", label: "Created", align: "left", width: "150px" },
-  { key: "modified_by", label: "Modified", align: "left", width: "150px" },
-  { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" }
-];
+const columns = computed(() => {
+  const base = [
+    { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
+    { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
+    { key: "customer", label: "Customer", align: "left", width: "200px" },
+    { key: "assigned_name", label: "Assigned Name", align: "left", width: "180px" },
+    { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap" },
+  ];
+  if (props.stage === 'printing') {
+    base.push({ key: "printing_days", label: "Printing Days", align: "left", width: "120px", class: "whitespace-nowrap" });
+  }
+  base.push(
+    { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },
+    { key: "created_at", label: "Created", align: "left", width: "150px" },
+    { key: "modified_by", label: "Modified", align: "left", width: "150px" },
+    { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" }
+  );
+  return base;
+});
+
+const getCountdownColor = (dateString) => {
+  if (!dateString) return "text-slate-500";
+  const deliveryDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  deliveryDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = deliveryDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 0) return "text-rose-500 font-medium";
+  return "text-emerald-500 font-medium";
+};
+
+const getPrintingDaysColor = (order) => {
+  const dateString = order.tracking?.client_info?.expected_delivery_date;
+  if (!dateString) return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+  
+  const deliveryDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  deliveryDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = deliveryDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 0) return "bg-rose-500/10 text-rose-500 border-rose-500/20";
+  return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+};
+
+const getCountdownText = (dateString) => {
+  if (!dateString) return "";
+  const deliveryDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  deliveryDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = deliveryDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  const absDays = Math.abs(diffDays);
+  const dayStr = absDays === 1 ? 'Day' : 'Days';
+  
+  if (diffDays < 0) {
+    return `${absDays} ${dayStr} Late`;
+  } else if (diffDays === 0) {
+    return "Due Today";
+  } else {
+    return `${absDays} ${dayStr} Left`;
+  }
+};
 
 const statusStyles = {
   pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
@@ -135,7 +211,7 @@ const getAssignedName = (order) => {
   }
 };
 
-const getAssignedDate = (order) => {
+const getAssignedDateRaw = (order) => {
   const tracking = order.tracking || {};
   let date = null;
   switch (props.stage) {
@@ -155,7 +231,27 @@ const getAssignedDate = (order) => {
       date = tracking.dispatch_mode?.date;
       break;
   }
-  return formatDate(date);
+  return date;
+};
+
+const getAssignedDate = (order) => {
+  return formatDate(getAssignedDateRaw(order));
+};
+
+const getDaysFromAssigned = (order) => {
+  const dateStr = getAssignedDateRaw(order);
+  if (!dateStr) return "N/A";
+  
+  const assigned = new Date(dateStr);
+  const today = new Date();
+  assigned.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
+  
+  const diffTime = today - assigned;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return "Day 1";
+  return `Day ${diffDays + 1}`;
 };
 
 const getStageStatus = (order) => {

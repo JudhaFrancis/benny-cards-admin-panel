@@ -143,78 +143,20 @@
                         <div class="md:col-span-2">
                           <label
                             class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >Street Address<span class="text-rose-500"
+                            >Primary Address<span class="text-rose-500"
                               >*</span
                             ></label
                           >
-                          <input
+                          <textarea
                             v-model="form.customer.address_1"
-                            type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="Primary Street Address"
+                            rows="2"
+                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold resize-none"
+                            placeholder="Enter full primary address..."
                             required
-                          />
+                          ></textarea>
                         </div>
 
-                        <div>
-                          <label
-                            class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >City<span class="text-rose-500">*</span></label
-                          >
-                          <input
-                            v-model="form.customer.city_1"
-                            type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="City"
-                            required
-                          />
-                        </div>
 
-                        <div>
-                          <label
-                            class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >State / Province<span class="text-rose-500"
-                              >*</span
-                            ></label
-                          >
-                          <input
-                            v-model="form.customer.state_1"
-                            type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="State"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >Country<span class="text-rose-500">*</span></label
-                          >
-                          <input
-                            v-model="form.customer.country"
-                            type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="Country"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >Post Code<span class="text-rose-500"
-                              >*</span
-                            ></label
-                          >
-                          <input
-                            v-model="form.customer.post_code_1"
-                            type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="Post Code"
-                            required
-                          />
-                        </div>
 
                         <!-- Extra Address Header -->
                         <div
@@ -231,54 +173,17 @@
                         <div class="md:col-span-2">
                           <label
                             class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >Street Address (Extra)</label
+                            >Secondary Address</label
                           >
                           <input
                             v-model="form.customer.address_2"
                             type="text"
                             class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="Secondary Street Address"
+                            placeholder="Secondary Address"
                           />
                         </div>
 
-                        <div>
-                          <label
-                            class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >City (Extra)</label
-                          >
-                          <input
-                            v-model="form.customer.city_2"
-                            type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="City 2"
-                          />
-                        </div>
 
-                        <div>
-                          <label
-                            class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >State (Extra)</label
-                          >
-                          <input
-                            v-model="form.customer.state_2"
-                            type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="State 2"
-                          />
-                        </div>
-
-                        <div class="md:col-span-2">
-                          <label
-                            class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
-                            >Post Code (Extra)</label
-                          >
-                          <input
-                            v-model="form.customer.post_code_2"
-                            type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
-                            placeholder="Post Code 2"
-                          />
-                        </div>
 
                         <!-- Remarks Section -->
                         <div
@@ -740,15 +645,8 @@ const form = reactive({
     name: "",
     email: "",
     phone: "",
-    country: "",
     address_1: "",
-    city_1: "",
-    state_1: "",
-    post_code_1: "",
     address_2: "",
-    city_2: "",
-    state_2: "",
-    post_code_2: "",
   },
   items: [],
   discount: 0,
@@ -861,15 +759,8 @@ const resetForm = () => {
     name: "",
     email: "",
     phone: "",
-    country: "",
     address_1: "",
-    city_1: "",
-    state_1: "",
-    post_code_1: "",
     address_2: "",
-    city_2: "",
-    state_2: "",
-    post_code_2: "",
   };
 };
 
@@ -898,27 +789,7 @@ const handleSubmit = async () => {
   }
 
   if (!form.customer.address_1) {
-    toast.error("Primary street address is required");
-    return;
-  }
-
-  if (!form.customer.city_1) {
-    toast.error("Primary city is required");
-    return;
-  }
-
-  if (!form.customer.state_1) {
-    toast.error("Primary state is required");
-    return;
-  }
-
-  if (!form.customer.country) {
-    toast.error("Country is required");
-    return;
-  }
-
-  if (!form.customer.post_code_1) {
-    toast.error("Post code is required");
+    toast.error("Primary address is required");
     return;
   }
 

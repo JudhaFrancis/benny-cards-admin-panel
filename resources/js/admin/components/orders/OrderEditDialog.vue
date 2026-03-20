@@ -30,11 +30,11 @@
             leave-to="opacity-0 scale-95 translateY(20px)"
           >
             <DialogPanel
-              class="w-full max-w-5xl transform rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh] overflow-hidden"
+              class="w-full max-w-5xl transform rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh] overflow-visible"
             >
               <!-- Header -->
               <div
-                class="relative bg-primary text-white overflow-hidden shrink-0"
+                class="relative bg-primary text-white overflow-hidden shrink-0 rounded-t-[2.5rem]"
               >
                 <!-- Decorative Background -->
                 <div
@@ -111,7 +111,7 @@
                 class="flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar p-0 relative"
               >
                 <!-- Main Content Container with white background for active tab illusion -->
-                <div class="bg-white min-h-full p-8 rounded-b-[2rem]">
+                <div class="bg-white min-h-full p-8 pb-40 rounded-b-[2rem]">
                   <div v-if="editedOrder" class="max-w-4xl mx-auto">
                     <Transition
                       mode="out-in"

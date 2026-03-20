@@ -7,9 +7,18 @@
   >
     <!-- Custom Row Cells -->
     <template #cell-order_number="{ item: order }">
-      <span class="font-semibold text-slate-900 italic">{{
-        order.order_number
-      }}</span>
+      <div class="flex flex-col">
+        <span class="font-semibold text-slate-900 italic">{{
+          order.order_number
+        }}</span>
+        <span 
+          v-if="order.tracking?.client_info?.expected_delivery_date" 
+          class="text-[10px] mt-0.5"
+          :class="getCountdownColor(order.tracking.client_info.expected_delivery_date)"
+        >
+          {{ getCountdownText(order.tracking.client_info.expected_delivery_date) }}
+        </span>
+      </div>
     </template>
 
     <template #cell-customer="{ item: order }">
@@ -238,6 +247,42 @@ const formatDate = (dateString) => {
     month: "short",
     year: "numeric",
   });
+};
+
+const getCountdownColor = (dateString) => {
+  if (!dateString) return "text-slate-500";
+  const deliveryDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  deliveryDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = deliveryDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 0) return "text-rose-500 font-medium";
+  return "text-emerald-500 font-medium";
+};
+
+const getCountdownText = (dateString) => {
+  if (!dateString) return "";
+  const deliveryDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  deliveryDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = deliveryDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  const absDays = Math.abs(diffDays);
+  const dayStr = absDays === 1 ? 'Day' : 'Days';
+  
+  if (diffDays < 0) {
+    return `${absDays} ${dayStr} Late`;
+  } else if (diffDays === 0) {
+    return "Due Today";
+  } else {
+    return `${absDays} ${dayStr} Left`;
+  }
 };
 
 const orderStatusStyles = {

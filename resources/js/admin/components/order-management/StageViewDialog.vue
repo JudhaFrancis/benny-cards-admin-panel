@@ -99,18 +99,18 @@ const formatAuditDate = (dateString) => {
   return `${d} at ${t}`;
 };
 
-// Section Components
-import OrderDetailsSection from "../orders/edit-tabs/tracking-edit-tabs/OrderDetailsSection.vue";
-import ClientInfoSection from "../orders/edit-tabs/tracking-edit-tabs/ClientInfoSection.vue";
-import CardSpecsSection from "../orders/edit-tabs/tracking-edit-tabs/CardSpecsSection.vue";
-import WorkAssignSection from "../orders/edit-tabs/tracking-edit-tabs/WorkAssignSection.vue";
-import DesignPrintSection from "../orders/edit-tabs/tracking-edit-tabs/DesignPrintSection.vue";
-import OrderPrintingSection from "../orders/edit-tabs/tracking-edit-tabs/OrderPrintingSection.vue";
-import PackagingLogisticsSection from "../orders/edit-tabs/tracking-edit-tabs/PackagingLogisticsSection.vue";
-import PackagingStatusSection from "../orders/edit-tabs/tracking-edit-tabs/PackagingStatusSection.vue";
-import DeliveryLocationSection from "../orders/edit-tabs/tracking-edit-tabs/DeliveryLocationSection.vue";
-import DispatchModeSection from "../orders/edit-tabs/tracking-edit-tabs/DispatchModeSection.vue";
-import DispatchDetailsSection from "../orders/edit-tabs/tracking-edit-tabs/DispatchDetailsSection.vue";
+// Section Components (View only)
+import ViewOrderDetailsSection from "../orders/info-tabs/tracking-view-tabs/ViewOrderDetailsSection.vue";
+import ViewClientInfoSection from "../orders/info-tabs/tracking-view-tabs/ViewClientInfoSection.vue";
+import ViewCardSpecsSection from "../orders/info-tabs/tracking-view-tabs/ViewCardSpecsSection.vue";
+import ViewWorkAssignSection from "../orders/info-tabs/tracking-view-tabs/ViewWorkAssignSection.vue";
+import ViewDesignPrintSection from "../orders/info-tabs/tracking-view-tabs/ViewDesignPrintSection.vue";
+import ViewOrderPrintingSection from "../orders/info-tabs/tracking-view-tabs/ViewOrderPrintingSection.vue";
+import ViewPackagingLogisticsSection from "../orders/info-tabs/tracking-view-tabs/ViewPackagingLogisticsSection.vue";
+import ViewPackagingStatusSection from "../orders/info-tabs/tracking-view-tabs/ViewPackagingStatusSection.vue";
+import ViewDeliveryLocationSection from "../orders/info-tabs/tracking-view-tabs/ViewDeliveryLocationSection.vue";
+import ViewDispatchModeSection from "../orders/info-tabs/tracking-view-tabs/ViewDispatchModeSection.vue";
+import ViewDispatchDetailsSection from "../orders/info-tabs/tracking-view-tabs/ViewDispatchDetailsSection.vue";
 
 const props = defineProps({
   isOpen: Boolean,
@@ -204,29 +204,29 @@ const relevantSections = computed(() => {
   switch (props.stage) {
     case 'client-information':
       return [
-        { id: 'details', label: 'Order Details', icon: ClipboardList, component: OrderDetailsSection },
-        { id: 'client', label: 'Client Information', icon: User, component: ClientInfoSection },
-        { id: 'specs', label: 'Card Specifications', icon: CreditCard, component: CardSpecsSection }
+        { id: 'details', label: 'Order Details', icon: ClipboardList, component: ViewOrderDetailsSection },
+        { id: 'client', label: 'Client Information', icon: User, component: ViewClientInfoSection },
+        { id: 'specs', label: 'Card Specifications', icon: CreditCard, component: ViewCardSpecsSection }
       ];
     case 'designing':
       return [
-        { id: 'assign', label: 'Work Assign Process', icon: Briefcase, component: WorkAssignSection },
-        { id: 'design', label: 'Design Details', icon: Printer, component: DesignPrintSection }
+        { id: 'assign', label: 'Work Assign Process', icon: Briefcase, component: ViewWorkAssignSection },
+        { id: 'design', label: 'Design Details', icon: Printer, component: ViewDesignPrintSection }
       ];
     case 'printing':
       return [
-        { id: 'printing', label: 'Order & Printing Status', icon: Package, component: OrderPrintingSection }
+        { id: 'printing', label: 'Order & Printing Status', icon: Package, component: ViewOrderPrintingSection }
       ];
     case 'packaging':
       return [
-        { id: 'logistics', label: 'Packaging & Logistics', icon: Box, component: PackagingLogisticsSection },
-        { id: 'status', label: 'Packaging Status', icon: Box, component: PackagingStatusSection }
+        { id: 'logistics', label: 'Packaging & Logistics', icon: Box, component: ViewPackagingLogisticsSection },
+        { id: 'status', label: 'Packaging Status', icon: Box, component: ViewPackagingStatusSection }
       ];
     case 'delivery':
       return [
-        { id: 'location', label: 'Delivery Location', icon: MapPin, component: DeliveryLocationSection },
-        { id: 'dispatch', label: 'Mode of Dispatch', icon: Truck, component: DispatchModeSection },
-        { id: 'details', label: 'Dispatch Details', icon: FileText, component: DispatchDetailsSection }
+        { id: 'location', label: 'Delivery Location', icon: MapPin, component: ViewDeliveryLocationSection },
+        { id: 'dispatch', label: 'Mode of Dispatch', icon: Truck, component: ViewDispatchModeSection },
+        { id: 'details', label: 'Dispatch Details', icon: FileText, component: ViewDispatchDetailsSection }
       ];
     default: return [];
   }

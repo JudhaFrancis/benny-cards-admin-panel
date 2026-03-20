@@ -81,73 +81,19 @@
         <MapPinIcon class="h-4 w-4 text-primary" /> Primary Address
       </h4>
 
-      <div class="space-y-6">
         <div class="space-y-2">
           <label
             for="addressLine1"
             class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-            >Street Address</label
+            >Primary Address</label
           >
-          <input
+          <textarea
             id="addressLine1"
             v-model="localDetails.address_1"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-            placeholder="123 Main St"
-          />
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label
-              for="city"
-              class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-              >City</label
-            >
-            <input
-              id="city"
-              v-model="localDetails.city_1"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-            />
-          </div>
-          <div class="space-y-2">
-            <label
-              for="state"
-              class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-              >State / Province</label
-            >
-            <input
-              id="state"
-              v-model="localDetails.state_1"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-            />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label
-              for="pincode"
-              class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-              >ZIP / Postal Code</label
-            >
-            <input
-              id="pincode"
-              v-model="localDetails.post_code_1"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-            />
-          </div>
-          <div class="space-y-2">
-            <label
-              for="country"
-              class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-              >Country</label
-            >
-            <input
-              id="country"
-              v-model="localDetails.country"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-            />
-          </div>
+            rows="2"
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300 resize-none"
+            placeholder="Enter full primary address..."
+          ></textarea>
         </div>
 
         <!-- Extra Address Divider -->
@@ -163,54 +109,17 @@
             <div class="space-y-2">
               <label
                 class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-                >Street Address (Extra)</label
+                >Secondary Address</label
               >
               <input
                 v-model="localDetails.address_2"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-                placeholder="Secondary Street Address"
+                placeholder="Secondary Address"
               />
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label
-                  class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-                  >City (Extra)</label
-                >
-                <input
-                  v-model="localDetails.city_2"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-                />
-              </div>
-              <div class="space-y-2">
-                <label
-                  class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-                  >State (Extra)</label
-                >
-                <input
-                  v-model="localDetails.state_2"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-                />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label
-                  class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-                  >Post Code (Extra)</label
-                >
-                <input
-                  v-model="localDetails.post_code_2"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300"
-                />
-              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
     <!-- Section Footer -->
     <div class="pt-6 border-t border-slate-100 flex justify-end gap-3">
@@ -266,13 +175,6 @@ const localDetails = reactive({
   phone: "",
   address_1: "",
   address_2: "",
-  city_1: "",
-  city_2: "",
-  state_1: "",
-  state_2: "",
-  post_code_1: "",
-  post_code_2: "",
-  country: "",
   ...props.order.customer_details,
 });
 

@@ -27,11 +27,11 @@
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="w-full max-w-2xl transform overflow-hidden rounded-[2.5rem] bg-white text-left align-middle shadow-xl transition-all border border-gray-100 flex flex-col"
+              class="w-full max-w-2xl transform overflow-visible rounded-[2.5rem] bg-white text-left align-middle shadow-xl transition-all border border-gray-100 flex flex-col"
             >
               <!-- Header -->
               <div
-                class="relative bg-primary text-white overflow-hidden shrink-0 sticky top-0 z-10"
+                class="relative bg-primary text-white overflow-hidden shrink-0 sticky top-0 z-10 rounded-t-[2.5rem]"
               >
                 <div
                   class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent"
@@ -76,7 +76,7 @@
 
               <!-- Form -->
               <div class="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                <form @submit.prevent="handleSubmit" class="space-y-6">
+                <form @submit.prevent="handleSubmit" class="space-y-6 pb-40">
                   <!-- Product Selection (Searchable) -->
                   <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">

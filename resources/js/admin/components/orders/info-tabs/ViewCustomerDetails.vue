@@ -68,66 +68,15 @@
         <MapPinIcon class="h-4 w-4 text-primary" /> Primary Address
       </h4>
 
-      <div class="space-y-6">
         <div class="space-y-2">
           <label
             class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-            >Street Address</label
+            >Primary Address</label
           >
           <div
-            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
+            class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 leading-relaxed whitespace-pre-wrap"
           >
             {{ order.customer_details?.address_1 || "N/A" }}
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label
-              class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-              >City</label
-            >
-            <div
-              class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
-            >
-              {{ order.customer_details?.city_1 || "N/A" }}
-            </div>
-          </div>
-          <div class="space-y-2">
-            <label
-              class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-              >State / Province</label
-            >
-            <div
-              class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
-            >
-              {{ order.customer_details?.state_1 || "N/A" }}
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label
-              class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-              >ZIP / Postal Code</label
-            >
-            <div
-              class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
-            >
-              {{ order.customer_details?.post_code_1 || "N/A" }}
-            </div>
-          </div>
-          <div class="space-y-2">
-            <label
-              class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-              >Country</label
-            >
-            <div
-              class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
-            >
-              {{ order.customer_details?.country || "N/A" }}
-            </div>
           </div>
         </div>
 
@@ -144,57 +93,17 @@
             <div class="space-y-2">
               <label
                 class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-                >Street Address (Extra)</label
+                >Secondary Address</label
               >
               <div
-                class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
+                class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 leading-relaxed whitespace-pre-wrap"
               >
                 {{ order.customer_details?.address_2 || "N/A" }}
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label
-                  class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-                  >City (Extra)</label
-                >
-                <div
-                  class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
-                >
-                  {{ order.customer_details?.city_2 || "N/A" }}
-                </div>
-              </div>
-              <div class="space-y-2">
-                <label
-                  class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-                  >State (Extra)</label
-                >
-                <div
-                  class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
-                >
-                  {{ order.customer_details?.state_2 || "N/A" }}
-                </div>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label
-                  class="text-xs font-bold text-slate-500 uppercase tracking-wide"
-                  >Post Code (Extra)</label
-                >
-                <div
-                  class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
-                >
-                  {{ order.customer_details?.post_code_2 || "N/A" }}
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 

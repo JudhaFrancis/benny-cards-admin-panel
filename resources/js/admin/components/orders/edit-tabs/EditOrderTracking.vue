@@ -55,11 +55,11 @@
     >
       <div
         :key="selectedSection"
-        class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden"
+        class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-visible"
       >
         <!-- Section Header -->
         <div
-          class="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50"
+          class="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50 rounded-t-3xl"
         >
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-2xl bg-primary/5 text-primary">
@@ -101,7 +101,7 @@
 
         <!-- Section Footer -->
         <div
-          class="px-8 py-5 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center"
+          class="px-8 py-5 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center rounded-b-3xl"
         >
           <button
             v-if="activeSectionIndex > 0"
