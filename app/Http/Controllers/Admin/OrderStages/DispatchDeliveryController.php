@@ -16,36 +16,14 @@ class DispatchDeliveryController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $order = Order::findOrFail($id);
-        $data = $request->only(['delivery_location', 'dispatch_mode', 'dispatch_details', 'status']);
-        $auditData = [
-            'updated_by' => auth()->user()->name ?? 'Unknown',
-            'updated_at' => now()->toDateTimeString(),
-        ];
-        $data['audit_details'] = $auditData;
-
         // 1. Update/Create Individual Stage Table
-        $order->dispatchDelivery()->updateOrCreate(
+        $stage = $order->dispatchDelivery()->updateOrCreate(
             ['order_id' => $order->id],
-            $data
+            array_merge($data, [
+                'added_by' => $order->dispatchDelivery ? $order->dispatchDelivery->added_by : auth()->id(),
+                'modified_by' => auth()->id()
+            ])
         );
-
-        // 2. Sync with order_trackings (JSON) for frontend compatibility
-        $trackingData = [];
-        $sections = ['delivery_location', 'dispatch_mode', 'dispatch_details'];
-        foreach ($sections as $key) {
-            if ($request->has($key)) {
-                $val = $request->input($key);
-                $val['_audit'] = $auditData;
-                $trackingData[$key] = $val;
-            }
-        }
-
-        if (!empty($trackingData)) {
-            $order->tracking()->updateOrCreate(
-                ['order_id' => $order->id],
-                $trackingData
-            );
-        }
 
         $order->modified_by = auth()->id();
         $order->save();
@@ -53,7 +31,7 @@ class DispatchDeliveryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Dispatch and Delivery details updated successfully.',
-            'data' => $order->load(['tracking', 'dispatchDelivery'])
+            'data' => $order->load(['dispatchDelivery'])
         ]);
     }
 }

@@ -103,12 +103,6 @@ const props = defineProps({
 
 const emit = defineEmits(["update:order"]);
 
-const designPrint = computed(() => {
-  if (!props.order.tracking.design_print) {
-    props.order.tracking.design_print = {};
-  }
-  return props.order.tracking.design_print;
-});
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";

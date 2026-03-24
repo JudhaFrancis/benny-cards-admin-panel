@@ -137,10 +137,13 @@ const props = defineProps({
 const emit = defineEmits(["update:order"]);
 
 const deliveryLocation = computed(() => {
-  if (!props.order.tracking.delivery_location) {
-    props.order.tracking.delivery_location = {};
+  if (!props.order.dispatch_delivery) {
+    props.order.dispatch_delivery = { delivery_location: {} };
   }
-  return props.order.tracking.delivery_location;
+  if (!props.order.dispatch_delivery.delivery_location) {
+    props.order.dispatch_delivery.delivery_location = {};
+  }
+  return props.order.dispatch_delivery.delivery_location;
 });
 
 const formatAuditDate = (dateString) => {
@@ -167,14 +170,14 @@ const shopOptions = [
 ];
 
 const autoFill = () => {
-  if (!props.order.tracking) {
-    props.order.tracking = {};
+  if (!props.order.dispatch_delivery) {
+    props.order.dispatch_delivery = { delivery_location: {} };
   }
-  if (!props.order.tracking.delivery_location) {
-    props.order.tracking.delivery_location = {};
+  if (!props.order.dispatch_delivery.delivery_location) {
+    props.order.dispatch_delivery.delivery_location = {};
   }
 
-  const target = props.order.tracking.delivery_location;
+  const target = props.order.dispatch_delivery.delivery_location;
   if (!target.place_name) {
     const cd = props.order.customer_details || props.order.customerDetails;
     if (cd) {

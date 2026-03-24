@@ -17,67 +17,7 @@
       </template>
     </PageHeader>
 
-    <!-- Filters & Search -->
-    <div
-      class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
-    >
-      <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Search by title or slug..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
-              @input="debounceSearch"
-            />
-          </div>
-
-          <!-- Advanced Filters Dropdown -->
-          <FilterDropdown
-            :isActive="activeFiltersCount > 0"
-            @reset="resetFilters"
-            @apply="fetchCategories"
-          >
-            <FilterSection label="Category Status">
-              <ContextDropdown
-                v-model="filters.status"
-                :options="statusFilterOptions"
-                :icon="ActivityIcon"
-              />
-            </FilterSection>
-
-            <FilterSection label="Category Type" last>
-              <ContextDropdown
-                v-model="filters.is_parent"
-                :options="typeFilterOptions"
-                :icon="FolderTreeIcon"
-              />
-            </FilterSection>
-          </FilterDropdown>
-
-          <button
-            v-if="activeFiltersCount > 0"
-            @click="resetFilters"
-            class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors px-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div
-          class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
-        >
-          Showing {{ meta.total || 0 }} categories
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <!-- Main Table Container -->
     <DataTable
@@ -191,37 +131,6 @@
         </div>
       </template>
 
-      <!-- Pagination Section -->
-      <template #pagination>
-        <div
-          v-if="!loading && categories.length > 0"
-          class="px-6 py-4 border-t border-gray-100 flex items-center justify-between"
-        >
-          <p class="text-[11px] text-gray-500 font-medium">
-            Showing
-            <span class="text-gray-700"
-              >{{ meta.from || 0 }} to {{ meta.to || 0 }}</span
-            >
-            of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
-          </p>
-          <div class="flex items-center gap-2">
-            <button
-              :disabled="!links.prev"
-              @click="fetchCategories(links.prev)"
-              class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-            >
-              <ChevronLeftIcon class="h-4 w-4 text-gray-600" />
-            </button>
-            <button
-              :disabled="!links.next"
-              @click="fetchCategories(links.next)"
-              class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-            >
-              <ChevronRightIcon class="h-4 w-4 text-gray-600" />
-            </button>
-          </div>
-        </div>
-      </template>
     </DataTable>
 
     <!-- Modals -->
@@ -410,50 +319,13 @@ import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 import InfoModal from "../../components/ui/InfoModal.vue";
 import InfoSection from "../../components/ui/InfoSection.vue";
 import InfoItem from "../../components/ui/InfoItem.vue";
-import FilterDropdown from "../../components/ui/FilterDropdown.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
-import FilterSection from "../../components/ui/FilterSection.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
 import ImagePreviewModal from "../../components/ui/ImagePreviewModal.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 
-const statusFilterOptions = [
-  { label: "All Statuses", value: "" },
-  {
-    label: "Active",
-    value: "active",
-    description: "Category is visible.",
-    badge: "Live",
-    badgeClass: "bg-emerald-100 text-emerald-700",
-  },
-  {
-    label: "Inactive",
-    value: "inactive",
-    description: "Category is hidden.",
-    badge: "Hidden",
-    badgeClass: "bg-gray-200 text-gray-500",
-  },
-];
 
-const typeFilterOptions = [
-  { label: "All Types", value: "" },
-  {
-    label: "Parent Categories",
-    value: "1",
-    description: "Top-level categories.",
-    badge: "Parent",
-    badgeClass: "bg-blue-100 text-blue-700",
-  },
-  {
-    label: "Child Categories",
-    value: "0",
-    description: "Sub-categories.",
-    badge: "Child",
-    badgeClass: "bg-purple-100 text-purple-700",
-  },
-];
 
 const categories = ref([]);
 const loading = ref(true);
@@ -475,26 +347,16 @@ const { success: toastSuccess, error: toastError } = useToast();
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
-  { key: "category", label: "Category", align: "left" },
-  { key: "parent", label: "Parent", align: "left" },
+  { key: "category", label: "Category", align: "left", filterKey: "title" },
+  { key: "parent", label: "Parent", align: "left", filterKey: "parent.title" },
   { key: "status", label: "Status", align: "left" },
-  { key: "created", label: "Created", align: "left" },
-  { key: "modified", label: "Modified", align: "left" },
+  { key: "created", label: "Created", align: "left", type: "date", filterKey: "created_at" },
+  { key: "modified", label: "Modified", align: "left", type: "date", filterKey: "updated_at" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 
-const filters = reactive({
-  search: "",
-  status: "",
-  is_parent: "",
-});
+const filters = reactive({});
 
-const activeFiltersCount = computed(() => {
-  let count = 0;
-  if (filters.status) count++;
-  if (filters.is_parent) count++;
-  return count;
-});
 
 let searchTimeout = null;
 
@@ -502,9 +364,7 @@ const fetchCategories = async (url = "/api/v1/categories") => {
   loading.value = true;
   try {
     const params = {
-      search: filters.search,
-      status: filters.status,
-      is_parent: filters.is_parent,
+      per_page: 50,
     };
 
     const finalUrl = url.includes("?") ? url : url;
@@ -532,12 +392,6 @@ const fetchCategories = async (url = "/api/v1/categories") => {
   }
 };
 
-const debounceSearch = () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    fetchCategories();
-  }, 500);
-};
 
 const resetFilters = () => {
   filters.status = "";

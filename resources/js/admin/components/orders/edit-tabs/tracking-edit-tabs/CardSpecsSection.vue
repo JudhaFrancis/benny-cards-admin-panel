@@ -338,19 +338,17 @@ const formatAuditDate = (dateString) => {
 };
 
 const cardSpecs = computed(() => {
-  if (!props.order.tracking) {
-    props.order.tracking = {};
+  if (!props.order.client_information) {
+    props.order.client_information = { card_specs: { type: "customize", quantity: props.order.total_quantity } };
   }
-  if (!props.order.tracking.card_specs) {
-    props.order.tracking.card_specs = {
-      type: "customize", // Default
+  if (!props.order.client_information.card_specs) {
+    props.order.client_information.card_specs = {
+      type: "customize",
       quantity: props.order.total_quantity,
     };
   }
-  return props.order.tracking.card_specs;
+  return props.order.client_information.card_specs;
 });
-
-// Sync type with legacy checkboxes if needed by backend,
 // though we should ideally just use 'type'
 watch(
   () => cardSpecs.value.type,

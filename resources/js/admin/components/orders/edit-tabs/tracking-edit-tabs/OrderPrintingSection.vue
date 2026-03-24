@@ -297,10 +297,13 @@ const props = defineProps({
 });
 
 const printingStatus = computed(() => {
-  if (!props.order.tracking.printing_status) {
-    props.order.tracking.printing_status = {};
+  if (!props.order.printing) {
+    props.order.printing = { printing_status: {} };
   }
-  return props.order.tracking.printing_status;
+  if (!props.order.printing.printing_status) {
+    props.order.printing.printing_status = {};
+  }
+  return props.order.printing.printing_status;
 });
 
 const formatAuditDate = (dateString) => {

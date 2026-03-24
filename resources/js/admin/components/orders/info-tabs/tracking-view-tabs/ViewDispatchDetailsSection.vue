@@ -117,18 +117,18 @@
 
     <!-- Audit Information -->
     <div
-      v-if="dispatchDetails._audit"
+      v-if="order.dispatch_delivery"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated by
         <strong class="text-slate-600">{{
-          dispatchDetails._audit.updated_by
+          order.dispatch_delivery.modified_by?.name || order.dispatch_delivery.added_by?.name || "System"
         }}</strong>
         on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          formatAuditDate(dispatchDetails._audit.updated_at)
+          formatAuditDate(order.dispatch_delivery.updated_at || order.dispatch_delivery.created_at)
         }}</span>
       </span>
     </div>
@@ -150,7 +150,7 @@ const props = defineProps({
 });
 
 const dispatchDetails = computed(
-  () => props.order.tracking?.dispatch_details || {},
+  () => props.order.dispatch_delivery?.dispatch_details || {},
 );
 const busDetails = computed(() => dispatchDetails.value.bus || {});
 const courierDetails = computed(() => dispatchDetails.value.courier || {});

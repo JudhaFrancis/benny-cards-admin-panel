@@ -17,66 +17,7 @@
       </template>
     </PageHeader>
 
-    <!-- Filters & Search -->
-    <div
-      class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
-    >
-      <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Search by coupon code..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
-              @input="debounceSearch"
-            />
-          </div>
-
-          <!-- Advanced Filters Dropdown -->
-          <FilterDropdown
-            :isActive="activeFiltersCount > 0"
-            @reset="resetFilters"
-            @apply="fetchCoupons"
-          >
-            <FilterSection label="Coupon Status">
-              <ContextDropdown
-                v-model="filters.status"
-                :options="statusFilterOptions"
-                :icon="ActivityIcon"
-              />
-            </FilterSection>
-            <FilterSection label="Coupon Type" last>
-              <ContextDropdown
-                v-model="filters.type"
-                :options="typeFilterOptions"
-                :icon="TagIcon"
-              />
-            </FilterSection>
-          </FilterDropdown>
-
-          <button
-            v-if="activeFiltersCount > 0"
-            @click="resetFilters"
-            class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors px-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div
-          class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
-        >
-          Showing {{ meta.total || 0 }} coupons
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <!-- Main Table Container -->
     <DataTable
@@ -215,60 +156,6 @@
       </template>
     </DataTable>
 
-    <!-- Pagination -->
-    <div
-      v-if="meta.total > 0"
-      class="bg-white rounded-2xl border border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm"
-    >
-      <p class="text-[11px] text-gray-500 font-medium">
-        Showing
-        <span class="text-gray-700"
-          >{{ meta.from || 0 }} to {{ meta.to || 0 }}</span
-        >
-        of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
-      </p>
-      <div class="flex items-center gap-2">
-        <button
-          @click="fetchCoupons(links.prev)"
-          :disabled="!links.prev"
-          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
-        >
-          <ChevronLeftIcon class="h-4 w-4" />
-        </button>
-        <button
-          @click="fetchCoupons(links.next)"
-          :disabled="!links.next"
-          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
-        >
-          <ChevronRightIcon class="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <div
-      v-else-if="!loading"
-      class="bg-white rounded-[2.5rem] border border-gray-200 p-16 text-center shadow-sm"
-    >
-      <div
-        class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-gray-100 shadow-inner"
-      >
-        <TicketIcon class="h-10 w-10 text-gray-300" />
-      </div>
-      <h3 class="text-xl font-bold text-gray-700 mb-2">No Coupons Found</h3>
-      <p class="text-gray-500 max-w-sm mx-auto text-sm leading-relaxed mb-8">
-        We couldn't find any coupons. Start by creating a new one or adjust your
-        search filters.
-      </p>
-      <button
-        v-if="canAdd"
-        @click="openCreateModal"
-        class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20 active:scale-95"
-      >
-        <PlusIcon class="h-4 w-4" />
-        Create Coupon
-      </button>
-    </div>
 
     <!-- Modals -->
     <CouponModal
@@ -389,9 +276,6 @@ import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 import InfoModal from "../../components/ui/InfoModal.vue";
 import InfoSection from "../../components/ui/InfoSection.vue";
 import InfoItem from "../../components/ui/InfoItem.vue";
-import FilterDropdown from "../../components/ui/FilterDropdown.vue";
-import FilterSection from "../../components/ui/FilterSection.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
 import { usePermissions } from "../../composables/usePermissions";
@@ -412,42 +296,21 @@ const isDeleteModalOpen = ref(false);
 const selectedCoupon = ref(null);
 const isDeleting = ref(false);
 
-const filters = reactive({
-  search: "",
-  status: "",
-  type: "",
-});
+const filters = reactive({});
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
-  { key: "code", label: "Coupon Code", sortable: true },
-  { key: "type", label: "Type" },
+  { key: "code", label: "Coupon Code", sortable: true, filterKey: "code" },
+  { key: "type", label: "Type", filterKey: "type" },
   { key: "value", label: "Value" },
   { key: "status", label: "Status" },
-  { key: "created_at", label: "Created" },
-  { key: "updated_at", label: "Modified" },
+  { key: "created_at", label: "Created", type: "date" },
+  { key: "updated_at", label: "Modified", type: "date" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 
-const statusFilterOptions = [
-  { label: "All Status", value: "" },
-  { label: "Live Only", value: "active", icon: ActivityIcon },
-  { label: "Hidden Only", value: "inactive", icon: ActivityIcon },
-];
 
-const typeFilterOptions = [
-  { label: "All Types", value: "" },
-  { label: "Fixed Amount", value: "fixed", icon: TagIcon },
-  { label: "Percentage", value: "percent", icon: TagIcon },
-];
 
-// Computed
-const activeFiltersCount = computed(() => {
-  let count = 0;
-  if (filters.status) count++;
-  if (filters.type) count++;
-  return count;
-});
 
 // Methods
 const fetchCoupons = async (url = "/api/v1/coupons") => {
@@ -455,9 +318,7 @@ const fetchCoupons = async (url = "/api/v1/coupons") => {
   try {
     const response = await axios.get(url, {
       params: {
-        search: filters.search,
-        status: filters.status,
-        type: filters.type,
+        per_page: 50,
       },
     });
     if (response.data.success) {
@@ -483,20 +344,6 @@ const fetchCoupons = async (url = "/api/v1/coupons") => {
   }
 };
 
-let debounceTimeout;
-const debounceSearch = () => {
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    fetchCoupons();
-  }, 500);
-};
-
-const resetFilters = () => {
-  filters.search = "";
-  filters.status = "";
-  filters.type = "";
-  fetchCoupons();
-};
 
 const viewCoupon = (coupon) => {
   selectedCoupon.value = coupon;

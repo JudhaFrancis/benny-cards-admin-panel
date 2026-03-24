@@ -309,20 +309,20 @@ const props = defineProps({
 });
 
 const workAssign = computed(() => {
-  if (!props.order.tracking) {
-    props.order.tracking = {};
+  if (!props.order.designing) {
+    props.order.designing = { work_assign: {} };
   }
-  if (!props.order.tracking.work_assign) {
-    props.order.tracking.work_assign = {};
+  if (!props.order.designing.work_assign) {
+    props.order.designing.work_assign = {};
   }
   
   // Auto-fill assigned_date with today's date if not already set
-  if (!props.order.tracking.work_assign.assigned_date) {
+  if (!props.order.designing.work_assign.assigned_date) {
     const today = new Date().toISOString().split('T')[0];
-    props.order.tracking.work_assign.assigned_date = today;
+    props.order.designing.work_assign.assigned_date = today;
   }
   
-  return props.order.tracking.work_assign;
+  return props.order.designing.work_assign;
 });
 
 const formatAuditDate = (dateString) => {

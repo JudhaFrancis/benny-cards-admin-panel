@@ -17,59 +17,7 @@
       </template>
     </PageHeader>
 
-    <!-- Filters & Search -->
-    <div
-      class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
-    >
-      <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Search by title..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
-              @input="debounceSearch"
-            />
-          </div>
-
-          <!-- Advanced Filters Dropdown -->
-          <FilterDropdown
-            :isActive="activeFiltersCount > 0"
-            @reset="resetFilters"
-            @apply="fetchPriceRanges"
-          >
-            <FilterSection label="Range Status" last>
-              <ContextDropdown
-                v-model="filters.status"
-                :options="statusFilterOptions"
-                :icon="ActivityIcon"
-              />
-            </FilterSection>
-          </FilterDropdown>
-
-          <button
-            v-if="activeFiltersCount > 0"
-            @click="resetFilters"
-            class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors px-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div
-          class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
-        >
-          Showing {{ meta.total || 0 }} ranges
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <!-- Main Table Container -->
     <DataTable
@@ -233,32 +181,6 @@
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div
-      v-else-if="!loading"
-      class="bg-white rounded-[2.5rem] border border-gray-200 p-16 text-center shadow-sm"
-    >
-      <div
-        class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-gray-100 shadow-inner"
-      >
-        <DollarSignIcon class="h-10 w-10 text-gray-300" />
-      </div>
-      <h3 class="text-xl font-bold text-gray-700 mb-2">
-        No Price Ranges Found
-      </h3>
-      <p class="text-gray-500 max-w-sm mx-auto text-sm leading-relaxed mb-8">
-        We couldn't find any price ranges. Start by creating a new one or adjust
-        your search filters.
-      </p>
-      <button
-        v-if="canAdd"
-        @click="openCreateModal"
-        class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20 active:scale-95"
-      >
-        <PlusIcon class="h-4 w-4" />
-        Create First Range
-      </button>
-    </div>
 
     <!-- Modals -->
     <PriceRangeModal
@@ -374,9 +296,6 @@ import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 import InfoModal from "../../components/ui/InfoModal.vue";
 import InfoSection from "../../components/ui/InfoSection.vue";
 import InfoItem from "../../components/ui/InfoItem.vue";
-import FilterDropdown from "../../components/ui/FilterDropdown.vue";
-import FilterSection from "../../components/ui/FilterSection.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
 import ImagePreviewModal from "../../components/ui/ImagePreviewModal.vue";
@@ -402,34 +321,19 @@ const isPreviewOpen = ref(false);
 const previewImage = ref("");
 const previewTitle = ref("");
 
-const filters = reactive({
-  search: "",
-  status: "",
-});
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
-  { key: "range", label: "Price Range", sortable: true },
+  { key: "range", label: "Price Range", sortable: true, filterKey: "title" },
   { key: "min_price", label: "Min Price", sortable: true },
   { key: "max_price", label: "Max Price", sortable: true },
   { key: "status", label: "Status" },
-  { key: "created_at", label: "Created" },
-  { key: "updated_at", label: "Modified" },
+  { key: "created_at", label: "Created", type: "date" },
+  { key: "updated_at", label: "Modified", type: "date" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 
-const statusFilterOptions = [
-  { label: "All Status", value: "" },
-  { label: "Live Only", value: "active", icon: ActivityIcon },
-  { label: "Hidden Only", value: "inactive", icon: ActivityIcon },
-];
 
-// Computed
-const activeFiltersCount = computed(() => {
-  let count = 0;
-  if (filters.status) count++;
-  return count;
-});
 
 // Methods
 const fetchPriceRanges = async (url = "/api/v1/price-ranges") => {
@@ -437,8 +341,7 @@ const fetchPriceRanges = async (url = "/api/v1/price-ranges") => {
   try {
     const response = await axios.get(url, {
       params: {
-        search: filters.search,
-        status: filters.status,
+        per_page: 50,
       },
     });
     if (response.data.success) {
@@ -464,19 +367,6 @@ const fetchPriceRanges = async (url = "/api/v1/price-ranges") => {
   }
 };
 
-let debounceTimeout;
-const debounceSearch = () => {
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    fetchPriceRanges();
-  }, 500);
-};
-
-const resetFilters = () => {
-  filters.search = "";
-  filters.status = "";
-  fetchPriceRanges();
-};
 
 const handleView = (range) => {
   selectedRange.value = range;

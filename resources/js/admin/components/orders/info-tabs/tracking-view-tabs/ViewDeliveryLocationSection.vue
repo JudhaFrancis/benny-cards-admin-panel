@@ -68,15 +68,19 @@
 
     <!-- Audit Information -->
     <div
-      v-if="deliveryLocation._audit"
+      v-if="order.dispatch_delivery"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          formatAuditDate(deliveryLocation._audit.updated_at)
+          formatAuditDate(order.dispatch_delivery.updated_at || order.dispatch_delivery.created_at)
         }}</span>
+        by
+        <strong class="text-slate-600 ml-1">{{
+          order.dispatch_delivery.modified_by?.name || order.dispatch_delivery.added_by?.name || "System"
+        }}</strong>
       </span>
     </div>
   </div>
@@ -99,7 +103,7 @@ const props = defineProps({
 });
 
 const deliveryLocation = computed(
-  () => props.order.tracking?.delivery_location || {},
+  () => props.order.dispatch_delivery?.delivery_location || {},
 );
 
 const shopOptions = [

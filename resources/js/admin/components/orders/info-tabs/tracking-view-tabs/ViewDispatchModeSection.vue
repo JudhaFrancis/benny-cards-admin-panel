@@ -95,18 +95,18 @@
 
     <!-- Audit Information -->
     <div
-      v-if="dispatchMode._audit"
+      v-if="order.dispatch_delivery"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated by
         <strong class="text-slate-600">{{
-          dispatchMode._audit.updated_by
+          order.dispatch_delivery.modified_by?.name || order.dispatch_delivery.added_by?.name || "System"
         }}</strong>
         on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          formatAuditDate(dispatchMode._audit.updated_at)
+          formatAuditDate(order.dispatch_delivery.updated_at || order.dispatch_delivery.created_at)
         }}</span>
       </span>
     </div>
@@ -131,7 +131,7 @@ const props = defineProps({
   order: { type: Object, required: true },
 });
 
-const dispatchMode = computed(() => props.order.tracking?.dispatch_mode || {});
+const dispatchMode = computed(() => props.order.dispatch_delivery?.dispatch_mode || {});
 
 const modeOptions = [
   { id: "Shop Pickup", label: "Shop Pickup", icon: StoreIcon },

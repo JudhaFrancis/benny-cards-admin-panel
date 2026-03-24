@@ -17,50 +17,17 @@
       </template>
     </PageHeader>
 
-    <!-- Filters & Search -->
-    <div
-      class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
-    >
-      <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              v-model="search"
-              type="text"
-              placeholder="Search roles..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
-              style="color: #475569 !important"
-            />
-          </div>
-        </div>
-
-        <div
-          class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
-        >
-          Showing {{ roles.length }} roles
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <!-- Main Table Container -->
     <DataTable
       :columns="columns"
-      :items="filteredRoles"
+      :items="roles"
       :loading="loading"
       empty-text="No roles found matching your criteria."
     >
       <!-- Custom Checkbox Cell (if needed, otherwise handled by DataTable if selectable) -->
 
-      <!-- S.No Cell -->
-      <template #cell-sn="{ item: role }">
-        <span class="text-xs font-bold text-slate-400">#{{ role.sn }}</span>
-      </template>
 
       <!-- Role Name Cell -->
       <template #cell-name="{ item: role }">
@@ -175,7 +142,6 @@ const roles = ref([]);
 const modules = ref([]);
 const loading = ref(true);
 const isSaving = ref(false);
-const search = ref("");
 const isInfoModalOpen = ref(false);
 const isEditModalOpen = ref(false);
 const isCreateModalOpen = ref(false);
@@ -184,19 +150,12 @@ const selectedRole = ref(null);
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
   { key: "name", label: "Role Name", sortable: true },
-  { key: "permissions", label: "Permissions" },
-  { key: "created_at", label: "Created" },
+  { key: "permissions", label: "Permissions", filterKey: "permissions.length" },
+  { key: "created_at", label: "Created", type: "date" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 
 // Computed
-const filteredRoles = computed(() => {
-  if (!search.value) return roles.value;
-  const lowerSearch = search.value.toLowerCase();
-  return roles.value.filter((role) =>
-    role.name.toLowerCase().includes(lowerSearch),
-  );
-});
 
 // Methods
 const fetchRoles = async () => {

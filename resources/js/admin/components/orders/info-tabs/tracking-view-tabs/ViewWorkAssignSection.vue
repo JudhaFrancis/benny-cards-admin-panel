@@ -151,18 +151,18 @@
 
     <!-- Audit Information -->
     <div
-      v-if="workAssign._audit"
+      v-if="order.designing"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated by
         <strong class="text-slate-600">{{
-          workAssign._audit.updated_by
+          order.designing.modified_by?.name || order.designing.added_by?.name || "System"
         }}</strong>
         on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          formatAuditDate(workAssign._audit.updated_at)
+          formatAuditDate(order.designing.updated_at || order.designing.created_at)
         }}</span>
       </span>
     </div>
@@ -185,7 +185,7 @@ const props = defineProps({
   order: { type: Object, required: true },
 });
 
-const workAssign = computed(() => props.order.tracking?.work_assign || {});
+const workAssign = computed(() => props.order.designing?.work_assign || {});
 
 const formatDate = (dateString) => {
   if (!dateString) return "";

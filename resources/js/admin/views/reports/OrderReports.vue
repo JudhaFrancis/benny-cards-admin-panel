@@ -49,50 +49,45 @@
     </div>
 
     <!-- Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-50/50 border-b border-slate-100">
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">S/No.</th>
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Customer Name</th>
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Order ID</th>
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Amount</th>
-              <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr v-for="(order, index) in orders" :key="order.id" class="hover:bg-slate-50/50 transition-colors group">
-              <td class="px-6 py-4 text-xs font-bold text-slate-400">{{ index + 1 }}</td>
-              <td class="px-6 py-4">
-                <span class="text-sm font-medium text-slate-900">{{ order.customer_name }}</span>
-              </td>
-              <td class="px-6 py-4 text-sm font-semibold text-slate-900 italic">
-                {{ order.order_number }}
-              </td>
-              <td class="px-6 py-4">
-                <span :class="cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', 
-                      orderStatusStyles[order.status?.toLowerCase()] || 'bg-slate-100 text-slate-800 border-slate-200')">
-                  {{ order.status || 'New' }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-sm font-bold text-slate-900 text-right">₹{{ order.total_amount }}</td>
-              <td class="px-6 py-4 text-sm text-slate-500">{{ formatDate(order.created_at) }}</td>
-            </tr>
-            <tr v-if="orders.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center text-slate-500">No orders found for the selected period.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <DataTable
+      :columns="columns"
+      :items="orders"
+      empty-text="No matching results found for the selected period."
+    >
+      <template #cell-customer_name="{ item: order }">
+        <span class="text-sm font-medium text-slate-900">{{ order.customer_name }}</span>
+      </template>
+
+      <template #cell-order_number="{ item: order }">
+        <span class="text-sm font-semibold text-slate-900 italic">
+          {{ order.order_number }}
+        </span>
+      </template>
+
+      <template #cell-status="{ item: order }">
+        <span :class="cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', 
+              orderStatusStyles[order.status?.toLowerCase()] || 'bg-slate-100 text-slate-800 border-slate-200')">
+          {{ order.status || 'New' }}
+        </span>
+      </template>
+
+      <template #cell-total_amount="{ item: order }">
+        <span class="text-sm font-bold text-slate-900">₹{{ order.total_amount }}</span>
+      </template>
+
+      <template #cell-created_at="{ item: order }">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          {{ formatDate(order.created_at) }}
+        </span>
+      </template>
+    </DataTable>
   </div>
 </template>
 
 <script setup>
 import PageHeader from "../../components/ui/PageHeader.vue";
-import { ref, onMounted } from 'vue';
+import DataTable from "../../components/ui/DataTable.vue";
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { 
   ChevronRight as ChevronRightIcon,
@@ -114,6 +109,15 @@ const stats = ref([
   { label: 'Total Orders', value: '0', icon: OrdersIcon, bgClass: 'bg-blue-50', iconClass: 'text-blue-600' },
   { label: 'Completed', value: '0', icon: SuccessIcon, bgClass: 'bg-emerald-50', iconClass: 'text-emerald-600' },
   { label: 'Pending', value: '0', icon: PendingIcon, bgClass: 'bg-amber-50', iconClass: 'text-amber-600' }
+]);
+
+const columns = computed(() => [
+  { key: 'sn', label: 'S/No.', align: 'center', width: '60px' },
+  { key: 'customer_name', label: 'Customer Name', align: 'left' },
+  { key: 'order_number', label: 'Order ID', align: 'left' },
+  { key: 'status', label: 'Status', align: 'left' },
+  { key: 'total_amount', label: 'Amount', align: 'right' },
+  { key: 'created_at', label: 'Date', align: 'left', type: 'date' },
 ]);
 
 const fetchReport = async () => {

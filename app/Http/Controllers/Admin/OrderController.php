@@ -150,7 +150,6 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully.',
-            'data' => $order->refresh()->load(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments']),
         ]);
     }
 }

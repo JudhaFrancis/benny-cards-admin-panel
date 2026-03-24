@@ -2,64 +2,7 @@
   <div class="space-y-6 animate-in fade-in duration-500">
     <PageHeader :title="title" :subtitle="subtitle" />
 
-    <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm relative z-30">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search Inner -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search Order ID or Name..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            />
-          </div>
-
-          <!-- Advanced Filters Dropdown -->
-          <FilterDropdown
-            :isActive="activeFiltersCount > 0"
-            @reset="resetFilters"
-          >
-            <FilterSectionHelper label="Overall Order Status">
-              <ContextDropdown
-                v-model="orderStatusFilter"
-                :options="orderStatusOptions"
-                :icon="ActivityIcon"
-              />
-            </FilterSectionHelper>
-
-            <FilterSectionHelper label="Payment Status">
-              <ContextDropdown
-                v-model="paymentFilter"
-                :options="paymentOptions"
-                :icon="CreditCardIcon"
-              />
-            </FilterSectionHelper>
-
-            <FilterSectionHelper label="Stage Status" last>
-              <ContextDropdown
-                v-model="stageStatusFilter"
-                :options="stageStatusOptions"
-                :icon="ClipboardListIcon"
-              />
-            </FilterSectionHelper>
-          </FilterDropdown>
-
-          <button
-            v-if="activeFiltersCount > 0"
-            @click="resetFilters"
-            class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors px-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div class="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-          {{ filteredOrders.length }} Items
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <OrderStageTable
       :orders="filteredOrders"
@@ -89,18 +32,8 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import { 
-  Search as SearchIcon, 
-  Activity as ActivityIcon, 
-  CreditCard as CreditCardIcon, 
-  ClipboardList as ClipboardListIcon 
-} from "lucide-vue-next";
-import axios from "axios";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import OrderStageTable from "../../components/order-management/OrderStageTable.vue";
-import FilterDropdown from "../../components/ui/FilterDropdown.vue";
-import FilterSectionHelper from "../../components/ui/FilterSection.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import StageViewDialog from "../../components/order-management/StageViewDialog.vue";
 import StageEditDialog from "../../components/order-management/StageEditDialog.vue";
 import { useAuth } from "../../composables/useAuth";
@@ -115,56 +48,11 @@ const props = defineProps({
 
 const orders = ref([]);
 const loading = ref(true);
-const searchQuery = ref("");
 
 // Modals State
 const isViewModalOpen = ref(false);
 const isEditModalOpen = ref(false);
 const selectedOrder = ref(null);
-
-// Filters state
-const orderStatusFilter = ref("all");
-const paymentFilter = ref("all");
-const stageStatusFilter = ref("all");
-
-const orderStatusOptions = [
-  { label: "All Statuses", value: "all" },
-  { label: "Pending", value: "pending" },
-  { label: "Processing", value: "processing" },
-  { label: "Shipped", value: "shipped" },
-  { label: "Delivered", value: "delivered" },
-  { label: "Cancelled", value: "cancelled" },
-];
-
-const paymentOptions = [
-  { label: "All Payments", value: "all" },
-  { label: "Paid", value: "paid" },
-  { label: "Partial", value: "partial" },
-  { label: "Unpaid", value: "unpaid" },
-];
-
-const stageStatusOptions = [
-  { label: "All Progress", value: "all" },
-  { label: "Pending", value: "pending" },
-  { label: "Process", value: "process" },
-  { label: "Completed", value: "completed" },
-  { label: "Cancelled", value: "cancelled" },
-];
-
-const activeFiltersCount = computed(() => {
-  let count = 0;
-  if (orderStatusFilter.value !== "all") count++;
-  if (paymentFilter.value !== "all") count++;
-  if (stageStatusFilter.value !== "all") count++;
-  return count;
-});
-
-const resetFilters = () => {
-  orderStatusFilter.value = "all";
-  paymentFilter.value = "all";
-  stageStatusFilter.value = "all";
-  searchQuery.value = "";
-};
 
 const fetchOrders = async () => {
   loading.value = true;
@@ -173,9 +61,6 @@ const fetchOrders = async () => {
       per_page: 100, 
       stage: props.stage,
     };
-    
-    // We can filter basic order status on backend if supported
-    if (orderStatusFilter.value !== 'all') params.status = orderStatusFilter.value;
     
     const response = await axios.get("/api/v1/orders", { params });
     if (response.data.success) {
@@ -194,34 +79,14 @@ const fetchOrders = async () => {
 const filteredOrders = computed(() => {
   let items = orders.value;
 
-  // Frontend filtering for complex stage logic
-  items = items.filter(o => {
-    // Search
-    const searchMatch = !searchQuery.value || 
-      o.order_number?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      o.customer_details?.name?.toLowerCase().includes(searchQuery.value.toLowerCase());
-    
-    // Payment Status
-    const paymentMatch = paymentFilter.value === 'all' || o.payment_status === paymentFilter.value;
-
-    // Stage Status - Reusing logic from Table Component if possible, but here we can check completion
-    let stageMatch = true;
-    if (stageStatusFilter.value !== 'all') {
-       const status = getStageStatus(o, props.stage).toLowerCase();
-       stageMatch = status === stageStatusFilter.value;
-    }
-
-    return searchMatch && paymentMatch && stageMatch;
-  });
-
   // Role based filtering: If not super-admin or admin, only show orders assigned to this user
   const userRole = user.value?.role?.name?.toLowerCase();
   const userName = user.value?.name;
 
   if (userRole && userRole !== 'super-admin' && userRole !== 'admin') {
-    items = items.filter(o => {
-       const assignedName = getAssignedNameHelper(o, props.stage);
-       return assignedName === userName;
+    items = items.filter((o) => {
+      const assignedName = getAssignedNameHelper(o, props.stage);
+      return assignedName === userName;
     });
   }
 
@@ -230,18 +95,17 @@ const filteredOrders = computed(() => {
 
 // Helper to get assigned name for filtering
 const getAssignedNameHelper = (order, stage) => {
-  const tracking = order.tracking || {};
   switch (stage) {
     case 'client-information':
-      return tracking.job_details?.order_taken_by;
+      return order.client_information?.job_details?.order_taken_by;
     case 'designing':
-      return tracking.work_assign?.assigned_to;
+      return order.designing?.work_assign?.assigned_to;
     case 'printing':
-      return tracking.printing_status?.assigned_to || tracking.work_assign?.assigned_to;
+      return order.printing?.printing_status?.assigned_to || order.designing?.work_assign?.assigned_to;
     case 'packaging':
-      return tracking.packaging_logistics?.crafted_by;
+      return order.packaging?.packaging_logistics?.crafted_by;
     case 'delivery':
-      return tracking.dispatch_mode?.signature_name;
+      return order.dispatch_delivery?.dispatch_mode?.signature_name;
     default:
       return null;
   }
@@ -250,35 +114,17 @@ const getAssignedNameHelper = (order, stage) => {
 // Helper for stage status to match table component logic
 const getStageStatus = (order, stage) => {
   if (order.status === 'cancelled') return 'Cancelled';
-  const tracking = order.tracking || {};
-  let isStarted = false;
-  let isDone = false;
-
-  switch (stage) {
-    case 'client-information':
-      isStarted = !!tracking.job_details;
-      isDone = !!tracking.card_specs && Object.keys(tracking.card_specs).length > 0;
-      break;
-    case 'designing':
-      isStarted = !!tracking.work_assign;
-      isDone = !!tracking.design_print && Object.keys(tracking.design_print).length > 0;
-      break;
-    case 'printing':
-      isStarted = !!tracking.printing_status;
-      isDone = !!(tracking.printing_status?.readymade_sent_to_print || tracking.printing_status?.customize_sent_to_print_date);
-      break;
-    case 'packaging':
-      isStarted = !!tracking.packaging_logistics;
-      isDone = !!tracking.packaging_status && Object.keys(tracking.packaging_status).length > 0;
-      break;
-    case 'delivery':
-      isStarted = !!tracking.delivery_location;
-      isDone = !!tracking.dispatch_details && Object.keys(tracking.dispatch_details).length > 0;
-      break;
-  }
-  if (isDone) return 'Completed';
-  if (isStarted) return 'Process';
-  return 'Pending';
+  
+  const stageRelationMap = {
+    'client-information': 'client_information',
+    'designing': 'designing',
+    'printing': 'printing',
+    'packaging': 'packaging',
+    'delivery': 'dispatch_delivery'
+  };
+  
+  const relation = stageRelationMap[stage];
+  return order[relation]?.status || 'Pending';
 };
 
 const handleView = (order) => {
@@ -294,5 +140,5 @@ const handleEdit = (order) => {
 onMounted(fetchOrders);
 
 // Refetch if stage or filter changes (if we want backend filter)
-watch([() => props.stage, orderStatusFilter], fetchOrders);
+watch(() => props.stage, fetchOrders);
 </script>

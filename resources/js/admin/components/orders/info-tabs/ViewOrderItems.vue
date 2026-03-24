@@ -149,7 +149,7 @@ const subtotal = computed(() => {
 });
 
 const dispatchExpense = computed(() => {
-  return parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  return parseFloat(props.order.dispatch_delivery?.dispatch_mode?.expense) || 0;
 });
 
 const total = computed(() => {

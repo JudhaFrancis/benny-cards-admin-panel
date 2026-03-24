@@ -21,20 +21,36 @@ class OrderService
         $isStaff = $user && !$isAdmin;
 
         return Order::query()
-            ->with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon', 'tracking', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery'])
+            ->with([
+                'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'coupon',
+                'clientInformation.addedBy', 'clientInformation.modifiedBy',
+                'designing.addedBy', 'designing.modifiedBy',
+                'printing.addedBy', 'printing.modifiedBy',
+                'packaging.addedBy', 'packaging.modifiedBy',
+                'dispatchDelivery.addedBy', 'dispatchDelivery.modifiedBy',
+                'payments.addedBy', 'payments.modifiedBy'
+            ])
             ->when($isStaff && isset($filters['stage']), function (Builder $query) use ($user) {
                 $userName = $user->name;
                 $userId = $user->id;
 
                 $query->where(function ($q) use ($userName, $userId) {
                     $q->where('added_by', $userId)
-                      ->orWhereHas('tracking', function ($sub) use ($userName) {
-                          $sub->where('job_details->order_taken_by', $userName)
-                              ->orWhere('work_assign->assigned_to', $userName)
-                              ->orWhere('printing_status->assigned_to', $userName)
-                              ->orWhere('packaging_logistics->crafted_by', $userName)
-                              ->orWhere('packaging_status->packed_by', $userName)
-                              ->orWhere('dispatch_mode->signature_name', $userName);
+                      ->orWhereHas('clientInformation', function ($sub) use ($userName) {
+                          $sub->where('job_details->order_taken_by', $userName);
+                      })
+                      ->orWhereHas('designing', function ($sub) use ($userName) {
+                          $sub->where('work_assign->assigned_to', $userName);
+                      })
+                      ->orWhereHas('printing', function ($sub) use ($userName) {
+                          $sub->where('printing_status->assigned_to', $userName);
+                      })
+                      ->orWhereHas('packaging', function ($sub) use ($userName) {
+                          $sub->where('packaging_logistics->crafted_by', $userName)
+                              ->orWhere('packaging_status->packed_by', $userName);
+                      })
+                      ->orWhereHas('dispatchDelivery', function ($sub) use ($userName) {
+                          $sub->where('dispatch_mode->signature_name', $userName);
                       });
                 });
             })
@@ -59,7 +75,15 @@ class OrderService
      */
     public function getOrder(int $id): Order
     {
-        return Order::with(['user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'payments', 'coupon', 'tracking', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery'])
+        return Order::with([
+                'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'coupon',
+                'clientInformation.addedBy', 'clientInformation.modifiedBy',
+                'designing.addedBy', 'designing.modifiedBy',
+                'printing.addedBy', 'printing.modifiedBy',
+                'packaging.addedBy', 'packaging.modifiedBy',
+                'dispatchDelivery.addedBy', 'dispatchDelivery.modifiedBy',
+                'payments.addedBy', 'payments.modifiedBy'
+            ])
             ->findOrFail($id);
     }
 
@@ -79,7 +103,6 @@ class OrderService
 
             $order = Order::create([
                 'order_number' => 'TEMP-' . uniqid(),
-                'tracking_number' => 'TEMP-' . uniqid(),
                 'order_date' => $data['order_date'] ?? now(),
                 'user_id' => $data['user_id'] ?? null,
                 'items_count' => $totals['items_count'],
@@ -99,7 +122,6 @@ class OrderService
 
             $order->update([
                 'order_number' => 'ORD' . $order->id . '-' . date('dmY'),
-                'tracking_number' => 'TRK' . $order->id . '-' . date('dmY'),
             ]);
 
             foreach ($itemsData as $item) {
@@ -122,13 +144,19 @@ class OrderService
             // Initialize first stage tracking
             $order->clientInformation()->create([
                 'status' => 'Pending',
-                'audit_details' => [
-                    'updated_by' => auth()->user()->name ?? 'System',
-                    'updated_at' => now()->toDateTimeString(),
-                ]
+                'added_by' => auth()->id(),
+                'modified_by' => auth()->id()
             ]);
 
-            return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'tracking', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery']);
+        return $order->load([
+            'items.product', 'customerDetails', 'coupon',
+            'clientInformation.addedBy', 'clientInformation.modifiedBy',
+            'designing.addedBy', 'designing.modifiedBy',
+            'printing.addedBy', 'printing.modifiedBy',
+            'packaging.addedBy', 'packaging.modifiedBy',
+            'dispatchDelivery.addedBy', 'dispatchDelivery.modifiedBy',
+            'payments.addedBy', 'payments.modifiedBy'
+        ]);
         });
     }
 
@@ -161,7 +189,7 @@ class OrderService
             if (isset($data['extra_charges'])) $order->extra_charges = $data['extra_charges'];
             if (isset($data['paid_amount'])) $order->paid_amount = $data['paid_amount'];
 
-            $expense = (float) ($order->tracking->dispatch_mode['expense'] ?? 0);
+            $expense = (float) ($order->dispatchDelivery->dispatch_mode['expense'] ?? 0);
             $order->total_amount = max(0, $order->net_amount + ($order->extra_charges ?? 0) - $order->discount + $expense);
 
             if (isset($data['coupon_id'])) $order->coupons_id = $data['coupon_id'];
@@ -179,7 +207,15 @@ class OrderService
             $order->modified_by = auth()->id();
             $order->save();
 
-            return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'tracking', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery']);
+        return $order->load([
+            'items.product', 'customerDetails', 'coupon',
+            'clientInformation.addedBy', 'clientInformation.modifiedBy',
+            'designing.addedBy', 'designing.modifiedBy',
+            'printing.addedBy', 'printing.modifiedBy',
+            'packaging.addedBy', 'packaging.modifiedBy',
+            'dispatchDelivery.addedBy', 'dispatchDelivery.modifiedBy',
+            'payments.addedBy', 'payments.modifiedBy'
+        ]);
         });
     }
 
@@ -213,7 +249,7 @@ class OrderService
         $order->customerDetails()->updateOrCreate(['order_id' => $order->id], $data);
         $order->modified_by = auth()->id();
         $order->save();
-        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'tracking', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery']);
+        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery']);
     }
 
     /**
@@ -221,28 +257,44 @@ class OrderService
      */
     public function updateTracking(Order $order, array $data): Order
     {
-        $allowedSections = ['job_details', 'client_info', 'card_specs', 'work_assign', 'design_print', 'printing_status', 'packaging_logistics', 'packaging_status', 'delivery_location', 'dispatch_mode', 'dispatch_details', 'payment_info'];
+        $stageMap = [
+            'job_details' => 'clientInformation',
+            'client_info' => 'clientInformation',
+            'card_specs' => 'clientInformation',
+            'work_assign' => 'designing',
+            'design_print' => 'designing',
+            'printing_status' => 'printing',
+            'packaging_logistics' => 'packaging',
+            'packaging_status' => 'packaging',
+            'delivery_location' => 'dispatchDelivery',
+            'dispatch_mode' => 'dispatchDelivery',
+            'dispatch_details' => 'dispatchDelivery',
+        ];
 
-        $updateData = [];
-        foreach ($data as $section => $content) {
-            if (in_array($section, $allowedSections)) {
-                $content['_audit'] = ['updated_by' => auth()->user()->name ?? 'Unknown', 'updated_at' => now()->toDateTimeString()];
-                $updateData[$section] = $content;
+        DB::transaction(function () use ($order, $data, $stageMap) {
+            $updatesByStage = [];
+            foreach ($data as $section => $content) {
+                if (isset($stageMap[$section])) {
+                    $stageRelation = $stageMap[$section];
+                    if (!isset($updatesByStage[$stageRelation])) {
+                        $updatesByStage[$stageRelation] = [];
+                    }
+                    $updatesByStage[$stageRelation][$section] = $content;
+                }
             }
-        }
 
-        if (!empty($updateData)) {
-            $order->tracking()->updateOrCreate(['order_id' => $order->id], $updateData);
+            foreach ($updatesByStage as $relation => $sectionData) {
+                $order->{$relation}()->updateOrCreate(
+                    ['order_id' => $order->id],
+                    array_merge($sectionData, [
+                        'added_by' => $order->{$relation} ? $order->{$relation}->added_by : auth()->id(),
+                        'modified_by' => auth()->id()
+                    ])
+                );
+            }
 
-            $tracking = $order->tracking()->first();
-            $expense = (float) ($tracking->dispatch_mode['expense'] ?? 0);
-            $totalAmount = max(0, $order->net_amount + ($order->extra_charges ?? 0) - $order->discount + $expense);
-            
-            $order->update(['total_amount' => $totalAmount, 'balance_due' => max(0, $totalAmount - $order->paid_amount), 'modified_by' => auth()->id()]);
-
-
-            if (isset($updateData['payment_info'])) {
-                $paymentInfo = $updateData['payment_info'];
+            if (isset($data['payment_info'])) {
+                $paymentInfo = $data['payment_info'];
                 $payments = $paymentInfo['payments'] ?? $paymentInfo;
                 if (!is_array($payments)) $payments = [$payments];
 
@@ -253,11 +305,23 @@ class OrderService
                     $amount = $payInfo['amount'] ?? 0;
                     if ($amount <= 0) continue;
 
-                    $paymentData = ['payment_method' => $payInfo['payment_method'] ?? 'cash', 'transaction_id' => $payInfo['transaction_id'] ?? null, 'signature_name' => $payInfo['signature_name'] ?? null, 'payment_status' => 'completed', 'payment_date' => $payInfo['payment_date'] ?? now(), 'amount' => $amount, 'added_by' => auth()->id(), 'modified_by' => auth()->id()];
+                    $paymentData = [
+                        'payment_method' => $payInfo['payment_method'] ?? 'cash', 
+                        'transaction_id' => $payInfo['transaction_id'] ?? null, 
+                        'signature_name' => $payInfo['signature_name'] ?? null, 
+                        'payment_status' => 'completed', 
+                        'payment_date' => $payInfo['payment_date'] ?? now(), 
+                        'amount' => $amount, 
+                        'added_by' => auth()->id(), 
+                        'modified_by' => auth()->id()
+                    ];
 
                     if (isset($payInfo['id'])) {
                         $payment = $order->payments()->find($payInfo['id']);
-                        if ($payment) { $payment->update($paymentData); $processedIds[] = $payment->id; }
+                        if ($payment) { 
+                            $payment->update($paymentData); 
+                            $processedIds[] = $payment->id; 
+                        }
                     } else {
                         $paymentData['payment_number'] = 'TEMP-' . time() . '-' . rand(1000, 9999);
                         $newPayment = $order->payments()->create($paymentData);
@@ -271,9 +335,19 @@ class OrderService
 
                 $order->updatePaymentStatus();
             }
-        }
 
-        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'tracking', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery']);
+            // Update total amount based on dispatch expense
+            $order->refresh();
+            $expense = (float) ($order->dispatchDelivery->dispatch_mode['expense'] ?? 0);
+            $totalAmount = max(0, $order->net_amount + ($order->extra_charges ?? 0) - $order->discount + $expense);
+            $order->update([
+                'total_amount' => $totalAmount, 
+                'balance_due' => max(0, $totalAmount - $order->paid_amount), 
+                'modified_by' => auth()->id()
+            ]);
+        });
+
+        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery']);
     }
 
 

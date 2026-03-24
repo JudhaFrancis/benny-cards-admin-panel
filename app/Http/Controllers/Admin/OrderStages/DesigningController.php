@@ -16,36 +16,14 @@ class DesigningController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $order = Order::findOrFail($id);
-        $data = $request->only(['work_assign', 'design_print', 'status']);
-        $auditData = [
-            'updated_by' => auth()->user()->name ?? 'Unknown',
-            'updated_at' => now()->toDateTimeString(),
-        ];
-        $data['audit_details'] = $auditData;
-
         // 1. Update/Create Individual Stage Table
-        $order->designing()->updateOrCreate(
+        $stage = $order->designing()->updateOrCreate(
             ['order_id' => $order->id],
-            $data
+            array_merge($data, [
+                'added_by' => $order->designing ? $order->designing->added_by : auth()->id(),
+                'modified_by' => auth()->id()
+            ])
         );
-
-        // 2. Sync with order_trackings (JSON) for frontend compatibility
-        $trackingData = [];
-        $sections = ['work_assign', 'design_print'];
-        foreach ($sections as $key) {
-            if ($request->has($key)) {
-                $val = $request->input($key);
-                $val['_audit'] = $auditData;
-                $trackingData[$key] = $val;
-            }
-        }
-
-        if (!empty($trackingData)) {
-            $order->tracking()->updateOrCreate(
-                ['order_id' => $order->id],
-                $trackingData
-            );
-        }
 
         // 3. Auto-trigger Next Stage: Printing
         if ($request->status === 'Completed') {
@@ -61,7 +39,7 @@ class DesigningController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Designing details updated successfully.',
-            'data' => $order->load(['tracking', 'designing'])
+            'data' => $order->load(['designing'])
         ]);
     }
 }

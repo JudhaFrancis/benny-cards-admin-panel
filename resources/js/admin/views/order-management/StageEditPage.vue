@@ -145,12 +145,22 @@ const fetchOrder = async () => {
     const response = await axios.get(`/api/v1/orders/${route.params.id}`);
     if (response.data.success) {
       order.value = response.data.data;
-      if (!order.value.tracking) order.value.tracking = {};
       
-      // Ensure all required keys exist to avoid v-model errors
-      relevantSections.value.forEach(s => {
-        if (!order.value.tracking[s.key]) order.value.tracking[s.key] = {};
-      });
+      const stageRelationMap = {
+        'client-information': 'client_information',
+        'designing': 'designing',
+        'printing': 'printing',
+        'packaging': 'packaging',
+        'delivery': 'dispatch_delivery'
+      };
+      
+      const relation = stageRelationMap[stage.value];
+      if (relation) {
+        if (!order.value[relation]) order.value[relation] = {};
+        relevantSections.value.forEach(s => {
+          if (!order.value[relation][s.key]) order.value[relation][s.key] = {};
+        });
+      }
     }
   } catch (error) {
     console.error("Error fetching order:", error);
@@ -176,10 +186,18 @@ const fetchStaff = async () => {
 const handleSave = async () => {
   isSaving.value = true;
   try {
-    // Construct payload with only relevant sections
+    const stageRelationMap = {
+      'client-information': 'client_information',
+      'designing': 'designing',
+      'printing': 'printing',
+      'packaging': 'packaging',
+      'delivery': 'dispatch_delivery'
+    };
+    const relation = stageRelationMap[stage.value];
+
     const payload = {};
     relevantSections.value.forEach(s => {
-      payload[s.key] = order.value.tracking[s.key];
+      payload[s.key] = order.value[relation]?.[s.key] || {};
     });
 
     if (stage.value === 'client-information') {

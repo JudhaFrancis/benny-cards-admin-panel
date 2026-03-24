@@ -176,10 +176,13 @@ const props = defineProps({
 const emit = defineEmits(["update:order"]);
 
 const dispatchMode = computed(() => {
-  if (!props.order.tracking.dispatch_mode) {
-    props.order.tracking.dispatch_mode = {};
+  if (!props.order.dispatch_delivery) {
+    props.order.dispatch_delivery = { dispatch_mode: {} };
   }
-  return props.order.tracking.dispatch_mode;
+  if (!props.order.dispatch_delivery.dispatch_mode) {
+    props.order.dispatch_delivery.dispatch_mode = {};
+  }
+  return props.order.dispatch_delivery.dispatch_mode;
 });
 
 const modeOptions = [

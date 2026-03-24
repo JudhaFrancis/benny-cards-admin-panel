@@ -37,94 +37,7 @@
       </button>
     </div>
 
-    <!-- Filters & Search -->
-    <div
-      class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
-    >
-      <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Search by title..."
-              class="w-full pl-11 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all text-gray-700"
-              @input="debounceSearch"
-            />
-          </div>
-
-          <!-- Advanced Filters Dropdown -->
-          <FilterDropdown
-            :isActive="activeFiltersCount > 0"
-            @reset="resetFilters"
-            @apply="fetchProducts"
-          >
-            <!-- Status Filter -->
-            <FilterSection label="Active Status">
-              <ContextDropdown
-                v-model="filters.status"
-                :options="statusFilterOptions"
-                :icon="ActivityIcon"
-              />
-            </FilterSection>
-
-            <!-- Category Filter -->
-            <FilterSection label="Categories">
-              <select
-                v-model="filters.cat_id"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-gray-700 font-semibold"
-              >
-                <option value="">All Categories</option>
-                <option
-                  v-for="cat in options.categories"
-                  :key="cat.id"
-                  :value="cat.id"
-                >
-                  {{ cat.title }}
-                </option>
-              </select>
-            </FilterSection>
-
-            <!-- Brand Filter -->
-            <FilterSection label="Brands" last>
-              <select
-                v-model="filters.brand_id"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-gray-700 font-semibold"
-              >
-                <option value="">All Brands</option>
-                <option
-                  v-for="brand in options.brands"
-                  :key="brand.id"
-                  :value="brand.id"
-                >
-                  {{ brand.title }}
-                </option>
-              </select>
-            </FilterSection>
-          </FilterDropdown>
-
-          <button
-            v-if="activeFiltersCount > 0"
-            @click="resetFilters"
-            class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors px-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div
-          class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
-        >
-          Showing {{ meta.total || 0 }} items
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <!-- Main Table Container -->
     <DataTable
@@ -498,9 +411,6 @@ import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 import InfoModal from "../../components/ui/InfoModal.vue";
 import InfoSection from "../../components/ui/InfoSection.vue";
 import InfoItem from "../../components/ui/InfoItem.vue";
-import FilterDropdown from "../../components/ui/FilterDropdown.vue";
-import FilterSection from "../../components/ui/FilterSection.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
 import ImagePreviewModal from "../../components/ui/ImagePreviewModal.vue";
@@ -531,11 +441,7 @@ const previewSrc = ref("");
 const previewTitle = ref("");
 
 const filters = reactive({
-  search: "",
-  status: "",
   type: "card", // card = Invitation Card, gift = Gift
-  cat_id: "",
-  brand_id: "",
 });
 
 const tabOptions = [
@@ -545,29 +451,16 @@ const tabOptions = [
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
-  { key: "photo", label: "Product", width: "80px" },
+  { key: "photo", label: "Product", width: "80px", filter: false },
   { key: "title", label: "Title & Meta", sortable: true },
-  { key: "price", label: "Price" },
+  { key: "price", label: "Price", filterKey: "price" },
   { key: "status", label: "Status" },
-  { key: "created_at", label: "Created" },
-  { key: "updated_at", label: "Modified" },
+  { key: "created_at", label: "Created", type: "date" },
+  { key: "updated_at", label: "Modified", type: "date" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 
-const statusFilterOptions = [
-  { label: "All Status", value: "" },
-  { label: "Live Only", value: "active", icon: ActivityIcon },
-  { label: "Hidden Only", value: "inactive", icon: ActivityIcon },
-];
 
-// Computed
-const activeFiltersCount = computed(() => {
-  let count = 0;
-  if (filters.status) count++;
-  if (filters.cat_id) count++;
-  if (filters.brand_id) count++;
-  return count;
-});
 
 // Methods
 const fetchProducts = async (url = "/api/v1/products") => {
@@ -575,11 +468,8 @@ const fetchProducts = async (url = "/api/v1/products") => {
   try {
     const response = await axios.get(url, {
       params: {
-        search: filters.search,
-        status: filters.status,
         type: filters.type,
-        cat_id: filters.cat_id,
-        brand_id: filters.brand_id,
+        per_page: 50,
       },
     });
     if (response.data.success) {
@@ -622,21 +512,7 @@ const switchTab = (tabValue) => {
   fetchProducts();
 };
 
-let debounceTimeout;
-const debounceSearch = () => {
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    fetchProducts();
-  }, 500);
-};
 
-const resetFilters = () => {
-  filters.search = "";
-  filters.status = "";
-  filters.cat_id = "";
-  filters.brand_id = "";
-  fetchProducts();
-};
 
 const getImageSource = (path) => {
   if (!path) return "/images/placeholder.webp";

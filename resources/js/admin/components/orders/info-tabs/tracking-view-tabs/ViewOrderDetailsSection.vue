@@ -90,18 +90,18 @@
 
     <!-- Audit Information -->
     <div
-      v-if="jobDetails._audit"
+      v-if="order.client_information"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated by
         <strong class="text-slate-600">{{
-          jobDetails._audit.updated_by
+          order.client_information.modified_by?.name || order.client_information.added_by?.name || "System"
         }}</strong>
         on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          formatAuditDate(jobDetails._audit.updated_at)
+          formatAuditDate(order.client_information.updated_at || order.client_information.created_at)
         }}</span>
       </span>
     </div>
@@ -121,7 +121,7 @@ const props = defineProps({
   order: { type: Object, required: true },
 });
 
-const jobDetails = computed(() => props.order.tracking?.job_details || {});
+const jobDetails = computed(() => props.order.client_information?.job_details || {});
 
 const formatDate = (dateString) => {
   if (!dateString) return "";

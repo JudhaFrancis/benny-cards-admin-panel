@@ -147,30 +147,29 @@ const occasionOptions = [
   { label: "Other", value: "other" },
 ];
 
-// Helper to access safe client_info
 const clientInfo = computed(() => {
-  if (!props.order.tracking) {
-    props.order.tracking = {};
+  if (!props.order.client_information) {
+    props.order.client_information = { client_info: {} };
   }
-  if (!props.order.tracking.client_info) {
-    props.order.tracking.client_info = {};
+  if (!props.order.client_information.client_info) {
+    props.order.client_information.client_info = {};
   }
-  return props.order.tracking.client_info;
+  return props.order.client_information.client_info;
 });
 
 const autoFill = () => {
-  // Ensure the tracking object and client_info exist
-  if (!props.order.tracking) {
-    props.order.tracking = {};
+  // Ensure the client_information object and client_info exist
+  if (!props.order.client_information) {
+    props.order.client_information = { client_info: {} };
   }
-  if (!props.order.tracking.client_info) {
-    props.order.tracking.client_info = {};
+  if (!props.order.client_information.client_info) {
+    props.order.client_information.client_info = {};
   }
 
   // Auto-fill from order customer details if available
   const cd = props.order.customer_details || props.order.customerDetails;
   if (cd) {
-    const target = props.order.tracking.client_info;
+    const target = props.order.client_information.client_info;
     // We fill ONLY if fields are currently empty or null
     if (!target.name) {
       target.name = cd.name;
@@ -222,6 +221,6 @@ watch(
 
 const save = () => {
   // Pass the data up to the parent component
-  emit("save", props.order.tracking);
+  emit("save", props.order.client_information);
 };
 </script>

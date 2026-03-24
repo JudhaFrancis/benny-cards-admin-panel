@@ -56,11 +56,11 @@
           <Clock class="h-3.5 w-3.5" />
           <span>Last updated</span>
           <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full text-slate-600">
-            {{ formatAuditDate(auditDetails.updated_at) }}
+            {{ formatAuditDate(auditDetails.updated_at || auditDetails.created_at) }}
           </span>
           <span>by</span>
           <span class="font-medium text-slate-600 underline decoration-slate-200 underline-offset-2">
-            {{ auditDetails.updated_by }}
+            {{ auditDetails.modified_by?.name || auditDetails.added_by?.name || "System" }}
           </span>
         </div>
       </div>
@@ -147,46 +147,7 @@ const stageRelationKey = computed(() => {
 });
 
 const auditDetails = computed(() => {
-  // 1. Try modern stage-level audit
-  const stageData = orderData.value?.[stageRelationKey.value];
-  if (stageData?.audit_details) return stageData.audit_details;
-
-  // 2. Fallback to legacy tracking-based audit for this stage
-  const tracking = orderData.value?.tracking || {};
-  
-  // Map stages to all their possible tracking JSON sections
-  const stageSectionMap = {
-    'client-information': ['client_info', 'job_details', 'card_specs'],
-    'designing': ['design_print', 'work_assign'],
-    'printing': ['printing_status'],
-    'packaging': ['packaging_status', 'packaging_logistics'],
-    'delivery': ['dispatch_details', 'dispatch_mode', 'delivery_location']
-  };
-
-  const sections = stageSectionMap[props.stage] || [];
-  let latestAudit = null;
-
-  sections.forEach(key => {
-    const audit = tracking[key]?._audit;
-    if (audit && audit.updated_at) {
-      if (!latestAudit || new Date(audit.updated_at) > new Date(latestAudit.updated_at)) {
-        latestAudit = {
-          updated_at: audit.updated_at,
-          updated_by: audit.updated_by
-        };
-      }
-    }
-  });
-
-  // 3. Global Fallback to Order Creation Info
-  if (!latestAudit && orderData.value) {
-    return {
-      updated_at: orderData.value.created_at,
-      updated_by: orderData.value.added_by?.name || "Admin"
-    };
-  }
-
-  return latestAudit;
+  return orderData.value?.[stageRelationKey.value];
 });
 
 const stageTitle = computed(() => {
@@ -239,7 +200,6 @@ const fetchOrder = async () => {
     const response = await axios.get(`/api/v1/orders/${props.orderId}`);
     if (response.data.success) {
       orderData.value = response.data.data;
-      if (!orderData.value.tracking) orderData.value.tracking = {};
     }
   } catch (error) {
     console.error("Error fetching order:", error);

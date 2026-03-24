@@ -17,60 +17,7 @@
       </template>
     </PageHeader>
 
-    <!-- Filters & Search -->
-    <div
-      class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
-    >
-      <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon
-              class="absolute left-4 top-1/2 -trangray-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Search by product, reviewer, content..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
-              style="color: #475569 !important"
-              @input="debounceSearch"
-            />
-          </div>
-
-          <!-- Advanced Filters Dropdown -->
-          <FilterDropdown
-            :isActive="activeFiltersCount > 0"
-            @reset="resetFilters"
-            @apply="fetchReviews"
-          >
-            <FilterSection label="Status">
-              <ContextDropdown
-                v-model="filters.status"
-                :options="statusFilterOptions"
-                :icon="ActivityIcon"
-              />
-            </FilterSection>
-          </FilterDropdown>
-
-          <button
-            v-if="activeFiltersCount > 0"
-            @click="resetFilters"
-            class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors px-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div
-          class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
-        >
-          Showing {{ meta.total || 0 }} reviews
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <!-- Main Table Container -->
     <DataTable
@@ -252,41 +199,18 @@ import {
   Search as SearchIcon,
   Edit3 as Edit3Icon,
   Trash2 as Trash2Icon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
   Eye as EyeIcon,
-  Activity as ActivityIcon,
   Star as StarIcon,
 } from "lucide-vue-next";
 import axios from "axios";
 import ReviewModal from "./ReviewModal.vue";
 import ReviewInfoDialog from "../../components/reviews/ReviewInfoDialog.vue";
 import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
-import FilterDropdown from "../../components/ui/FilterDropdown.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
-import FilterSection from "../../components/ui/FilterSection.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 
-const statusFilterOptions = [
-  { label: "All Statuses", value: "" },
-  {
-    label: "Active",
-    value: "active",
-    description: "Review is visible.",
-    badge: "Live",
-    badgeClass: "bg-emerald-100 text-emerald-700",
-  },
-  {
-    label: "Inactive",
-    value: "inactive",
-    description: "Review is hidden.",
-    badge: "Hidden",
-    badgeClass: "bg-gray-200 text-gray-500",
-  },
-];
 
 const reviews = ref([]);
 const loading = ref(true);
@@ -308,24 +232,15 @@ const { success: toastSuccess, error: toastError } = useToast();
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
-  { key: "product", label: "Product", align: "left" },
-  { key: "reviewer", label: "Reviewer", align: "left" },
+  { key: "product", label: "Product", align: "left", filterKey: "product.title" },
+  { key: "reviewer", label: "Reviewer", align: "left", filterKey: "user.name" },
   { key: "rating", label: "Rating", align: "left" },
   { key: "status", label: "Status", align: "left" },
-  { key: "created", label: "Date", align: "left" },
+  { key: "created", label: "Date", align: "left", type: "date", filterKey: "created_at" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 
-const filters = reactive({
-  search: "",
-  status: "",
-});
 
-const activeFiltersCount = computed(() => {
-  let count = 0;
-  if (filters.status) count++;
-  return count;
-});
 
 let searchTimeout = null;
 
@@ -333,8 +248,7 @@ const fetchReviews = async (url = "/api/v1/reviews") => {
   loading.value = true;
   try {
     const params = {
-      search: filters.search,
-      status: filters.status,
+      per_page: 50,
     };
 
     const finalUrl = url.includes("?") ? url : url;
@@ -363,17 +277,6 @@ const fetchReviews = async (url = "/api/v1/reviews") => {
   }
 };
 
-const debounceSearch = () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    fetchReviews();
-  }, 500);
-};
-
-const resetFilters = () => {
-  filters.status = "";
-  fetchReviews();
-};
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("en-US", {

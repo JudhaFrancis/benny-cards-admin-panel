@@ -457,7 +457,7 @@ onMounted(() => {
 });
 
 const dispatchExpense = computed(() => {
-  return parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  return parseFloat(props.order.dispatch_delivery?.dispatch_mode?.expense) || 0;
 });
 
 const subtotal = computed(() => {
@@ -520,7 +520,7 @@ const updateQuantityValue = (itemId, value) => {
   
   const discount = props.order.discount || 0;
   // Use current dispatch expense
-  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  const expense = parseFloat(props.order.dispatch_delivery?.dispatch_mode?.expense) || 0;
 
   // Emit updated order
   emit("update:order", {
@@ -550,7 +550,7 @@ const updateUnitPriceValue = (itemId, value) => {
   );
   
   const discount = props.order.discount || 0;
-  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  const expense = parseFloat(props.order.dispatch_delivery?.dispatch_mode?.expense) || 0;
 
   emit("update:order", {
     ...props.order,
@@ -569,7 +569,7 @@ const removeItem = (itemId) => {
   );
   const discount = props.order.discount || 0;
   const extraCharges = props.order.extra_charges || 0;
-  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  const expense = parseFloat(props.order.dispatch_delivery?.dispatch_mode?.expense) || 0;
 
   emit("update:order", {
      ...props.order,
@@ -615,7 +615,7 @@ const addItem = (product) => {
 
 const handleDiscountChange = (value) => {
   const discount = parseFloat(value) || 0;
-  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  const expense = parseFloat(props.order.dispatch_delivery?.dispatch_mode?.expense) || 0;
   const extraCharges = parseFloat(props.order.extra_charges) || 0;
   emit("update:order", {
     ...props.order,
@@ -626,7 +626,7 @@ const handleDiscountChange = (value) => {
 
 const handleExtraChargesChange = (value) => {
   const extraCharges = parseFloat(value) || 0;
-  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  const expense = parseFloat(props.order.dispatch_delivery?.dispatch_mode?.expense) || 0;
   const discount = parseFloat(props.order.discount) || 0;
   emit("update:order", {
     ...props.order,
@@ -644,7 +644,7 @@ const updateOrderItems = (items) => {
   );
   const discount = props.order.discount || 0;
   const extraCharges = props.order.extra_charges || 0;
-  const expense = parseFloat(props.order.tracking?.dispatch_mode?.expense) || 0;
+  const expense = parseFloat(props.order.dispatch_delivery?.dispatch_mode?.expense) || 0;
 
   emit("update:order", {
     ...props.order,

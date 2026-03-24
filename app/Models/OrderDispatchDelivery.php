@@ -4,31 +4,43 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderDispatchDelivery extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'order_dispatch_delivery';
 
     protected $fillable = [
         'order_id',
         'status',
-        'audit_details',
         'delivery_location',
         'dispatch_mode',
-        'dispatch_details'
+        'dispatch_details',
+        'added_by',
+        'modified_by'
     ];
 
     protected $casts = [
-        'audit_details' => 'array',
         'delivery_location' => 'array',
         'dispatch_mode' => 'array',
         'dispatch_details' => 'array'
     ];
 
-    public function order()
+    public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function addedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'added_by');
+    }
+
+    public function modifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modified_by');
     }
 }

@@ -292,10 +292,13 @@ const props = defineProps({
 const emit = defineEmits(["update:order"]);
 
 const dispatchDetails = computed(() => {
-  if (!props.order.tracking.dispatch_details) {
-    props.order.tracking.dispatch_details = {};
+  if (!props.order.dispatch_delivery) {
+    props.order.dispatch_delivery = { dispatch_details: {} };
   }
-  return props.order.tracking.dispatch_details;
+  if (!props.order.dispatch_delivery.dispatch_details) {
+    props.order.dispatch_delivery.dispatch_details = {};
+  }
+  return props.order.dispatch_delivery.dispatch_details;
 });
 
 const busDetails = computed(() => {

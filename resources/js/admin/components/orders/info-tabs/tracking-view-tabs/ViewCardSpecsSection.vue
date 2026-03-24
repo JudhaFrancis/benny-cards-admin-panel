@@ -202,18 +202,18 @@
 
     <!-- Audit Information -->
     <div
-      v-if="cardSpecs._audit"
+      v-if="order.client_information"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated by
         <strong class="text-slate-600">{{
-          cardSpecs._audit.updated_by
+          order.client_information.modified_by?.name || order.client_information.added_by?.name || "System"
         }}</strong>
         on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          formatAuditDate(cardSpecs._audit.updated_at)
+          formatAuditDate(order.client_information.updated_at || order.client_information.created_at)
         }}</span>
       </span>
     </div>
@@ -238,7 +238,7 @@ const props = defineProps({
   order: { type: Object, required: true },
 });
 
-const cardSpecs = computed(() => props.order.tracking?.card_specs || {});
+const cardSpecs = computed(() => props.order.client_information?.card_specs || {});
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";

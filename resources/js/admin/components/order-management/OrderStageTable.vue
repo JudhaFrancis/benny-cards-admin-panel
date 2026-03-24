@@ -13,11 +13,11 @@
           {{ order.order_number }}
         </span>
         <span 
-          v-if="order.tracking?.client_info?.expected_delivery_date" 
+          v-if="order.client_information?.job_details?.expected_delivery_date" 
           class="text-[10px] mt-0.5"
-          :class="getCountdownColor(order.tracking.client_info.expected_delivery_date)"
+          :class="getCountdownColor(order.client_information.job_details.expected_delivery_date)"
         >
-          {{ getCountdownText(order.tracking.client_info.expected_delivery_date) }}
+          {{ getCountdownText(order.client_information.job_details.expected_delivery_date) }}
         </span>
       </div>
     </template>
@@ -108,18 +108,18 @@ defineEmits(["view", "edit"]);
 const columns = computed(() => {
   const base = [
     { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
-    { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
-    { key: "customer", label: "Customer", align: "left", width: "200px" },
-    { key: "assigned_name", label: "Assigned Name", align: "left", width: "180px" },
-    { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap" },
+    { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap", filterKey: "order_number" },
+    { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name" },
+    { key: "assigned_name", label: "Assigned Name", align: "left", width: "180px", filter: false },
+    { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap", filter: false },
   ];
   if (props.stage === 'printing') {
-    base.push({ key: "printing_days", label: "Printing Days", align: "left", width: "120px", class: "whitespace-nowrap" });
+    base.push({ key: "printing_days", label: "Printing Days", align: "left", width: "120px", class: "whitespace-nowrap", filter: false });
   }
   base.push(
-    { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },
-    { key: "created_at", label: "Created", align: "left", width: "150px" },
-    { key: "modified_by", label: "Modified", align: "left", width: "150px" },
+    { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap", filter: false },
+    { key: "created_at", label: "Created", align: "left", width: "150px", type: "date", filterKey: "created_at" },
+    { key: "modified_by", label: "Modified", align: "left", width: "150px", filter: false },
     { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" }
   );
   return base;
@@ -140,7 +140,7 @@ const getCountdownColor = (dateString) => {
 };
 
 const getPrintingDaysColor = (order) => {
-  const dateString = order.tracking?.client_info?.expected_delivery_date;
+  const dateString = order.client_information?.job_details?.expected_delivery_date;
   if (!dateString) return "bg-slate-500/10 text-slate-500 border-slate-500/20";
   
   const deliveryDate = new Date(dateString);
@@ -194,41 +194,39 @@ const formatDate = (date) => {
 };
 
 const getAssignedName = (order) => {
-  const tracking = order.tracking || {};
   switch (props.stage) {
     case 'client-information':
-      return tracking.job_details?.order_taken_by || "N/A";
+      return order.client_information?.job_details?.order_taken_by || "N/A";
     case 'designing':
-      return tracking.work_assign?.assigned_to || "N/A";
+      return order.designing?.work_assign?.assigned_to || "N/A";
     case 'printing':
-      return tracking.printing_status?.assigned_to || tracking.work_assign?.assigned_to || "N/A"; // Printing often shares same assignee or isn't specifically named
+      return order.printing?.printing_status?.assigned_to || order.designing?.work_assign?.assigned_to || "N/A";
     case 'packaging':
-      return tracking.packaging_logistics?.crafted_by || "N/A";
+      return order.packaging?.packaging_logistics?.crafted_by || "N/A";
     case 'delivery':
-      return tracking.dispatch_mode?.signature_name || "N/A";
+      return order.dispatch_delivery?.dispatch_mode?.signature_name || "N/A";
     default:
       return "N/A";
   }
 };
 
 const getAssignedDateRaw = (order) => {
-  const tracking = order.tracking || {};
   let date = null;
   switch (props.stage) {
     case 'client-information':
       date = order.order_date;
       break;
     case 'designing':
-      date = tracking.work_assign?.assigned_date;
+      date = order.designing?.work_assign?.assigned_date;
       break;
     case 'printing':
-      date = tracking.printing_status?.assigned_date;
+      date = order.printing?.printing_status?.assigned_date;
       break;
     case 'packaging':
-      date = tracking.packaging_logistics?.date;
+      date = order.packaging?.packaging_logistics?.date;
       break;
     case 'delivery':
-      date = tracking.dispatch_mode?.date;
+      date = order.dispatch_delivery?.dispatch_mode?.date;
       break;
   }
   return date;
@@ -262,36 +260,6 @@ const getStageStatus = (order) => {
     return stageData.status;
   }
   
-  // Fallback to heuristic if DB status is not set
-  const tracking = order.tracking || {};
-  let isStarted = false;
-  let isDone = false;
-
-  switch (props.stage) {
-    case 'client-information':
-      isStarted = !!tracking.job_details;
-      isDone = !!tracking.card_specs && Object.keys(tracking.card_specs).length > 0;
-      break;
-    case 'designing':
-      isStarted = !!tracking.work_assign;
-      isDone = !!tracking.design_print && Object.keys(tracking.design_print).length > 0;
-      break;
-    case 'printing':
-      isStarted = !!tracking.printing_status;
-      isDone = tracking.printing_status?.readymade_sent_to_print || tracking.printing_status?.customize_sent_to_print_date;
-      break;
-    case 'packaging':
-      isStarted = !!tracking.packaging_logistics;
-      isDone = !!tracking.packaging_status && Object.keys(tracking.packaging_status).length > 0;
-      break;
-    case 'delivery':
-      isStarted = !!tracking.delivery_location;
-      isDone = !!tracking.dispatch_details && Object.keys(tracking.dispatch_details).length > 0;
-      break;
-  }
-
-  if (isDone) return 'Completed';
-  if (isStarted) return 'Process';
   return 'Pending';
 };
 
@@ -308,39 +276,12 @@ const getStageData = (order) => {
 
 const getModifiedBy = (order) => {
   const stageData = getStageData(order);
-  if (stageData?.audit_details?.updated_by) {
-    return stageData.audit_details.updated_by;
-  }
-  
-  // Fallback to tracking audit
-  const tracking = order.tracking || {};
-  let audit = null;
-  switch (props.stage) {
-    case 'client-information': audit = tracking.client_info?._audit; break;
-    case 'designing': audit = tracking.design_print?._audit; break;
-    case 'printing': audit = tracking.printing_status?._audit; break;
-    case 'packaging': audit = tracking.packaging_status?._audit; break;
-    case 'delivery': audit = tracking.dispatch_details?._audit; break;
-  }
-  return audit?.updated_by || "Admin";
+  return stageData?.modified_by?.name || stageData?.added_by?.name || "Admin";
 };
 
 const getModifiedAt = (order) => {
   const stageData = getStageData(order);
-  if (stageData?.audit_details?.updated_at) {
-    return formatDate(stageData.audit_details.updated_at);
-  }
-
-  const tracking = order.tracking || {};
-  let audit = null;
-  switch (props.stage) {
-    case 'client-information': audit = tracking.client_info?._audit; break;
-    case 'designing': audit = tracking.design_print?._audit; break;
-    case 'printing': audit = tracking.printing_status?._audit; break;
-    case 'packaging': audit = tracking.packaging_status?._audit; break;
-    case 'delivery': audit = tracking.dispatch_details?._audit; break;
-  }
-  return formatDate(audit?.updated_at);
+  return formatDate(stageData?.updated_at || stageData?.created_at);
 };
 
 function cn(...classes) {

@@ -17,68 +17,7 @@
       </template>
     </PageHeader>
 
-    <!-- Filters & Search -->
-    <div
-      class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
-    >
-      <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search Inner -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Search by name or email..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-700"
-              style="color: #475569 !important"
-              @input="debounceSearch"
-            />
-          </div>
-
-          <!-- Advanced Filters Dropdown -->
-          <FilterDropdown
-            :isActive="activeFiltersCount > 0"
-            @reset="resetFilters"
-            @apply="fetchUsers"
-          >
-            <FilterSectionHelper label="Member Role">
-              <ContextDropdown
-                v-model="filters.role_id"
-                :options="roleFilterOptions"
-                :icon="ShieldIcon"
-              />
-            </FilterSectionHelper>
-
-            <FilterSectionHelper label="Account Status" last>
-              <ContextDropdown
-                v-model="filters.status"
-                :options="statusFilterOptions"
-                :icon="ActivityIcon"
-              />
-            </FilterSectionHelper>
-          </FilterDropdown>
-
-          <button
-            v-if="activeFiltersCount > 0"
-            @click="resetFilters"
-            class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors px-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div
-          class="text-xs font-semibold text-slate-400 uppercase tracking-widest"
-        >
-          Showing {{ meta.total || 0 }} members
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <!-- Main Table Container -->
     <DataTable
@@ -352,8 +291,6 @@ import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 import InfoModal from "../../components/ui/InfoModal.vue";
 import InfoSection from "../../components/ui/InfoSection.vue";
 import InfoItem from "../../components/ui/InfoItem.vue";
-import FilterDropdown from "../../components/ui/FilterDropdown.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
 import { usePermissions } from "../../composables/usePermissions";
@@ -444,35 +381,18 @@ const { canAdd, canView, canEdit, canDelete } = getModulePermissions("User");
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
-  { key: "user", label: "User", align: "left" },
-  { key: "role", label: "Role", align: "left" },
+  { key: "user", label: "User", align: "left", filterKey: "name" },
+  { key: "role", label: "Role", align: "left", filterKey: "role.name" },
   { key: "status", label: "Status", align: "left" },
-  { key: "joined", label: "Joined", align: "left" },
+  { key: "joined", label: "Joined", align: "left", type: "date", filterKey: "created_at" },
   { key: "actions", label: "Actions", align: "right" },
 ];
-
-const filters = reactive({
-  search: "",
-  role_id: "",
-  status: "",
-});
-
-const activeFiltersCount = computed(() => {
-  let count = 0;
-  if (filters.role_id) count++;
-  if (filters.status) count++;
-  return count;
-});
-
-let searchTimeout = null;
 
 const fetchUsers = async (url = "/api/v1/users") => {
   loading.value = true;
   try {
     const params = {
-      search: filters.search,
-      role_id: filters.role_id,
-      status: filters.status,
+      per_page: 50, // Fetch more for better local filtering
     };
 
     // Check if url is just path or full URL
@@ -501,18 +421,6 @@ const fetchUsers = async (url = "/api/v1/users") => {
   }
 };
 
-const debounceSearch = () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    fetchUsers();
-  }, 500);
-};
-
-const resetFilters = () => {
-  filters.role_id = "";
-  filters.status = "";
-  fetchUsers();
-};
 
 const userInitials = (name) => {
   if (!name) return "??";

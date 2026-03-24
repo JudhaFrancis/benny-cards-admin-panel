@@ -122,12 +122,12 @@ defineEmits(["view", "edit", "delete"]);
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
-  { key: "payment_number", label: "Payment", align: "left" },
-  { key: "order", label: "Order", align: "left" },
+  { key: "payment_number", label: "Payment", align: "left", filterKey: "payment_number" },
+  { key: "order", label: "Order", align: "left", filterKey: "order.order_number" },
   { key: "amount", label: "Amount", align: "right" },
-  { key: "method", label: "Method", align: "left" },
-  { key: "status", label: "Status", align: "left" },
-  { key: "date", label: "Date", align: "left" },
+  { key: "method", label: "Method", align: "left", filterKey: "payment_method" },
+  { key: "status", label: "Status", align: "left", filterKey: "payment_status" },
+  { key: "date", label: "Date", align: "left", type: "date", filterKey: "payment_date" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 

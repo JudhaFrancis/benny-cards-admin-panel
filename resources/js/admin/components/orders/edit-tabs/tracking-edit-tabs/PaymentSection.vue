@@ -456,19 +456,7 @@ const form = ref({
 });
 
 const paymentList = computed(() => {
-  const info = props.order.tracking.payment_info;
-  if (!info) return [];
-
-  // Check for new standard structure
-  if (info.payments && Array.isArray(info.payments)) {
-    return info.payments;
-  }
-
-  // Fallback: If it's a direct array
-  if (Array.isArray(info)) return info;
-
-  // Fallback: Legacy object with numeric keys (unlikely now, but safe to keep logic or just return empty if structured differently)
-  return [];
+  return props.order.payments || [];
 });
 
 const paymentMethods = [
@@ -521,28 +509,12 @@ const resetForm = () => {
   showAddForm.value = false;
 };
 
-// Helper to ensure payment_info is in the correct format and return the payments array
+// Helper to ensure payments is an array
 const ensurePaymentArray = () => {
-  if (!props.order.tracking.payment_info) {
-    // Initialize as object with payments array if missing
-    props.order.tracking.payment_info = { payments: [] };
-  } else if (Array.isArray(props.order.tracking.payment_info)) {
-    // Convert existing array to object structure
-    props.order.tracking.payment_info = {
-      payments: props.order.tracking.payment_info,
-    };
-  } else if (!props.order.tracking.payment_info.payments) {
-    // If object exists but no payments key, initialize it
-    // (This handles the case where it might be a legacy object structure, though unlikely with recent backend changes)
-    if (Object.keys(props.order.tracking.payment_info).length > 0) {
-      // Try to recover any array-like keys if necessary, or just start fresh
-      // For now, safe default:
-      props.order.tracking.payment_info.payments = [];
-    } else {
-      props.order.tracking.payment_info.payments = [];
-    }
+  if (!props.order.payments) {
+    props.order.payments = [];
   }
-  return props.order.tracking.payment_info.payments;
+  return props.order.payments;
 };
 
 const savePayment = () => {

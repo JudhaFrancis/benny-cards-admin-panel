@@ -317,18 +317,18 @@ const activeSectionIndex = computed(() => {
 });
 
 const sectionMap = {
-  "order-details": "job_details",
-  "client-info": "client_info",
-  "card-specs": "card_specs",
-  "work-assign": "work_assign",
-  "design-print": "design_print",
-  "order-printing": "printing_status",
-  "packaging-logistics": "packaging_logistics",
-  "packaging-status": "packaging_status",
-  "delivery-location": "delivery_location",
-  "dispatch-mode": "dispatch_mode",
-  "dispatch-details": "dispatch_details",
-  payment: "payment_info",
+  "order-details": { relation: "client_information", key: "job_details" },
+  "client-info": { relation: "client_information", key: "client_info" },
+  "card-specs": { relation: "client_information", key: "card_specs" },
+  "work-assign": { relation: "designing", key: "work_assign" },
+  "design-print": { relation: "designing", key: "design_print" },
+  "order-printing": { relation: "printing", key: "printing_status" },
+  "packaging-logistics": { relation: "packaging", key: "packaging_logistics" },
+  "packaging-status": { relation: "packaging", key: "packaging_status" },
+  "delivery-location": { relation: "dispatch_delivery", key: "delivery_location" },
+  "dispatch-mode": { relation: "dispatch_delivery", key: "dispatch_mode" },
+  "dispatch-details": { relation: "dispatch_delivery", key: "dispatch_details" },
+  payment: { relation: "payments", isArray: true },
 };
 
 // Check if a section is unlocked (accessible)
@@ -364,20 +364,20 @@ const handleSectionClick = (sectionId, index) => {
 
 // Helper to get validation errors for a specific section
 const getSectionErrors = (sectionId) => {
-  const tracking = props.order.tracking || {};
+  const order = props.order;
   let errors = [];
 
   switch (sectionId) {
     case "order-details":
-      const details = tracking.job_details || {};
-      if (!props.order.order_date) errors.push("Order Date");
+      const details = order.client_information?.job_details || {};
+      if (!order.order_date) errors.push("Order Date");
       if (!details.order_taken_by) errors.push("Order Taken By");
       if (!details.order_placed_in) errors.push("Order Placed In");
       if (!details.reference) errors.push("Reference");
       break;
 
     case "client-info":
-      const client = tracking.client_info || {};
+      const client = order.client_information?.client_info || {};
       if (!client.name) errors.push("Name");
       if (!client.address) errors.push("Place (Address)");
       if (!client.phone) errors.push("Contact No");
@@ -386,7 +386,7 @@ const getSectionErrors = (sectionId) => {
       break;
 
     case "card-specs":
-      const specs = tracking.card_specs || {};
+      const specs = order.client_information?.card_specs || {};
       if (!specs.type) errors.push("Product Type (Customize or Ready Made)");
       if (!specs.card_size) errors.push("Card Size");
       if (!specs.quantity) errors.push("Quantity");
@@ -395,7 +395,7 @@ const getSectionErrors = (sectionId) => {
       break;
 
     case "work-assign":
-      const work = tracking.work_assign || {};
+      const work = order.designing?.work_assign || {};
       if (!work.assigned_to) errors.push("Assigned To");
       if (!work.assigned_date) errors.push("Assigned Date");
       if (!work.deadline) errors.push("Deadline");
@@ -404,7 +404,7 @@ const getSectionErrors = (sectionId) => {
       break;
 
     case "design-print":
-      const design = tracking.design_print || {};
+      const design = order.designing?.design_print || {};
       if (!design.design_outputs)
         errors.push("Design Outputs (Select at least one)");
       if (!design.print_addons)
@@ -412,7 +412,7 @@ const getSectionErrors = (sectionId) => {
       break;
 
     case "order-printing":
-      const printing = tracking.printing_status || {};
+      const printing = order.printing?.printing_status || {};
 
       if (!printing.assigned_date) errors.push("Assigned Date");
 
@@ -448,14 +448,10 @@ const getSectionErrors = (sectionId) => {
         if (followUpCount < 1)
           errors.push("Readymade Card: At least Day 1 status must be checked");
       }
-
-      // Fallback: If absolutely nothing is entered, but a card type is known,
-      // it should at least validate that type if we want strictness.
-      // But for now, let it be flexible as long as something is being tracked.
       break;
 
     case "packaging-logistics":
-      const logistics = tracking.packaging_logistics || {};
+      const logistics = order.packaging?.packaging_logistics || {};
       if (!logistics.crafted_by) errors.push("Crafted By");
       if (!logistics.names) errors.push("Names");
       if (!logistics.date) errors.push("Date");
@@ -465,25 +461,25 @@ const getSectionErrors = (sectionId) => {
       break;
 
     case "packaging-status":
-      const packing = tracking.packaging_status || {};
+      const packing = order.packaging?.packaging_status || {};
       if (!packing.packed_by) errors.push("Packed By");
       break;
 
     case "delivery-location":
-      const loc = tracking.delivery_location || {};
+      const loc = order.dispatch_delivery?.delivery_location || {};
       if (!loc.place_name) errors.push("Place Name");
       break;
 
     case "dispatch-mode":
-      const dispMode = tracking.dispatch_mode || {};
+      const dispMode = order.dispatch_delivery?.dispatch_mode || {};
       if (!dispMode.date) errors.push("Dispatch Details with Date");
       if (!dispMode.expense) errors.push("Dispatch Expense");
       if (!dispMode.signature_name) errors.push("Signature & Name");
       break;
 
     case "dispatch-details":
-      const dispDet = tracking.dispatch_details || {};
-      const modesStr = tracking.dispatch_mode?.modes || "";
+      const dispDet = order.dispatch_delivery?.dispatch_details || {};
+      const modesStr = order.dispatch_delivery?.dispatch_mode?.modes || "";
       const modes = modesStr.split(",");
 
       if (modes.includes("Bus")) {
@@ -505,10 +501,7 @@ const getSectionErrors = (sectionId) => {
       break;
 
     case "payment":
-      const paymentInfo = tracking.payment_info || {};
-      const payments = Array.isArray(paymentInfo)
-        ? paymentInfo
-        : paymentInfo.payments || [];
+      const payments = order.payments || [];
 
       if (!Array.isArray(payments) || payments.length === 0) {
         errors.push("At least one payment record is required");
@@ -531,16 +524,17 @@ const savingSectionId = ref(null);
 
 // Initialize completed sections based on existing data
 const calculateCompletedStatus = () => {
-  const tracking = props.order.tracking || {};
   const filled = [];
 
   for (const section of trackingSections) {
-    const dbCol = sectionMap[section.id];
-    const sectionData = tracking[dbCol];
+    const config = sectionMap[section.id];
+    const sectionData = config.isArray 
+      ? props.order[config.relation] 
+      : props.order[config.relation]?.[config.key];
 
     if (
       sectionData && 
-      (sectionData._audit || Object.keys(sectionData).length > 0) &&
+      (Array.isArray(sectionData) ? sectionData.length > 0 : (sectionData._audit || Object.keys(sectionData).length > 0)) &&
       getSectionErrors(section.id).length === 0
     ) {
       filled.push(section.id);
@@ -564,7 +558,7 @@ const initCompletedSections = () => {
 
 // Watch for tracking updates from parent (after a save)
 watch(
-  () => props.order.tracking,
+  () => props.order,
   (newTracking) => {
     const newlyFilled = calculateCompletedStatus();
     const oldFilledCount = completedSections.value.length;
@@ -600,12 +594,15 @@ onMounted(() => {
 });
 
 // Defensive fix for Laravel returning [] for empty JSON objects
-watch(() => props.order?.tracking, (newTracking) => {
-  if (newTracking && typeof newTracking === 'object') {
+watch(() => props.order, (newOrder) => {
+  if (newOrder && typeof newOrder === 'object') {
     Object.keys(sectionMap).forEach(key => {
-      const dbCol = sectionMap[key];
-      if (Array.isArray(newTracking[dbCol]) && newTracking[dbCol].length === 0) {
-        newTracking[dbCol] = {};
+      const config = sectionMap[key];
+      if (config.isArray) return;
+      
+      const relation = newOrder[config.relation];
+      if (relation && Array.isArray(relation[config.key]) && relation[config.key].length === 0) {
+        relation[config.key] = {};
       }
     });
   }
@@ -623,11 +620,14 @@ const handleSaveSection = () => {
   savingSectionId.value = selectedSection.value;
 
   // Emit Save
-  const dbColumn = sectionMap[selectedSection.value];
-  if (dbColumn) {
-    const trackingData = props.order.tracking || {};
-    const sectionData = trackingData[dbColumn] || {};
-    emit("save", { [dbColumn]: sectionData });
+  const config = sectionMap[selectedSection.value];
+  if (config) {
+    if (config.isArray) {
+        emit("save", { [config.relation]: props.order[config.relation] });
+    } else {
+        const sectionData = props.order[config.relation]?.[config.key] || {};
+        emit("save", { [config.key]: sectionData });
+    }
   } else {
     emit("save");
   }

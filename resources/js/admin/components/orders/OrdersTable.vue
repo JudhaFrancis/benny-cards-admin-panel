@@ -12,11 +12,11 @@
           order.order_number
         }}</span>
         <span 
-          v-if="order.tracking?.client_info?.expected_delivery_date" 
+          v-if="order.client_information?.client_info?.expected_delivery_date" 
           class="text-[10px] mt-0.5"
-          :class="getCountdownColor(order.tracking.client_info.expected_delivery_date)"
+          :class="getCountdownColor(order.client_information.client_info.expected_delivery_date)"
         >
-          {{ getCountdownText(order.tracking.client_info.expected_delivery_date) }}
+          {{ getCountdownText(order.client_information.client_info.expected_delivery_date) }}
         </span>
       </div>
     </template>
@@ -30,9 +30,9 @@
     </template>
 
     <template #cell-orderDate="{ item: order }">
-      <span class="text-slate-500">{{
-        new Date(order.order_date).toLocaleDateString()
-      }}</span>
+      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        {{ formatDate(order.order_date) }}
+      </span>
     </template>
 
     <template #cell-items="{ item: order }">
@@ -54,16 +54,10 @@
       </span>
     </template>
 
-    <template #cell-amount="{ item: order }">
-      <span class="font-bold text-slate-900"
-        >₹{{ Number(order.total_amount).toFixed(2) }}</span
-      >
-    </template>
-
-    <template #cell-paid="{ item: order }">
-      <span class="font-medium text-slate-600"
-        >₹{{ Number(order.paid_amount).toFixed(2) }}</span
-      >
+    <template #cell-delivery_date="{ item: order }">
+      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        {{ formatDate(order.client_information?.client_info?.expected_delivery_date) }}
+      </span>
     </template>
 
     <template #cell-payment="{ item: order }">
@@ -83,13 +77,13 @@
 
     <template #cell-assigned_name="{ item: order }">
       <span class="text-sm font-medium text-slate-700">
-        {{ order.tracking?.work_assign?.assigned_to || "Not Assigned" }}
+        {{ order.designing?.work_assign?.assigned_to || "Not Assigned" }}
       </span>
     </template>
 
     <template #cell-assigned_date="{ item: order }">
       <span class="text-xs font-mono text-slate-500">
-        {{ formatDate(order.tracking?.work_assign?.assigned_date) }}
+        {{ formatDate(order.designing?.work_assign?.assigned_date) }}
       </span>
     </template>
 
@@ -102,7 +96,7 @@
     <template #cell-modified_by="{ item: order }">
       <div class="flex flex-col">
         <span class="text-[10px] text-slate-600 font-bold uppercase tracking-wider">
-          {{  order.tracking?.work_assign?._audit?.updated_by || order.updated_by_name || "N/A" }}
+          {{ order.designing?.modified_by?.name || order.designing?.added_by?.name || "N/A" }}
         </span>
       </div>
     </template>
@@ -216,13 +210,25 @@ const columns = computed(() => {
     return [
       { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
       { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
-      { key: "customer", label: "Customer", align: "left", width: "200px" },
-      { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap" },
-      { key: "items", label: "Items", align: "center", width: "100px", class: "whitespace-nowrap" },
-      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap" },
-      { key: "amount", label: "Amount", align: "right", width: "120px", class: "whitespace-nowrap" },
-      { key: "paid", label: "Paid", align: "right", width: "120px", class: "whitespace-nowrap" },
-      { key: "payment", label: "Payment", align: "left", width: "120px", class: "whitespace-nowrap" },
+      { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name" },
+      { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "order_date" },
+      { key: "items", label: "Items", align: "center", width: "100px", class: "whitespace-nowrap", filterKey: "items_count" },
+      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "tracking_status_label" },
+      { key: "delivery_date", label: "Delivery Date", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "client_information.client_info.expected_delivery_date" },
+      { 
+        key: "payment", 
+        label: "Payment Status", 
+        align: "left", 
+        width: "140px", 
+        class: "whitespace-nowrap", 
+        filterKey: "payment_status",
+        type: "select",
+        options: [
+          { label: "Paid", value: "paid" },
+          { label: "Unpaid", value: "unpaid" },
+          { label: "Due", value: "due" },
+        ]
+      },
       { key: "actions", label: "Actions", align: "right", width: "130px", class: "whitespace-nowrap" },
     ];
   }
@@ -231,10 +237,10 @@ const columns = computed(() => {
   return [
     { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
     { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
-    { key: "assigned_name", label: "Assigned Name", align: "left", width: "200px" },
-    { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap" },
+    { key: "assigned_name", label: "Assigned Name", align: "left", width: "200px", filterKey: "designing.work_assign.assigned_to" },
+    { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "designing.work_assign.assigned_date" },
     { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },
-    { key: "created_at", label: "Created At", align: "left", width: "150px" },
+    { key: "created_at", label: "Created At", align: "left", width: "150px", type: "date" },
     { key: "modified_by", label: "Modified By", align: "left", width: "150px" },
     { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" },
   ];
@@ -242,11 +248,11 @@ const columns = computed(() => {
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 
 const getCountdownColor = (dateString) => {

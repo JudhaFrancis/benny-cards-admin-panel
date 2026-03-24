@@ -128,19 +128,8 @@
                             required
                           />
                         </div>
-                        <!-- Primary Address Header -->
-                        <div
-                          class="md:col-span-2 pt-4 border-t border-gray-100 mt-2"
-                        >
-                          <h5
-                            class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2"
-                          >
-                            <span class="w-8 h-[1px] bg-gray-100"></span>
-                            Primary Address
-                          </h5>
-                        </div>
-
-                        <div class="md:col-span-2">
+                        <!-- Primary & Secondary Address in a Single Row -->
+                        <div class="md:col-span-1">
                           <label
                             class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
                             >Primary Address<span class="text-rose-500"
@@ -156,47 +145,22 @@
                           ></textarea>
                         </div>
 
-
-
-                        <!-- Extra Address Header -->
-                        <div
-                          class="md:col-span-2 pt-6 border-t border-gray-100 mt-2"
-                        >
-                          <h5
-                            class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2"
-                          >
-                            <span class="w-8 h-[1px] bg-gray-100"></span>
-                            Extra / Secondary Address
-                          </h5>
-                        </div>
-
-                        <div class="md:col-span-2">
+                        <div class="md:col-span-1">
                           <label
                             class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
                             >Secondary Address</label
                           >
-                          <input
+                          <textarea
                             v-model="form.customer.address_2"
-                            type="text"
-                            class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
+                            rows="2"
+                            class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold resize-none"
                             placeholder="Secondary Address"
-                          />
+                          ></textarea>
                         </div>
 
 
 
                         <!-- Remarks Section -->
-                        <div
-                          class="md:col-span-2 pt-6 border-t border-gray-100 mt-2"
-                        >
-                          <h5
-                            class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2"
-                          >
-                            <span class="w-8 h-[1px] bg-gray-100"></span>
-                            Order Remarks
-                          </h5>
-                        </div>
-
                         <div class="md:col-span-2">
                           <label
                             class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"

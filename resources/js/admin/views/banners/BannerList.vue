@@ -17,59 +17,7 @@
       </template>
     </PageHeader>
 
-    <!-- Filters & Search -->
-    <div
-      class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm animate-in fade-in duration-700 delay-100 relative z-30"
-    >
-      <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <!-- Search -->
-          <div class="relative w-full md:w-72 group">
-            <SearchIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Search by title or text..."
-              class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-700"
-              @input="debounceSearch"
-            />
-          </div>
-
-          <!-- Advanced Filters Dropdown -->
-          <FilterDropdown
-            :isActive="activeFiltersCount > 0"
-            @reset="resetFilters"
-            @apply="fetchBanners"
-          >
-            <FilterSection label="Banner Status" last>
-              <ContextDropdown
-                v-model="filters.status"
-                :options="statusFilterOptions"
-                :icon="ActivityIcon"
-              />
-            </FilterSection>
-          </FilterDropdown>
-
-          <button
-            v-if="activeFiltersCount > 0"
-            @click="resetFilters"
-            class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors px-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div
-          class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
-        >
-          Showing {{ meta.total || 0 }} banners
-        </div>
-      </div>
-    </div>
+    <!-- Filters & Search (REMOVED) -->
 
     <!-- Main Table Container -->
     <DataTable
@@ -188,35 +136,6 @@
       </template>
     </DataTable>
 
-    <!-- Pagination -->
-    <div
-      v-if="meta.total > 0"
-      class="bg-white rounded-2xl border border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm"
-    >
-      <p class="text-[11px] text-gray-500 font-medium">
-        Showing
-        <span class="text-gray-700"
-          >{{ meta.from || 0 }} to {{ meta.to || 0 }}</span
-        >
-        of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
-      </p>
-      <div class="flex items-center gap-2">
-        <button
-          @click="fetchBanners(links.prev)"
-          :disabled="!links.prev"
-          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
-        >
-          <ChevronLeftIcon class="h-4 w-4" />
-        </button>
-        <button
-          @click="fetchBanners(links.next)"
-          :disabled="!links.next"
-          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
-        >
-          <ChevronRightIcon class="h-4 w-4" />
-        </button>
-      </div>
-    </div>
 
     <!-- Modals -->
     <BannerModal
@@ -338,9 +257,6 @@ import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
 import InfoModal from "../../components/ui/InfoModal.vue";
 import InfoSection from "../../components/ui/InfoSection.vue";
 import InfoItem from "../../components/ui/InfoItem.vue";
-import FilterDropdown from "../../components/ui/FilterDropdown.vue";
-import FilterSection from "../../components/ui/FilterSection.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
 import PageHeader from "../../components/ui/PageHeader.vue";
 import DataTable from "../../components/ui/DataTable.vue";
 import ImagePreviewModal from "../../components/ui/ImagePreviewModal.vue";
@@ -366,33 +282,19 @@ const isImagePreviewOpen = ref(false);
 const previewSrc = ref("");
 const previewTitle = ref("");
 
-const filters = reactive({
-  search: "",
-  status: "",
-});
+const filters = reactive({});
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
-  { key: "photo", label: "Image", width: "80px" },
-  { key: "title", label: "Banner Info", sortable: true },
+  { key: "photo", label: "Image", width: "80px", filter: false },
+  { key: "title", label: "Banner Info", sortable: true, filterKey: "title" },
   { key: "status", label: "Status" },
-  { key: "created_at", label: "Created" },
-  { key: "updated_at", label: "Modified" },
+  { key: "created_at", label: "Created", type: "date" },
+  { key: "updated_at", label: "Modified", type: "date" },
   { key: "actions", label: "Actions", align: "right" },
 ];
 
-const statusFilterOptions = [
-  { label: "All Status", value: "" },
-  { label: "Live Only", value: "active", icon: ActivityIcon },
-  { label: "Hidden Only", value: "inactive", icon: ActivityIcon },
-];
 
-// Computed
-const activeFiltersCount = computed(() => {
-  let count = 0;
-  if (filters.status) count++;
-  return count;
-});
 
 // Methods
 const fetchBanners = async (url = "/api/v1/banners") => {
@@ -400,8 +302,7 @@ const fetchBanners = async (url = "/api/v1/banners") => {
   try {
     const response = await axios.get(url, {
       params: {
-        search: filters.search,
-        status: filters.status,
+        per_page: 50,
       },
     });
     if (response.data.success) {
@@ -427,19 +328,6 @@ const fetchBanners = async (url = "/api/v1/banners") => {
   }
 };
 
-let debounceTimeout;
-const debounceSearch = () => {
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    fetchBanners();
-  }, 500);
-};
-
-const resetFilters = () => {
-  filters.search = "";
-  filters.status = "";
-  fetchBanners();
-};
 
 const getImageSource = (path) => {
   if (!path) return "/images/placeholder.webp";

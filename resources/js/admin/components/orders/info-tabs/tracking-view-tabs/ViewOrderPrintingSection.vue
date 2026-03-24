@@ -207,18 +207,18 @@
 
     <!-- Audit Information -->
     <div
-      v-if="printingStatus._audit"
+      v-if="order.printing"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated by
         <strong class="text-slate-600">{{
-          printingStatus._audit.updated_by
+          order.printing.modified_by?.name || order.printing.added_by?.name || "System"
         }}</strong>
         on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          formatAuditDate(printingStatus._audit.updated_at)
+          formatAuditDate(order.printing.updated_at || order.printing.created_at)
         }}</span>
       </span>
     </div>
@@ -242,7 +242,7 @@ const props = defineProps({
 });
 
 const printingStatus = computed(
-  () => props.order.tracking?.printing_status || {},
+  () => props.order.printing?.printing_status || {},
 );
 
 const readymadeFollowUpList = computed(() =>

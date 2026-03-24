@@ -336,23 +336,28 @@ const activeSectionComponent = computed(() => {
 });
 
 const calculateCompletedStatus = () => {
-  const tracking = props.order.tracking || {};
+  const order = props.order;
   const completed = [];
 
-  if (props.order.order_date || tracking.job_details?._audit)
+  if (order.order_date || order.client_information?.job_details)
     completed.push("order-details");
-  if (tracking.client_info?._audit) completed.push("client-info");
-  if (tracking.card_specs?._audit) completed.push("card-specs");
-  if (tracking.work_assign?._audit) completed.push("work-assign");
-  if (tracking.design_print?._audit) completed.push("design-print");
-  if (tracking.printing_status?._audit) completed.push("order-printing");
-  if (tracking.packaging_logistics?._audit)
+  if (order.client_information?.client_info?._audit || order.client_information?.client_info) completed.push("client-info");
+  if (order.client_information?.card_specs?._audit || order.client_information?.card_specs) completed.push("card-specs");
+  
+  if (order.designing?.work_assign?._audit || order.designing?.work_assign) completed.push("work-assign");
+  if (order.designing?.design_print?._audit || order.designing?.design_print) completed.push("design-print");
+  
+  if (order.printing?.printing_status?._audit || order.printing?.printing_status) completed.push("order-printing");
+  
+  if (order.packaging?.packaging_logistics?._audit || order.packaging?.packaging_logistics)
     completed.push("packaging-logistics");
-  if (tracking.packaging_status?._audit) completed.push("packaging-status");
-  if (tracking.delivery_location?._audit) completed.push("delivery-location");
-  if (tracking.dispatch_mode?._audit) completed.push("dispatch-mode");
-  if (tracking.dispatch_details?._audit) completed.push("dispatch-details");
-  if (tracking.payment_info?._audit) completed.push("payment");
+  if (order.packaging?.packaging_status?._audit || order.packaging?.packaging_status) completed.push("packaging-status");
+  
+  if (order.dispatch_delivery?.delivery_location?._audit || order.dispatch_delivery?.delivery_location) completed.push("delivery-location");
+  if (order.dispatch_delivery?.dispatch_mode?._audit || order.dispatch_delivery?.dispatch_mode) completed.push("dispatch-mode");
+  if (order.dispatch_delivery?.dispatch_details?._audit || order.dispatch_delivery?.dispatch_details) completed.push("dispatch-details");
+  
+  if (order.payments && order.payments.length > 0) completed.push("payment");
 
   return completed;
 };

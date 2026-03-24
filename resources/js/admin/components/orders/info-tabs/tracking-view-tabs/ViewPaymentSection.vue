@@ -158,20 +158,19 @@
             </div>
           </div>
 
-          <!-- Individual Audit info -->
+          <!-- Payment Audit info -->
           <div
-            v-if="payment._audit"
             class="mt-4 pt-4 border-t border-slate-50 flex items-center justify-end text-[10px] text-slate-400"
           >
             <span class="flex items-center gap-2">
               <ClockIcon class="h-3.5 w-3.5" />
               Last updated by
               <strong class="text-slate-600">{{
-                payment._audit.updated_by
+                payment.modified_by?.name || payment.added_by?.name || "System"
               }}</strong>
               on
               <span class="font-medium bg-slate-50 px-2 py-0.5 rounded-full">{{
-                formatAuditDate(payment._audit.updated_at)
+                formatAuditDate(payment.updated_at || payment.created_at)
               }}</span>
             </span>
           </div>
@@ -220,17 +219,7 @@ const props = defineProps({
   order: { type: Object, required: true },
 });
 
-const paymentList = computed(() => {
-  const info = props.order.tracking?.payment_info;
-  if (!info) return [];
-
-  // Check for new standard structure
-  if (info.payments && Array.isArray(info.payments)) {
-    return info.payments;
-  }
-
-  return Array.isArray(info) ? info : [];
-});
+const paymentList = computed(() => props.order.payments || []);
 
 const isFullyPaid = computed(() => {
   const total = parseFloat(props.order.total_amount || 0);

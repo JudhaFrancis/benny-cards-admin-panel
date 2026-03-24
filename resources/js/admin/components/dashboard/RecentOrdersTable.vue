@@ -15,7 +15,9 @@
     </template>
 
     <template #cell-order_date="{ item: order }">
-      <span class="text-slate-500">{{ formatDate(order.order_date) }}</span>
+      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        {{ formatDate(order.order_date) }}
+      </span>
     </template>
 
     <template #cell-total_amount="{ item: order }">
@@ -63,12 +65,13 @@ const loading = ref(true);
 const recentOrders = ref([]);
 
 const columns = [
+  { key: "sn", label: "S.No", align: "left", width: "60px" },
   { key: "order_number", label: "Order", align: "left" },
-  { key: "customer", label: "Customer", align: "left" },
-  { key: "order_date", label: "Date", align: "left" },
+  { key: "customer", label: "Customer", align: "left", filterKey: "customer_details.name" },
+  { key: "order_date", label: "Date", align: "left", type: "date" },
   { key: "total_amount", label: "Amount", align: "left" },
-  { key: "status", label: "Status", align: "left" },
-  { key: "payment", label: "Payment", align: "right" },
+  { key: "status", label: "Status", align: "left", filterKey: "tracking_status_label" },
+  { key: "payment", label: "Payment", align: "right", filterKey: "payment_status" },
 ];
 
 const fetchRecentOrders = async () => {
@@ -87,9 +90,13 @@ const fetchRecentOrders = async () => {
 
 onMounted(fetchRecentOrders);
 
-const formatDate = (date) => {
-  if (!date) return "N/A";
-  return new Date(date).toLocaleDateString();
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 
 const orderStatusStyles = {

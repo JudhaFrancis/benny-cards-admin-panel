@@ -150,18 +150,18 @@
 
     <!-- Audit Information -->
     <div
-      v-if="logistics._audit"
+      v-if="order.packaging"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated by
         <strong class="text-slate-600">{{
-          logistics._audit.updated_by
+          order.packaging.modified_by?.name || order.packaging.added_by?.name || "System"
         }}</strong>
         on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
-          formatAuditDate(logistics._audit.updated_at)
+          formatAuditDate(order.packaging.updated_at || order.packaging.created_at)
         }}</span>
       </span>
     </div>
@@ -186,7 +186,7 @@ const props = defineProps({
 });
 
 const logistics = computed(
-  () => props.order.tracking?.packaging_logistics || {},
+  () => props.order.packaging?.packaging_logistics || {},
 );
 
 const formatDate = (dateString) => {

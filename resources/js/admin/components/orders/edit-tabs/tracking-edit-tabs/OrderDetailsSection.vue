@@ -282,13 +282,13 @@ const props = defineProps({
 const emit = defineEmits(["update:order"]);
 
 const jobDetails = computed(() => {
-  if (!props.order.tracking.job_details) {
-    props.order.tracking.job_details = {};
-
-    // Auto-fill order taken by if available (e.g. from added_by user)
-    // For now leave empty
+  if (!props.order.client_information) {
+    props.order.client_information = { job_details: {} };
   }
-  return props.order.tracking.job_details;
+  if (!props.order.client_information.job_details) {
+    props.order.client_information.job_details = {};
+  }
+  return props.order.client_information.job_details;
 });
 
 const formatAuditDate = (dateString) => {

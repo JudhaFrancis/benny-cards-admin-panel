@@ -267,10 +267,13 @@ const props = defineProps({
 const emit = defineEmits(["update:order"]);
 
 const packagingLogistics = computed(() => {
-  if (!props.order.tracking.packaging_logistics) {
-    props.order.tracking.packaging_logistics = {};
+  if (!props.order.packaging) {
+    props.order.packaging = { packaging_logistics: {} };
   }
-  return props.order.tracking.packaging_logistics;
+  if (!props.order.packaging.packaging_logistics) {
+    props.order.packaging.packaging_logistics = {};
+  }
+  return props.order.packaging.packaging_logistics;
 });
 
 const formatAuditDate = (dateString) => {

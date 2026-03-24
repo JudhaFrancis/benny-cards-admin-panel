@@ -112,7 +112,6 @@ const fetchOrder = async () => {
     const response = await axios.get(`/api/v1/orders/${route.params.id}`);
     if (response.data.success) {
       order.value = response.data.data;
-      if (!order.value.tracking) order.value.tracking = {};
     }
   } catch (error) {
     console.error("Error fetching order:", error);
