@@ -44,7 +44,7 @@
 
             <!-- Info -->
             <div class="flex-1 min-w-0">
-              <p class="font-bold text-slate-900 truncate text-base mb-1">
+              <p class="font-bold text-slate-900 truncate text-sm mb-1">
                 {{ item.product_name }}
               </p>
               <div class="flex items-center gap-4">
@@ -86,7 +86,7 @@
                     type="number"
                     :value="item.quantity"
                     @input="updateQuantityValue(item.id, $event.target.value)"
-                    class="w-full text-center text-sm font-black text-slate-900 bg-transparent border-none focus:ring-0 p-0 appearance-none [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+                    class="w-full text-center text-xs font-black text-slate-900 bg-transparent border-none focus:ring-0 p-0 appearance-none [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
                     @keypress="isNumber($event)"
                     min="1"
                   />
@@ -145,7 +145,7 @@
               class="relative w-full cursor-default overflow-hidden rounded-2xl bg-white border border-slate-200 text-left focus-within:ring-4 focus-within:ring-primary/10 focus-within:border-primary transition-all font-semibold shadow-sm"
             >
               <ComboboxInput
-                class="w-full border-none py-4 pl-12 pr-10 text-sm leading-5 text-slate-900 focus:ring-0 outline-none bg-transparent placeholder:text-slate-400"
+                class="w-full border-none py-3 pl-12 pr-10 text-xs leading-5 text-slate-900 focus:ring-0 outline-none bg-transparent placeholder:text-slate-400"
                 :displayValue="(product) => query"
                 @change="query = $event.target.value"
                 placeholder="Search for products to add..."

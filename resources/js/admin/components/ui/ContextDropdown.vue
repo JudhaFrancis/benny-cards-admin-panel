@@ -16,7 +16,7 @@
           <ListboxButton
             :class="
               cn(
-                'relative w-full text-left py-3 bg-slate-50 border border-transparent rounded-xl cursor-pointer outline-none transition-all',
+                'relative w-full text-left py-2.5 bg-slate-50 border border-transparent rounded-xl cursor-pointer outline-none transition-all',
                 'focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5',
                 open ? 'bg-white border-primary ring-4 ring-primary/5' : '',
                 props.icon ? 'pl-12 pr-10' : 'pl-4 pr-10',
@@ -32,7 +32,7 @@
             </span>
 
             <span
-              class="block truncate text-sm font-semibold"
+              class="block truncate text-xs font-semibold"
               :class="value ? 'text-slate-900' : 'text-slate-400'"
             >
               {{ selectedOption?.label || props.modelValue || placeholder }}

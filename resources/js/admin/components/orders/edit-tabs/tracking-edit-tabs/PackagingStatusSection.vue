@@ -102,7 +102,7 @@
     <!-- Assignment -->
     <div class="space-y-4">
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-700"
+        <label class="text-xs font-medium text-slate-700"
           >Packed By <span class="text-red-500">*</span></label
         >
         <ContextDropdown

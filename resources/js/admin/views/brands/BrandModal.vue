@@ -82,7 +82,7 @@
                     <!-- Title -->
                     <div class="md:col-span-2">
                       <label
-                        class="block text-sm font-semibold text-gray-700 mb-2.5 ml-1"
+                        class="block text-xs font-semibold text-gray-700 mb-2.5 ml-1"
                       >
                         <div class="flex items-center gap-2">
                           <TypeIcon class="h-4 w-4 text-gray-400" />
@@ -94,7 +94,7 @@
                         v-model="form.title"
                         type="text"
                         placeholder="e.g. Nike, Apple, Samsung"
-                        class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-gray-400"
+                        class="w-full px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-gray-400"
                         required
                       />
                     </div>
@@ -102,7 +102,7 @@
                     <!-- Slug -->
                     <div class="md:col-span-2">
                       <label
-                        class="block text-sm font-semibold text-gray-700 mb-2.5 ml-1"
+                        class="block text-xs font-semibold text-gray-700 mb-2.5 ml-1"
                       >
                         <div class="flex items-center gap-2">
                           <LinkIcon class="h-4 w-4 text-gray-400" />
@@ -114,7 +114,7 @@
                           v-model="form.slug"
                           type="text"
                           placeholder="auto-generated-from-title"
-                          class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-500 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-mono text-xs"
+                          class="w-full px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-500 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-mono text-xs"
                         />
                         <div
                           class="absolute inset-y-0 right-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity"
@@ -129,7 +129,7 @@
                     <!-- Status -->
                     <div class="md:col-span-2">
                       <label
-                        class="block text-sm font-semibold text-gray-700 mb-2.5 ml-1"
+                        class="block text-xs font-semibold text-gray-700 mb-2.5 ml-1"
                       >
                         <div class="flex items-center gap-2">
                           <ActivityIcon class="h-4 w-4 text-gray-400" />

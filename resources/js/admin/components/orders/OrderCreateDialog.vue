@@ -96,7 +96,7 @@
                           <input
                             v-model="form.customer.name"
                             type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
+                            class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
                             placeholder="John Doe"
                             required
                           />
@@ -109,7 +109,7 @@
                           <input
                             v-model="form.customer.email"
                             type="email"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
+                            class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
                             placeholder="john@example.com"
                           />
                         </div>
@@ -123,7 +123,7 @@
                           <input
                             v-model="form.customer.phone"
                             type="tel"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
+                            class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
                             placeholder="+1 234 567 890"
                             required
                           />
@@ -150,7 +150,7 @@
                           <textarea
                             v-model="form.customer.address_1"
                             rows="2"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold resize-none"
+                            class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold resize-none"
                             placeholder="Enter full primary address..."
                             required
                           ></textarea>
@@ -178,7 +178,7 @@
                           <input
                             v-model="form.customer.address_2"
                             type="text"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
+                            class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
                             placeholder="Secondary Address"
                           />
                         </div>
@@ -205,7 +205,7 @@
                           <textarea
                             v-model="form.remarks"
                             rows="3"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold resize-none"
+                            class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold resize-none"
                             placeholder="Add any special instructions or notes for this order..."
                           ></textarea>
                         </div>
@@ -253,7 +253,7 @@
                                   class="relative w-full cursor-default overflow-hidden rounded-xl bg-white border border-gray-200 text-left focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all font-semibold"
                                 >
                                   <ComboboxInput
-                                    class="w-full border-none py-3 pl-10 pr-10 text-sm leading-5 text-gray-900 focus:ring-0 outline-none bg-transparent"
+                                    class="w-full border-none py-2.5 pl-10 pr-10 text-xs leading-5 text-gray-900 focus:ring-0 outline-none bg-transparent"
                                     :displayValue="
                                       (id) =>
                                         Array.isArray(products)
@@ -401,7 +401,7 @@
                               v-model.number="item.quantity"
                               type="number"
                               min="1"
-                              class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-sm"
+                              class="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-xs"
                             />
                           </div>
 
@@ -421,7 +421,7 @@
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                class="w-full pl-7 pr-2 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-sm"
+                                class="w-full pl-7 pr-2 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-xs"
                               />
                             </div>
                           </div>

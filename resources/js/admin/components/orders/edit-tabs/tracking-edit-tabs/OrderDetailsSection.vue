@@ -34,7 +34,7 @@
           <div class="relative">
             <input
               :value="order.order_number"
-              class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-600 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-slate-200 transition-all cursor-not-allowed"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-600 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-slate-200 transition-all cursor-not-allowed"
               readonly
             />
             <div
@@ -53,7 +53,7 @@
           <input
             type="date"
             v-model="formattedOrderDate"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
           />
         </div>
         <div class="space-y-2">
@@ -130,7 +130,7 @@
                 ></div>
               </div>
               <span
-                class="text-sm font-medium"
+                class="text-xs font-medium"
                 :class="
                   jobDetails.order_placed_in === place
                     ? 'text-primary'
@@ -186,7 +186,7 @@
                 ></div>
               </div>
               <span
-                class="text-sm font-medium"
+                class="text-xs font-medium"
                 :class="
                   jobDetails.reference === ref
                     ? 'text-emerald-700'
@@ -207,7 +207,7 @@
           <div class="relative pt-2">
             <input
               v-model="jobDetails.remarks"
-              class="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+              class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
               placeholder="Other reference/remarks..."
             />
             <div

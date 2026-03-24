@@ -38,12 +38,12 @@
   input,
   textarea,
   select {
-    @apply text-slate-100;
+    @apply text-slate-100 text-xs;
   }
 
   input::placeholder,
   textarea::placeholder {
-    @apply text-slate-400;
+    @apply text-xs text-slate-400;
   }
 
   /* Fix autofill text color visibility */
@@ -64,11 +64,15 @@
     -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
   }
 
-  /* Force input text color globally for all modals */
+  /* Force input text color and size globally for all modals */
   input[type="text"],
   input[type="email"],
-  input[type="password"] {
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  textarea {
     color: #475569 !important;
+    font-size: 0.75rem !important; /* text-xs */
   }
 }
 

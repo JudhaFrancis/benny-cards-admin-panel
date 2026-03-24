@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-8">
-    <p class="text-sm text-slate-400 italic">
+    <p class="text-xs text-slate-400 italic">
       Please ✔ whichever given to print
     </p>
 
     <div class="space-y-4">
-      <label class="text-sm font-medium text-slate-700"
+      <label class="text-xs font-medium text-slate-700"
         >Design Outputs <span class="text-red-500">*</span></label
       >
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -27,7 +27,7 @@
 
     <div class="space-y-4">
       <div class="flex items-center justify-between">
-        <label class="text-sm font-medium text-slate-700"
+        <label class="text-xs font-medium text-slate-700"
           >Print & Add-ons <span class="text-red-500">*</span></label
         >
         <div class="flex items-center gap-2">

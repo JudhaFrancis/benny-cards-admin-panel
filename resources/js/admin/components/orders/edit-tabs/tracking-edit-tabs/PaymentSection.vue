@@ -142,7 +142,7 @@
             <Listbox v-model="form.payment_method">
               <div class="relative">
                 <ListboxButton
-                  class="relative w-full cursor-pointer rounded-xl bg-white py-3 pl-11 pr-10 text-left border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm sm:text-sm"
+                  class="relative w-full cursor-pointer rounded-xl bg-white py-2.5 pl-11 pr-10 text-left border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm sm:text-xs"
                 >
                   <span class="absolute left-4 top-1/2 -translate-y-1/2">
                     <component
@@ -168,7 +168,7 @@
                   leave-to-class="opacity-0"
                 >
                   <ListboxOptions
-                    class="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-xl ring-1 ring-slate-900/5 focus:outline-none sm:text-sm custom-scrollbar"
+                    class="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-xl ring-1 ring-slate-900/5 focus:outline-none sm:text-xs custom-scrollbar"
                   >
                     <ListboxOption
                       v-slot="{ active, selected }"
@@ -182,7 +182,7 @@
                           active
                             ? 'bg-primary/5 text-primary'
                             : 'text-slate-700',
-                          'relative cursor-pointer select-none py-3 pl-11 pr-4 transition-colors',
+                          'relative cursor-pointer select-none py-2.5 pl-11 pr-4 transition-colors',
                         ]"
                       >
                         <span class="absolute left-4 top-1/2 -translate-y-1/2">
@@ -228,7 +228,7 @@
               />
               <input
                 v-model="form.transaction_id"
-                class="w-full px-11 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                 placeholder="Reference #"
               />
             </div>
@@ -248,7 +248,7 @@
               <input
                 type="date"
                 v-model="form.payment_date"
-                class="w-full px-11 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
               />
             </div>
           </div>
@@ -268,7 +268,7 @@
                 type="number"
                 v-model="form.amount"
                 step="0.01"
-                class="w-full px-11 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                 placeholder="0.00"
               />
             </div>
@@ -287,7 +287,7 @@
               />
               <input
                 v-model="form.signature_name"
-                class="w-full px-11 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                 placeholder="Enter name"
               />
             </div>
