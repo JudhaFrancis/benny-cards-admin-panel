@@ -308,7 +308,7 @@ import {
   PlusCircle as PlusCircleIcon,
   Clock as ClockIcon,
 } from "lucide-vue-next";
-import ContextDropdown from "../../../ui/ContextDropdown.vue";
+import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
 
 const props = defineProps({
   order: {

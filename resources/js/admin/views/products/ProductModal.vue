@@ -517,7 +517,7 @@ import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import axios from "axios";
 import { useToast } from "../../composables/useToast";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
+import ContextDropdown from "../../components/ui/dropdowns/ContextDropdown.vue";
 
 const props = defineProps({
   isOpen: Boolean,

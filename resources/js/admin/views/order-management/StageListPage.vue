@@ -32,7 +32,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import PageHeader from "../../components/ui/PageHeader.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import OrderStageTable from "../../components/order-management/OrderStageTable.vue";
 import StageViewDialog from "../../components/order-management/StageViewDialog.vue";
 import StageEditDialog from "../../components/order-management/StageEditDialog.vue";

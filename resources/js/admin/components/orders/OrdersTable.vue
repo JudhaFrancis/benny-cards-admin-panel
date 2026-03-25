@@ -152,7 +152,7 @@ import { Eye, Pencil, Trash2, MessageCircle, Loader2 } from "lucide-vue-next";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 import axios from "axios";
-import DataTable from "../ui/DataTable.vue";
+import DataTable from "../ui/data-table/DataTable.vue";
 
 const props = defineProps({
   orders: {

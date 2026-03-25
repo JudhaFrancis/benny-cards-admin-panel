@@ -170,7 +170,7 @@ import {
   Lock as LockIcon,
   Check as CheckIcon,
 } from "lucide-vue-next";
-import PageHeader from "../../components/ui/PageHeader.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import { useToast } from "../../composables/useToast";
 
 const route = useRoute();

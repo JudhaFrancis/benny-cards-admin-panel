@@ -93,7 +93,7 @@
 
 <script setup>
 import { Eye, Pencil, Trash2 } from "lucide-vue-next";
-import DataTable from "../ui/DataTable.vue";
+import DataTable from "../ui/data-table/DataTable.vue";
 
 const props = defineProps({
   payments: {

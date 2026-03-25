@@ -59,7 +59,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
-import DataTable from "../ui/DataTable.vue";
+import DataTable from "../ui/data-table/DataTable.vue";
 
 const loading = ref(true);
 const recentOrders = ref([]);

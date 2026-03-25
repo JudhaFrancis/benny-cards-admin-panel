@@ -213,7 +213,7 @@ import {
   Truck as TruckIcon,
 } from "lucide-vue-next";
 import SidebarNavItem from "./SidebarNavItem.vue";
-import ConfirmationModal from "../ui/ConfirmationModal.vue";
+import ConfirmationModal from "../ui/modals/ConfirmationModal.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useAuth } from "../../composables/useAuth";
 import { useSettings } from "../../composables/useSettings";

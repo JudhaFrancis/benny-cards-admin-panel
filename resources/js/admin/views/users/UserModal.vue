@@ -244,8 +244,8 @@ import {
   Activity as ActivityIcon,
 } from "lucide-vue-next";
 import axios from "axios";
-import InfoSection from "../../components/ui/InfoSection.vue";
-import ContextDropdown from "../../components/ui/ContextDropdown.vue";
+import InfoSection from "../../components/ui/display/InfoSection.vue";
+import ContextDropdown from "../../components/ui/dropdowns/ContextDropdown.vue";
 import { useToast } from "../../composables/useToast";
 
 const props = defineProps({

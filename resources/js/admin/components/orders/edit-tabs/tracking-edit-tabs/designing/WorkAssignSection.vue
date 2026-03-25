@@ -202,15 +202,18 @@
           >Assigned Date <span class="text-red-500">*</span></label
         >
         <div class="relative group">
-          <CalendarIcon
-            class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
-          />
-          <input
-            type="date"
+          <DatePicker
             v-model="workAssign.assigned_date"
-            class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            placeholder="Select Assigned Date"
+            custom-class="pl-11 py-2.5 text-xs"
             required
-          />
+          >
+            <template #leading>
+              <CalendarIcon
+                class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+              />
+            </template>
+          </DatePicker>
         </div>
       </div>
 
@@ -219,15 +222,18 @@
           >Deadline <span class="text-red-500">*</span></label
         >
         <div class="relative group">
-          <CalendarIcon
-            class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
-          />
-          <input
-            type="date"
+          <DatePicker
             v-model="workAssign.deadline"
-            class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            placeholder="Select Deadline"
+            custom-class="pl-11 py-2.5 text-xs"
             required
-          />
+          >
+            <template #leading>
+              <CalendarIcon
+                class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+              />
+            </template>
+          </DatePicker>
         </div>
       </div>
 
@@ -291,7 +297,8 @@ import {
   Clock as ClockIcon,
   Check as CheckIcon,
 } from "lucide-vue-next";
-import ContextDropdown from "../../../ui/ContextDropdown.vue";
+import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
+import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 
 const props = defineProps({
   order: {

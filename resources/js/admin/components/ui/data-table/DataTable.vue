@@ -44,11 +44,10 @@
               class="px-3 py-2 border-slate-100"
             >
               <div v-if="shouldShowFilter(column)" class="relative group min-w-[120px]">
-                <input
+                <DateRangePicker
                   v-if="column.type === 'date'"
-                  type="date"
                   v-model="filters[column.key]"
-                  class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300 pr-8 shadow-sm"
+                  placeholder="Select Date Range"
                 />
                 <div v-else-if="column.type === 'select'" class="relative">
                   <Listbox v-model="filters[column.key]">
@@ -209,13 +208,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import {
   Listbox,
   ListboxButton,
   ListboxOptions,
   ListboxOption,
 } from "@headlessui/vue";
+import DateRangePicker from "../pickers/DateRangePicker.vue";
 import { X as XIcon, Search as SearchIcon, ChevronDown as ChevronDownIcon, Check as CheckIcon } from "lucide-vue-next";
 
 const props = defineProps({
@@ -292,6 +292,10 @@ const filteredItems = computed(() => {
       if (column.type === "date") {
         try {
           const itemDate = new Date(val).toISOString().split("T")[0];
+          if (typeof filterValue === 'string' && filterValue.includes(" to ")) {
+            const [start, end] = filterValue.split(" to ");
+            return itemDate >= start && itemDate <= end;
+          }
           return itemDate === filterValue;
         } catch (e) {
           return false;
@@ -330,14 +334,15 @@ defineExpose({ filters, resetFilters, filteredItems });
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  appearance: none;
   -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
 /* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {

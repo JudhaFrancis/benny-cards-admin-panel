@@ -49,8 +49,8 @@
 </template>
 
 <script setup>
-import Card from "../ui/Card.vue";
-import CardContent from "../ui/CardContent.vue";
+import Card from "../ui/cards/Card.vue";
+import CardContent from "../ui/cards/CardContent.vue";
 
 const props = defineProps({
   title: String,

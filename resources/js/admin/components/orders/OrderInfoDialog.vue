@@ -26,7 +26,7 @@
             leave-to="opacity-0 scale-95 translateY(20px)"
           >
             <DialogPanel
-              class="w-full max-w-5xl transform rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh] overflow-hidden"
+              class="w-full max-w-6xl transform rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh] overflow-hidden"
             >
               <!-- Header -->
               <div
@@ -105,8 +105,8 @@
                 class="flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar p-0 relative"
               >
                 <!-- Main Content Container with white background for active tab illusion -->
-                <div class="bg-white min-h-full p-8 rounded-b-[2rem]">
-                  <div v-if="order" class="max-w-4xl mx-auto">
+                <div class="bg-white min-h-full rounded-b-[2rem]">
+                  <div v-if="order" class="w-full">
                     <Transition
                       mode="out-in"
                       enter-active-class="transition duration-200 ease-out"
@@ -148,8 +148,7 @@ import {
   Calendar as CalendarIcon,
   Activity as ActivityIcon,
 } from "lucide-vue-next";
-import ViewOrderItems from "./info-tabs/ViewOrderItems.vue";
-import ViewCustomerDetails from "./info-tabs/ViewCustomerDetails.vue";
+import ViewOrderGeneralDetails from "./info-tabs/ViewOrderGeneralDetails.vue";
 import ViewOrderTracking from "./info-tabs/ViewOrderTracking.vue";
 
 const props = defineProps({
@@ -165,24 +164,21 @@ const props = defineProps({
 
 defineEmits(["close"]);
 
-const activeTab = ref("items");
+const activeTab = ref("details");
 
 const tabs = [
-  { id: "items", label: "Order Items" },
-  { id: "customer", label: "Customer Details" },
+  { id: "details", label: "Order Details" },
   { id: "tracking", label: "Order Tracking" },
 ];
 
 const activeTabComponent = computed(() => {
   switch (activeTab.value) {
-    case "items":
-      return ViewOrderItems;
-    case "customer":
-      return ViewCustomerDetails;
+    case "details":
+      return ViewOrderGeneralDetails;
     case "tracking":
       return ViewOrderTracking;
     default:
-      return ViewOrderItems;
+      return ViewOrderGeneralDetails;
   }
 });
 
@@ -190,7 +186,7 @@ const activeTabComponent = computed(() => {
 watch(
   () => props.isOpen,
   (val) => {
-    if (val) activeTab.value = "items";
+    if (val) activeTab.value = "details";
   },
 );
 

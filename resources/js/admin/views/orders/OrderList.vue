@@ -76,8 +76,8 @@ import OrdersTable from "../../components/orders/OrdersTable.vue";
 import OrderInfoDialog from "../../components/orders/OrderInfoDialog.vue";
 import OrderCreateDialog from "../../components/orders/OrderCreateDialog.vue";
 import OrderEditDialog from "../../components/orders/OrderEditDialog.vue";
-import PageHeader from "../../components/ui/PageHeader.vue";
-import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
+import ConfirmationModal from "../../components/ui/modals/ConfirmationModal.vue";
 
 const { getModulePermissions } = usePermissions();
 const { canAdd: canCreate, canEdit, canDelete } = getModulePermissions("Order");

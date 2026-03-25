@@ -77,8 +77,8 @@ import PaymentsTable from "../../components/payments/PaymentsTable.vue";
 import PaymentInfoDialog from "../../components/payments/PaymentInfoDialog.vue";
 import PaymentCreateDialog from "../../components/payments/PaymentCreateDialog.vue";
 import PaymentEditDialog from "../../components/payments/PaymentEditDialog.vue";
-import PageHeader from "../../components/ui/PageHeader.vue";
-import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
+import ConfirmationModal from "../../components/ui/modals/ConfirmationModal.vue";
 
 const { getModulePermissions } = usePermissions();
 const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Payment");

@@ -173,18 +173,18 @@ import {
 import axios from "axios";
 
 // Import tracking section components
-import OrderDetailsSection from "./tracking-edit-tabs/OrderDetailsSection.vue";
-import ClientInfoSection from "./tracking-edit-tabs/ClientInfoSection.vue";
-import CardSpecsSection from "./tracking-edit-tabs/CardSpecsSection.vue";
-import WorkAssignSection from "./tracking-edit-tabs/WorkAssignSection.vue";
-import DesignPrintSection from "./tracking-edit-tabs/DesignPrintSection.vue";
-import OrderPrintingSection from "./tracking-edit-tabs/OrderPrintingSection.vue";
-import PackagingLogisticsSection from "./tracking-edit-tabs/PackagingLogisticsSection.vue";
-import PackagingStatusSection from "./tracking-edit-tabs/PackagingStatusSection.vue";
-import DeliveryLocationSection from "./tracking-edit-tabs/DeliveryLocationSection.vue";
-import DispatchModeSection from "./tracking-edit-tabs/DispatchModeSection.vue";
-import DispatchDetailsSection from "./tracking-edit-tabs/DispatchDetailsSection.vue";
-import PaymentSection from "./tracking-edit-tabs/PaymentSection.vue";
+import OrderDetailsSection from "./tracking-edit-tabs/client-information/OrderDetailsSection.vue";
+import ClientInfoSection from "./tracking-edit-tabs/client-information/ClientInfoSection.vue";
+import CardSpecsSection from "./tracking-edit-tabs/client-information/CardSpecsSection.vue";
+import WorkAssignSection from "./tracking-edit-tabs/designing/WorkAssignSection.vue";
+import DesignPrintSection from "./tracking-edit-tabs/designing/DesignPrintSection.vue";
+import OrderPrintingSection from "./tracking-edit-tabs/printing/OrderPrintingSection.vue";
+import PackagingLogisticsSection from "./tracking-edit-tabs/packaging/PackagingLogisticsSection.vue";
+import PackagingStatusSection from "./tracking-edit-tabs/packaging/PackagingStatusSection.vue";
+import DeliveryLocationSection from "./tracking-edit-tabs/dispatch-delivery/DeliveryLocationSection.vue";
+import DispatchModeSection from "./tracking-edit-tabs/dispatch-delivery/DispatchModeSection.vue";
+import DispatchDetailsSection from "./tracking-edit-tabs/dispatch-delivery/DispatchDetailsSection.vue";
+import PaymentSection from "./tracking-edit-tabs/payment/PaymentSection.vue";
 
 const props = defineProps({
   order: {

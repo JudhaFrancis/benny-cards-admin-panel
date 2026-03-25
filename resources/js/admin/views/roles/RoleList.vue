@@ -128,8 +128,8 @@ import axios from "axios";
 import RoleInfoDialog from "../../components/roles/RoleInfoDialog.vue";
 import RoleEditDialog from "../../components/roles/RoleEditDialog.vue";
 import RoleCreateDialog from "../../components/roles/RoleCreateDialog.vue";
-import PageHeader from "../../components/ui/PageHeader.vue";
-import DataTable from "../../components/ui/DataTable.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
+import DataTable from "../../components/ui/data-table/DataTable.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 

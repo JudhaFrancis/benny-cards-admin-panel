@@ -17,10 +17,10 @@
         <label class="text-xs font-medium text-slate-700"
           >Assigned Date <span class="text-red-500">*</span></label
         >
-        <input
-          type="date"
+        <DatePicker
           v-model="printingStatus.assigned_date"
-          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          placeholder="Select Assigned Date"
+          custom-class="py-2.5 text-xs"
         />
       </div>
     </div>
@@ -203,20 +203,20 @@
           <label class="text-xs font-medium text-slate-700"
             >Sent to Print Date <span class="text-red-500">*</span></label
           >
-          <input
-            type="date"
+          <DatePicker
             v-model="printingStatus.customize_sent_to_print_date"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            placeholder="Select Date"
+            custom-class="py-2.5 text-xs"
           />
         </div>
         <div class="space-y-2">
           <label class="text-xs font-medium text-slate-700"
             >Delivery Date <span class="text-red-500">*</span></label
           >
-          <input
-            type="date"
+          <DatePicker
             v-model="printingStatus.customize_delivery_date"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            placeholder="Select Date"
+            custom-class="py-2.5 text-xs"
           />
         </div>
       </div>
@@ -283,7 +283,8 @@
 <script setup>
 import { computed, watch, onMounted } from "vue";
 import { Clock as ClockIcon, User as UserIcon } from "lucide-vue-next";
-import ContextDropdown from "../../../ui/ContextDropdown.vue";
+import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
+import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 
 const props = defineProps({
   order: {

@@ -272,12 +272,12 @@ import {
 } from "lucide-vue-next";
 import axios from "axios";
 import CouponModal from "./CouponModal.vue";
-import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
-import InfoModal from "../../components/ui/InfoModal.vue";
-import InfoSection from "../../components/ui/InfoSection.vue";
-import InfoItem from "../../components/ui/InfoItem.vue";
-import PageHeader from "../../components/ui/PageHeader.vue";
-import DataTable from "../../components/ui/DataTable.vue";
+import ConfirmationModal from "../../components/ui/modals/ConfirmationModal.vue";
+import InfoModal from "../../components/ui/modals/InfoModal.vue";
+import InfoSection from "../../components/ui/display/InfoSection.vue";
+import InfoItem from "../../components/ui/display/InfoItem.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
+import DataTable from "../../components/ui/data-table/DataTable.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 

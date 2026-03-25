@@ -217,7 +217,7 @@ import {
 } from "lucide-vue-next";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
 import { useRouter } from "vue-router";
-import ConfirmationModal from "../ui/ConfirmationModal.vue";
+import ConfirmationModal from "../ui/modals/ConfirmationModal.vue";
 import { useAuth } from "../../composables/useAuth";
 import { usePermissions } from "../../composables/usePermissions";
 import WhatsAppLogsSidebar from "../whatsapp/WhatsAppLogsSidebar.vue";

@@ -138,11 +138,11 @@
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { ShoppingCart, CheckCircle, Clock, IndianRupee, Activity } from "lucide-vue-next";
-import PageHeader from "../../components/ui/PageHeader.vue";
-import Card from "../../components/ui/Card.vue";
-import CardHeader from "../../components/ui/CardHeader.vue";
-import CardTitle from "../../components/ui/CardTitle.vue";
-import CardContent from "../../components/ui/CardContent.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
+import Card from "../../components/ui/cards/Card.vue";
+import CardHeader from "../../components/ui/cards/CardHeader.vue";
+import CardTitle from "../../components/ui/cards/CardTitle.vue";
+import CardContent from "../../components/ui/cards/CardContent.vue";
 import StatsCard from "../../components/dashboard/StatsCard.vue";
 import OrdersChart from "../../components/dashboard/OrdersChart.vue";
 import PaymentsChart from "../../components/dashboard/PaymentsChart.vue";

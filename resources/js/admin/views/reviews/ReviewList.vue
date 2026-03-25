@@ -205,9 +205,9 @@ import {
 import axios from "axios";
 import ReviewModal from "./ReviewModal.vue";
 import ReviewInfoDialog from "../../components/reviews/ReviewInfoDialog.vue";
-import ConfirmationModal from "../../components/ui/ConfirmationModal.vue";
-import PageHeader from "../../components/ui/PageHeader.vue";
-import DataTable from "../../components/ui/DataTable.vue";
+import ConfirmationModal from "../../components/ui/modals/ConfirmationModal.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
+import DataTable from "../../components/ui/data-table/DataTable.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 

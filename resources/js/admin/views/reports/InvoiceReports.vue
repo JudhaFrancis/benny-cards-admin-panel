@@ -93,7 +93,7 @@
 </template>
 
 <script setup>
-import PageHeader from "../../components/ui/PageHeader.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { 

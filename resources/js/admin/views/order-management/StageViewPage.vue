@@ -41,7 +41,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ArrowLeft, Pencil, Loader2, ClipboardList, User, CreditCard, Briefcase, Printer, Package, Box, MapPin, Truck, FileText } from "lucide-vue-next";
 import axios from "axios";
-import PageHeader from "../../components/ui/PageHeader.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
 
 // Section Components
 import OrderDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/OrderDetailsSection.vue";

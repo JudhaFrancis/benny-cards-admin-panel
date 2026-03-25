@@ -72,7 +72,7 @@
 import { ref, computed, watch } from "vue";
 import { Loader2, ClipboardList, User, CreditCard, Briefcase, Printer, Package, Box, MapPin, Truck, FileText, Activity, Calendar, Clock, User as UserIcon } from "lucide-vue-next";
 import axios from "axios";
-import InfoModal from "../ui/InfoModal.vue";
+import InfoModal from "../ui/modals/InfoModal.vue";
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -100,17 +100,17 @@ const formatAuditDate = (dateString) => {
 };
 
 // Section Components (View only)
-import ViewOrderDetailsSection from "../orders/info-tabs/tracking-view-tabs/ViewOrderDetailsSection.vue";
-import ViewClientInfoSection from "../orders/info-tabs/tracking-view-tabs/ViewClientInfoSection.vue";
-import ViewCardSpecsSection from "../orders/info-tabs/tracking-view-tabs/ViewCardSpecsSection.vue";
-import ViewWorkAssignSection from "../orders/info-tabs/tracking-view-tabs/ViewWorkAssignSection.vue";
-import ViewDesignPrintSection from "../orders/info-tabs/tracking-view-tabs/ViewDesignPrintSection.vue";
-import ViewOrderPrintingSection from "../orders/info-tabs/tracking-view-tabs/ViewOrderPrintingSection.vue";
-import ViewPackagingLogisticsSection from "../orders/info-tabs/tracking-view-tabs/ViewPackagingLogisticsSection.vue";
-import ViewPackagingStatusSection from "../orders/info-tabs/tracking-view-tabs/ViewPackagingStatusSection.vue";
-import ViewDeliveryLocationSection from "../orders/info-tabs/tracking-view-tabs/ViewDeliveryLocationSection.vue";
-import ViewDispatchModeSection from "../orders/info-tabs/tracking-view-tabs/ViewDispatchModeSection.vue";
-import ViewDispatchDetailsSection from "../orders/info-tabs/tracking-view-tabs/ViewDispatchDetailsSection.vue";
+import ViewOrderDetailsSection from "../orders/info-tabs/tracking-view-tabs/client-information/ViewOrderDetailsSection.vue";
+import ViewClientInfoSection from "../orders/info-tabs/tracking-view-tabs/client-information/ViewClientInfoSection.vue";
+import ViewCardSpecsSection from "../orders/info-tabs/tracking-view-tabs/client-information/ViewCardSpecsSection.vue";
+import ViewWorkAssignSection from "../orders/info-tabs/tracking-view-tabs/designing/ViewWorkAssignSection.vue";
+import ViewDesignPrintSection from "../orders/info-tabs/tracking-view-tabs/designing/ViewDesignPrintSection.vue";
+import ViewOrderPrintingSection from "../orders/info-tabs/tracking-view-tabs/printing/ViewOrderPrintingSection.vue";
+import ViewPackagingLogisticsSection from "../orders/info-tabs/tracking-view-tabs/packaging/ViewPackagingLogisticsSection.vue";
+import ViewPackagingStatusSection from "../orders/info-tabs/tracking-view-tabs/packaging/ViewPackagingStatusSection.vue";
+import ViewDeliveryLocationSection from "../orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDeliveryLocationSection.vue";
+import ViewDispatchModeSection from "../orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDispatchModeSection.vue";
+import ViewDispatchDetailsSection from "../orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDispatchDetailsSection.vue";
 
 const props = defineProps({
   isOpen: Boolean,

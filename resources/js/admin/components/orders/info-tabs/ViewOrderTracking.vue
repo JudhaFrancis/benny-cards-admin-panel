@@ -104,7 +104,7 @@
 
     <!-- Main Content Area -->
     <div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30">
-      <div class="max-w-4xl mx-auto p-8 pt-12">
+      <div class="max-w-6xl mx-auto p-8 pt-12">
         <div
           class="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 p-8 min-h-[500px] animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
@@ -126,14 +126,18 @@
                 Tracking Section Information
               </p>
             </div>
-            <div
-              v-if="completedSections.includes(selectedSection)"
-              class="ml-auto px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-2"
-            >
-              <CheckCircleIcon class="h-4 w-4" />
-              <span class="text-xs font-black uppercase tracking-widest"
-                >Completed</span
+            <div v-if="activeSectionStatus" class="ml-auto">
+              <span
+                class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border shadow-sm transition-all"
+                :class="[
+                  activeSectionStatus.toLowerCase() === 'completed' ||
+                  activeSectionStatus.toLowerCase() === 'paid'
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                    : 'bg-amber-50 text-amber-600 border-amber-100',
+                ]"
               >
+                {{ activeSectionStatus }}
+              </span>
             </div>
           </div>
 
@@ -201,96 +205,54 @@ import {
 } from "lucide-vue-next";
 
 // Section Views
-import ViewOrderDetailsSection from "./tracking-view-tabs/ViewOrderDetailsSection.vue";
-import ViewClientInfoSection from "./tracking-view-tabs/ViewClientInfoSection.vue";
-import ViewCardSpecsSection from "./tracking-view-tabs/ViewCardSpecsSection.vue";
-import ViewWorkAssignSection from "./tracking-view-tabs/ViewWorkAssignSection.vue";
-import ViewDesignPrintSection from "./tracking-view-tabs/ViewDesignPrintSection.vue";
-import ViewOrderPrintingSection from "./tracking-view-tabs/ViewOrderPrintingSection.vue";
-import ViewPackagingLogisticsSection from "./tracking-view-tabs/ViewPackagingLogisticsSection.vue";
-import ViewPackagingStatusSection from "./tracking-view-tabs/ViewPackagingStatusSection.vue";
-import ViewDeliveryLocationSection from "./tracking-view-tabs/ViewDeliveryLocationSection.vue";
-import ViewDispatchModeSection from "./tracking-view-tabs/ViewDispatchModeSection.vue";
-import ViewDispatchDetailsSection from "./tracking-view-tabs/ViewDispatchDetailsSection.vue";
-import ViewPaymentSection from "./tracking-view-tabs/ViewPaymentSection.vue";
+import ViewClientInformationTab from "./tracking-view-tabs/client-information/ViewClientInformationTab.vue";
+import ViewDesigningTab from "./tracking-view-tabs/designing/ViewDesigningTab.vue";
+import ViewOrderPrintingSection from "./tracking-view-tabs/printing/ViewOrderPrintingSection.vue";
+import ViewPackagingTab from "./tracking-view-tabs/packaging/ViewPackagingTab.vue";
+import ViewDispatchDeliveryTab from "./tracking-view-tabs/dispatch-delivery/ViewDispatchDeliveryTab.vue";
+import ViewPaymentSection from "./tracking-view-tabs/payment/ViewPaymentSection.vue";
 
 const props = defineProps({
   order: { type: Object, required: true },
 });
 
-const selectedSection = ref("order-details");
+const selectedSection = ref("client-information");
 const completedSections = ref([]);
 
 const trackingSections = [
   {
-    id: "order-details",
-    label: "Order Details",
-    shortLabel: "Details",
-    icon: ClipboardListIcon,
-  },
-  {
-    id: "client-info",
+    id: "client-information",
     label: "Client Information",
     shortLabel: "Client",
     icon: UserIcon,
   },
   {
-    id: "card-specs",
-    label: "Card Specifications",
-    shortLabel: "Specs",
-    icon: CreditCardIcon,
-  },
-  {
-    id: "work-assign",
-    label: "Work Assignment",
+    id: "designing",
+    label: "Designing",
     shortLabel: "Design",
     icon: SettingsIcon,
   },
   {
-    id: "design-print",
-    label: "Design & Print Stat",
-    shortLabel: "D&P",
+    id: "printing",
+    label: "Printing",
+    shortLabel: "Print",
     icon: PrinterIcon,
   },
   {
-    id: "order-printing",
-    label: "Order Printing Status",
-    shortLabel: "Print",
-    icon: LayersIcon,
-  },
-  {
-    id: "packaging-logistics",
-    label: "Packaging & Logistics",
-    shortLabel: "Logis",
-    icon: PackageIcon,
-  },
-  {
-    id: "packaging-status",
-    label: "Packaging Status",
+    id: "packaging",
+    label: "Packaging",
     shortLabel: "Pack",
     icon: PackageIcon,
   },
   {
-    id: "delivery-location",
-    label: "Delivery Location",
-    shortLabel: "Loc",
-    icon: NavigationIcon,
-  },
-  {
-    id: "dispatch-mode",
-    label: "Dispatch Mode",
-    shortLabel: "Mode",
+    id: "dispatch-delivery",
+    label: "Dispatch & Delivery",
+    shortLabel: "Disp",
     icon: TruckIcon,
   },
   {
-    id: "dispatch-details",
-    label: "Dispatch Details",
-    shortLabel: "Disp",
-    icon: BusIcon,
-  },
-  {
     id: "payment",
-    label: "Payment Information",
+    label: "Payments",
     shortLabel: "Pay",
     icon: IndianRupeeIcon,
   },
@@ -306,32 +268,40 @@ const activeSectionData = computed(() =>
 
 const activeSectionComponent = computed(() => {
   switch (selectedSection.value) {
-    case "order-details":
-      return ViewOrderDetailsSection;
-    case "client-info":
-      return ViewClientInfoSection;
-    case "card-specs":
-      return ViewCardSpecsSection;
-    case "work-assign":
-      return ViewWorkAssignSection;
-    case "design-print":
-      return ViewDesignPrintSection;
-    case "order-printing":
+    case "client-information":
+      return ViewClientInformationTab;
+    case "designing":
+      return ViewDesigningTab;
+    case "printing":
       return ViewOrderPrintingSection;
-    case "packaging-logistics":
-      return ViewPackagingLogisticsSection;
-    case "packaging-status":
-      return ViewPackagingStatusSection;
-    case "delivery-location":
-      return ViewDeliveryLocationSection;
-    case "dispatch-mode":
-      return ViewDispatchModeSection;
-    case "dispatch-details":
-      return ViewDispatchDetailsSection;
+    case "packaging":
+      return ViewPackagingTab;
+    case "dispatch-delivery":
+      return ViewDispatchDeliveryTab;
     case "payment":
       return ViewPaymentSection;
     default:
-      return ViewOrderDetailsSection;
+      return ViewClientInformationTab;
+  }
+});
+
+const activeSectionStatus = computed(() => {
+  const order = props.order;
+  switch (selectedSection.value) {
+    case "client-information":
+      return order.client_information?.status;
+    case "designing":
+      return order.designing?.status;
+    case "printing":
+      return order.printing?.status;
+    case "packaging":
+      return order.packaging?.status;
+    case "dispatch-delivery":
+      return order.dispatch_delivery?.status;
+    case "payment":
+      return order.payment_status;
+    default:
+      return null;
   }
 });
 
@@ -339,25 +309,35 @@ const calculateCompletedStatus = () => {
   const order = props.order;
   const completed = [];
 
-  if (order.order_date || order.client_information?.job_details)
-    completed.push("order-details");
-  if (order.client_information?.client_info?._audit || order.client_information?.client_info) completed.push("client-info");
-  if (order.client_information?.card_specs?._audit || order.client_information?.card_specs) completed.push("card-specs");
-  
-  if (order.designing?.work_assign?._audit || order.designing?.work_assign) completed.push("work-assign");
-  if (order.designing?.design_print?._audit || order.designing?.design_print) completed.push("design-print");
-  
-  if (order.printing?.printing_status?._audit || order.printing?.printing_status) completed.push("order-printing");
-  
-  if (order.packaging?.packaging_logistics?._audit || order.packaging?.packaging_logistics)
-    completed.push("packaging-logistics");
-  if (order.packaging?.packaging_status?._audit || order.packaging?.packaging_status) completed.push("packaging-status");
-  
-  if (order.dispatch_delivery?.delivery_location?._audit || order.dispatch_delivery?.delivery_location) completed.push("delivery-location");
-  if (order.dispatch_delivery?.dispatch_mode?._audit || order.dispatch_delivery?.dispatch_mode) completed.push("dispatch-mode");
-  if (order.dispatch_delivery?.dispatch_details?._audit || order.dispatch_delivery?.dispatch_details) completed.push("dispatch-details");
-  
-  if (order.payments && order.payments.length > 0) completed.push("payment");
+  // Client Information
+  if (order.client_information?.status === "Completed") {
+    completed.push("client-information");
+  }
+
+  // Designing
+  if (order.designing?.status === "Completed") {
+    completed.push("designing");
+  }
+
+  // Printing
+  if (order.printing?.status === "Completed") {
+    completed.push("printing");
+  }
+
+  // Packaging
+  if (order.packaging?.status === "Completed") {
+    completed.push("packaging");
+  }
+
+  // Dispatch & Delivery
+  if (order.dispatch_delivery?.status === "Completed") {
+    completed.push("dispatch-delivery");
+  }
+
+  // Payment
+  if (order.payment_status === "paid") {
+    completed.push("payment");
+  }
 
   return completed;
 };

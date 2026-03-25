@@ -157,20 +157,20 @@ const formatAuditDate = (dateString) => {
 };
 import axios from "axios";
 import { useToast } from "../../composables/useToast";
-import InfoModal from "../ui/InfoModal.vue";
+import InfoModal from "../ui/modals/InfoModal.vue";
 
 // Section Components
-import OrderDetailsSection from "../orders/edit-tabs/tracking-edit-tabs/OrderDetailsSection.vue";
-import ClientInfoSection from "../orders/edit-tabs/tracking-edit-tabs/ClientInfoSection.vue";
-import CardSpecsSection from "../orders/edit-tabs/tracking-edit-tabs/CardSpecsSection.vue";
-import WorkAssignSection from "../orders/edit-tabs/tracking-edit-tabs/WorkAssignSection.vue";
-import DesignPrintSection from "../orders/edit-tabs/tracking-edit-tabs/DesignPrintSection.vue";
-import OrderPrintingSection from "../orders/edit-tabs/tracking-edit-tabs/OrderPrintingSection.vue";
-import PackagingLogisticsSection from "../orders/edit-tabs/tracking-edit-tabs/PackagingLogisticsSection.vue";
-import PackagingStatusSection from "../orders/edit-tabs/tracking-edit-tabs/PackagingStatusSection.vue";
-import DeliveryLocationSection from "../orders/edit-tabs/tracking-edit-tabs/DeliveryLocationSection.vue";
-import DispatchModeSection from "../orders/edit-tabs/tracking-edit-tabs/DispatchModeSection.vue";
-import DispatchDetailsSection from "../orders/edit-tabs/tracking-edit-tabs/DispatchDetailsSection.vue";
+import OrderDetailsSection from "../orders/edit-tabs/tracking-edit-tabs/client-information/OrderDetailsSection.vue";
+import ClientInfoSection from "../orders/edit-tabs/tracking-edit-tabs/client-information/ClientInfoSection.vue";
+import CardSpecsSection from "../orders/edit-tabs/tracking-edit-tabs/client-information/CardSpecsSection.vue";
+import WorkAssignSection from "../orders/edit-tabs/tracking-edit-tabs/designing/WorkAssignSection.vue";
+import DesignPrintSection from "../orders/edit-tabs/tracking-edit-tabs/designing/DesignPrintSection.vue";
+import OrderPrintingSection from "../orders/edit-tabs/tracking-edit-tabs/printing/OrderPrintingSection.vue";
+import PackagingLogisticsSection from "../orders/edit-tabs/tracking-edit-tabs/packaging/PackagingLogisticsSection.vue";
+import PackagingStatusSection from "../orders/edit-tabs/tracking-edit-tabs/packaging/PackagingStatusSection.vue";
+import DeliveryLocationSection from "../orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DeliveryLocationSection.vue";
+import DispatchModeSection from "../orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DispatchModeSection.vue";
+import DispatchDetailsSection from "../orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DispatchDetailsSection.vue";
 
 const props = defineProps({
   isOpen: Boolean,

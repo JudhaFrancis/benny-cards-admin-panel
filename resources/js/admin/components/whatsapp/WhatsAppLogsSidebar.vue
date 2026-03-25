@@ -214,7 +214,7 @@ import {
 } from "@headlessui/vue";
 import { X as XIcon, Search as SearchIcon, RotateCcw as RotateCcwIcon } from "lucide-vue-next";
 import axios from "axios";
-import ConfirmationModal from "../ui/ConfirmationModal.vue";
+import ConfirmationModal from "../ui/modals/ConfirmationModal.vue";
 import { useToast } from "../../composables/useToast";
 
 const toast = useToast();

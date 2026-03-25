@@ -1,26 +1,5 @@
 <template>
   <div class="space-y-8">
-    <!-- Status Badge -->
-    <div class="flex justify-center -mb-4">
-      <div
-        :class="[
-          'px-6 py-2 rounded-2xl border-2 flex items-center gap-2 transition-all shadow-sm',
-          isFullyPaid
-            ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
-            : 'bg-amber-50 border-amber-500 text-amber-700',
-        ]"
-      >
-        <div
-          :class="[
-            'w-2.5 h-2.5 rounded-full animate-pulse',
-            isFullyPaid ? 'bg-emerald-500' : 'bg-amber-500',
-          ]"
-        ></div>
-        <span class="text-sm font-black uppercase tracking-widest">{{
-          isFullyPaid ? "Completed" : "Pending"
-        }}</span>
-      </div>
-    </div>
 
     <!-- Payment Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

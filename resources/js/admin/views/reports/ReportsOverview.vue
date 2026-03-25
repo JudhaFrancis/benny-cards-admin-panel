@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import PageHeader from "../../components/ui/PageHeader.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import { 
   ChevronRight as ChevronRightIcon,
   ShoppingBag as OrdersIcon,

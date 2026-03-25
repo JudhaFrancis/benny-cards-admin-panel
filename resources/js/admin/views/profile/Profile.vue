@@ -188,7 +188,7 @@ import {
   Loader2 as Loader2Icon,
 } from "lucide-vue-next";
 import axios from "axios";
-import PageHeader from "../../components/ui/PageHeader.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import { useAuth } from "../../composables/useAuth";
 
 const { user, setUser } = useAuth();

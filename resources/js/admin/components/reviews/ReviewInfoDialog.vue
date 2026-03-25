@@ -150,7 +150,7 @@ import {
   Star as StarIcon,
   Package as PackageIcon,
 } from "lucide-vue-next";
-import ImagePreviewModal from "../ui/ImagePreviewModal.vue";
+import ImagePreviewModal from "../ui/modals/ImagePreviewModal.vue";
 
 const props = defineProps({
   isOpen: Boolean,

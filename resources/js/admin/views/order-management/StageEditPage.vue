@@ -71,7 +71,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ArrowLeft, Check, Loader2, Pencil, ClipboardList, User, CreditCard, Briefcase, Printer, Package, Box, MapPin, Truck, FileText } from "lucide-vue-next";
 import axios from "axios";
 import { useToast } from "../../composables/useToast";
-import PageHeader from "../../components/ui/PageHeader.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
 
 // Section Components
 import OrderDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/OrderDetailsSection.vue";

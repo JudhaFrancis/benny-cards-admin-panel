@@ -293,7 +293,7 @@ import {
   Facebook as FacebookIcon,
   Instagram as InstagramIcon,
 } from "lucide-vue-next";
-import PageHeader from "../../components/ui/PageHeader.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import { usePermissions } from "../../composables/usePermissions";
 import { useSettings } from "../../composables/useSettings";
 

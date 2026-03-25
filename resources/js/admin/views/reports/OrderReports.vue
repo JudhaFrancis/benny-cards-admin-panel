@@ -85,8 +85,8 @@
 </template>
 
 <script setup>
-import PageHeader from "../../components/ui/PageHeader.vue";
-import DataTable from "../../components/ui/DataTable.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
+import DataTable from "../../components/ui/data-table/DataTable.vue";
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { 

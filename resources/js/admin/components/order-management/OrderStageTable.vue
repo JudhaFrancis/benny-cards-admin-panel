@@ -42,6 +42,12 @@
       </div>
     </template>
 
+    <template #cell-order_placed_in="{ item: order }">
+      <span class="text-sm font-medium text-slate-700">
+        {{ order.client_information?.job_details?.order_placed_in || "N/A" }}
+      </span>
+    </template>
+
     <template #cell-assigned_date="{ item: order }">
       <span class="text-slate-500 font-medium">{{ getAssignedDate(order) }}</span>
     </template>
@@ -95,7 +101,7 @@
 <script setup>
 import { computed } from "vue";
 import { Eye, Pencil } from "lucide-vue-next";
-import DataTable from "../ui/DataTable.vue";
+import DataTable from "../ui/data-table/DataTable.vue";
 
 const props = defineProps({
   orders: { type: Array, required: true },
@@ -110,7 +116,21 @@ const columns = computed(() => {
     { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
     { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap", filterKey: "order_number" },
     { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name" },
-    { key: "assigned_name", label: "Assigned Name", align: "left", width: "180px", filter: false },
+    { 
+      key: "assigned_name", 
+      label: props.stage === 'client-information' ? "Order Taken By" : "Assigned Name", 
+      align: "left", 
+      width: "180px", 
+      filter: false 
+    },
+    ...(props.stage === 'client-information' ? [{ 
+      key: "order_placed_in", 
+      label: "Order Placed In", 
+      align: "left", 
+      width: "150px", 
+      class: "whitespace-nowrap", 
+      filter: false 
+    }] : []),
     { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap", filter: false },
   ];
   if (props.stage === 'printing') {
