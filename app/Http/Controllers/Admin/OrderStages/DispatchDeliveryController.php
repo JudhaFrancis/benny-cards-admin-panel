@@ -4,34 +4,32 @@ namespace App\Http\Controllers\Admin\OrderStages;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\OrderDispatchDelivery;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class DispatchDeliveryController extends Controller
 {
+    public function __construct(
+        protected OrderService $orderService
+    ) {}
+
     /**
-     * Update Dispatch and Delivery stage.
+     * Update Dispatch & Delivery stage.
      */
     public function update(Request $request, int $id): JsonResponse
     {
         $order = Order::findOrFail($id);
-        // 1. Update/Create Individual Stage Table
-        $data = $request->all();
-        $stage = $order->dispatchDelivery()->updateOrCreate(
-            ['order_id' => $order->id],
-            array_merge($data, [
-                'added_by' => $order->dispatchDelivery ? $order->dispatchDelivery->added_by : auth()->id(),
-                'modified_by' => auth()->id()
-            ])
-        );
+        
+        // Use central service for tracking updates
+        $this->orderService->updateTracking($order, array_merge($request->all(), ['_stage' => 'dispatchDelivery']));
 
         $order->modified_by = auth()->id();
         $order->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Dispatch and Delivery details updated successfully.',
+            'message' => 'Dispatch & Delivery details updated successfully.',
             'data' => $order->load(['dispatchDelivery'])
         ]);
     }

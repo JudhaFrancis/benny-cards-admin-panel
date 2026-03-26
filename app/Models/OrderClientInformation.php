@@ -16,15 +16,14 @@ class OrderClientInformation extends Model
     protected $fillable = [
         'order_id',
         'status',
-        'job_details',
+        'order_details',
         'client_info',
         'card_specs',
-        'added_by',
         'modified_by'
     ];
 
     protected $casts = [
-        'job_details' => 'array',
+        'order_details' => 'array',
         'client_info' => 'array',
         'card_specs' => 'array'
     ];
@@ -34,10 +33,7 @@ class OrderClientInformation extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function addedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'added_by');
-    }
+
 
     public function modifiedBy(): BelongsTo
     {

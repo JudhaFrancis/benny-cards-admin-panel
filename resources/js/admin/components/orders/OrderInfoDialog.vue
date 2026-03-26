@@ -61,7 +61,7 @@
                           class="text-xs text-slate-200 font-medium flex items-center gap-1.5 bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 backdrop-blur-sm"
                         >
                           <ActivityIcon class="h-3.5 w-3.5" />
-                          {{ order?.tracking_status_label || "New" }}
+                          {{ order?.resolved_status || "New Order" }}
                         </span>
                         <span
                           class="text-xs text-slate-200 font-medium flex items-center gap-1.5 bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 backdrop-blur-sm"
@@ -206,11 +206,11 @@ watch(
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 </script>
 

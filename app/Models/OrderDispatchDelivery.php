@@ -19,7 +19,6 @@ class OrderDispatchDelivery extends Model
         'delivery_location',
         'dispatch_mode',
         'dispatch_details',
-        'added_by',
         'modified_by'
     ];
 
@@ -34,10 +33,7 @@ class OrderDispatchDelivery extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function addedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'added_by');
-    }
+
 
     public function modifiedBy(): BelongsTo
     {

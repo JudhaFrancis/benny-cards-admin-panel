@@ -17,7 +17,6 @@ class OrderPrinting extends Model
         'order_id',
         'status',
         'printing_status',
-        'added_by',
         'modified_by'
     ];
 
@@ -30,10 +29,7 @@ class OrderPrinting extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function addedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'added_by');
-    }
+
 
     public function modifiedBy(): BelongsTo
     {

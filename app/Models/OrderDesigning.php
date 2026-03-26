@@ -18,7 +18,6 @@ class OrderDesigning extends Model
         'status',
         'work_assign',
         'design_print',
-        'added_by',
         'modified_by'
     ];
 
@@ -32,10 +31,7 @@ class OrderDesigning extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function addedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'added_by');
-    }
+
 
     public function modifiedBy(): BelongsTo
     {

@@ -2,19 +2,13 @@
   <div class="space-y-8">
     <!-- Progress Timeline Header -->
     <div class="relative px-2">
-      <div
-        class="flex gap-3 overflow-x-auto custom-scrollbar pb-4 -mx-2 px-2 snap-x"
-      >
-        <button
-          v-for="(section, index) in trackingSections"
-          :key="section.id"
-          @click="handleSectionClick(section.id, index)"
-          :disabled="!isSectionUnlocked(index)"
+      <div class="flex gap-3 overflow-x-auto custom-scrollbar pb-4 -mx-2 px-2 snap-x">
+        <button v-for="(section, index) in trackingSections" :key="section.id"
+          @click="handleSectionClick(section.id, index)" :disabled="!isSectionUnlocked(index)"
           class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group min-w-[5rem] transition-opacity duration-300"
           :class="{
             'opacity-50 cursor-not-allowed': !isSectionUnlocked(index),
-          }"
-        >
+          }">
           <div
             class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm border"
             :class="[
@@ -23,44 +17,30 @@
                 : completedSections.includes(section.id)
                   ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
                   : 'bg-white text-slate-400 border-slate-100 group-hover:border-primary/30 group-hover:text-primary',
-            ]"
-          >
+            ]">
             <component :is="section.icon" class="h-5 w-5" />
           </div>
           <span
             class="text-[10px] font-bold uppercase tracking-wider text-center max-w-[5rem] leading-tight transition-colors"
-            :class="
-              selectedSection === section.id ? 'text-primary' : 'text-slate-400'
-            "
-          >
+            :class="selectedSection === section.id ? 'text-primary' : 'text-slate-400'
+              ">
             {{ section.shortLabel || section.label }}
           </span>
-          <div
-            v-if="completedSections.includes(section.id)"
-            class="absolute top-0 right-3 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"
-          ></div>
+          <div v-if="completedSections.includes(section.id)"
+            class="absolute top-0 right-3 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></div>
         </button>
       </div>
     </div>
 
     <!-- Active Section Content Card -->
-    <Transition
-      mode="out-in"
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0 translate-y-2"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-2"
-    >
-      <div
-        :key="selectedSection"
-        class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-visible"
-      >
+    <Transition mode="out-in" enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2">
+      <div :key="selectedSection"
+        class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-visible">
         <!-- Section Header -->
-        <div
-          class="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50 rounded-t-3xl"
-        >
+        <div class="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50 rounded-t-3xl">
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-2xl bg-primary/5 text-primary">
               <component :is="activeSectionIcon" class="h-6 w-6" />
@@ -69,69 +49,62 @@
               <h3 class="text-xl font-bold text-slate-900 tracking-tight">
                 {{ activeSectionLabel }}
               </h3>
-              <p
-                class="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1"
-              >
+              <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">
                 Step {{ activeSectionIndex + 1 }} of
                 {{ trackingSections.length }}
               </p>
             </div>
           </div>
 
-          <div
-            v-if="completedSections.includes(selectedSection)"
-            class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100"
-          >
-            <CheckIcon class="h-4 w-4" />
-            <span class="text-xs font-black uppercase tracking-wider"
-              >Completed</span
-            >
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+              <ActivityIcon class="h-3.5 w-3.5 text-slate-400" />
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-r border-slate-100 pr-2 mr-1">Status</span>
+              <select 
+                :value="currentStageStatus"
+                @change="handleStatusChange($event.target.value)"
+                class="text-xs font-bold bg-transparent border-none focus:ring-0 cursor-pointer pr-8"
+                :class="statusStyles[currentStageStatus.toLowerCase()] || 'text-slate-600'"
+              >
+                <option value="Pending">Pending</option>
+                <option value="Process">Processing</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div v-if="completedSections.includes(selectedSection)"
+              class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+              <CheckIcon class="h-4 w-4" />
+              <span class="text-xs font-black uppercase tracking-wider">Filled</span>
+            </div>
           </div>
         </div>
 
         <!-- Section Body (Dynamic Component) -->
         <div class="p-8 min-h-[300px]">
-          <component
-            :is="activeSectionComponent"
-            :order="order"
-            :staff-options="staffOptions"
-            @update:order="(val) => $emit('update:order', val)"
-          />
+          <component :is="activeSectionComponent" :order="order" :staff-options="staffOptions"
+            @update:order="(val) => $emit('update:order', val)" />
         </div>
 
         <!-- Section Footer -->
-        <div
-          class="px-8 py-5 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center rounded-b-3xl"
-        >
-          <button
-            v-if="activeSectionIndex > 0"
-            @click="selectPreviousSection"
-            class="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2"
-          >
+        <div class="px-8 py-5 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center rounded-b-3xl">
+          <button v-if="activeSectionIndex > 0" @click="selectPreviousSection"
+            class="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2">
             ← Previous Step
           </button>
           <div v-else></div>
           <!-- Spacer -->
 
           <div class="flex gap-3">
-            <button
-              @click="handleSaveSection"
-              :disabled="isSaving || !!savingSectionId"
-              class="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              <Loader2Icon
-                v-if="isSaving || !!savingSectionId"
-                class="h-4 w-4 animate-spin"
-              />
+            <button @click="handleSaveSection" :disabled="isSaving || !!savingSectionId"
+              class="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+              <Loader2Icon v-if="isSaving || !!savingSectionId" class="h-4 w-4 animate-spin" />
               <CheckIcon v-else class="h-4 w-4" />
               {{
                 isSaving || !!savingSectionId
                   ? "Saving..."
-                  : activeSectionIndex < trackingSections.length - 1
-                    ? "Save & Next"
-                    : "Save & Finish"
-              }}
-            </button>
+                  : activeSectionIndex < trackingSections.length - 1 ? "Save & Next" : "Save & Finish" }} </button>
           </div>
         </div>
       </div>
@@ -139,10 +112,8 @@
 
     <!-- Footer Actions (Global Cancel/Save) -->
     <div class="pt-6 border-t border-slate-100 flex justify-end gap-3">
-      <button
-        @click="$emit('cancel')"
-        class="px-8 py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all active:scale-95 text-sm"
-      >
+      <button @click="$emit('cancel')"
+        class="px-8 py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all active:scale-95 text-sm">
         Close Editor
       </button>
     </div>
@@ -151,10 +122,9 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
+import axios from "axios";
 import { useToast } from "../../../composables/useToast";
-
-const { error: toastError } = useToast();
-
+import { useOrderValidation } from "../../../composables/useOrderValidation";
 import {
   ClipboardList as ClipboardListIcon,
   User as UserIcon,
@@ -169,8 +139,8 @@ import {
   IndianRupee as IndianRupeeIcon,
   Check as CheckIcon,
   Loader2 as Loader2Icon,
+  Activity as ActivityIcon,
 } from "lucide-vue-next";
-import axios from "axios";
 
 // Import tracking section components
 import OrderDetailsSection from "./tracking-edit-tabs/client-information/OrderDetailsSection.vue";
@@ -199,6 +169,9 @@ const props = defineProps({
 
 const emit = defineEmits(["update:order", "save", "cancel"]);
 
+const { getSectionErrors, validateStage, trackingSections, sectionMap } = useOrderValidation();
+const { error: toastError, success: toastSuccess } = useToast();
+
 const selectedSection = ref("order-details");
 const completedSections = ref([]);
 const staffOptions = ref([]);
@@ -224,80 +197,7 @@ const fetchStaff = async () => {
   }
 };
 
-const trackingSections = [
-  {
-    id: "order-details",
-    label: "Order Details",
-    shortLabel: "Details",
-    icon: ClipboardListIcon,
-  },
-  {
-    id: "client-info",
-    label: "Client Information",
-    shortLabel: "Client",
-    icon: UserIcon,
-  },
-  {
-    id: "card-specs",
-    label: "Card Specifications",
-    shortLabel: "Specs",
-    icon: CreditCardIcon,
-  },
-  {
-    id: "work-assign",
-    label: "Work Assign Process",
-    shortLabel: "Assign",
-    icon: BriefcaseIcon,
-  },
-  {
-    id: "design-print",
-    label: "Design – Checked & Given to Print",
-    shortLabel: "Design",
-    icon: PrinterIcon,
-  },
-  {
-    id: "order-printing",
-    label: "Order & Printing Status",
-    shortLabel: "Printing",
-    icon: PackageIcon,
-  },
-  {
-    id: "packaging-logistics",
-    label: "Packaging & Logistics",
-    shortLabel: "Logistics",
-    icon: BoxIcon,
-  },
-  {
-    id: "packaging-status",
-    label: "Packaging Status",
-    shortLabel: "Packing",
-    icon: BoxIcon,
-  },
-  {
-    id: "delivery-location",
-    label: "Delivery Location",
-    shortLabel: "Location",
-    icon: MapPinIcon,
-  },
-  {
-    id: "dispatch-mode",
-    label: "Mode of Dispatch",
-    shortLabel: "Dispatch",
-    icon: TruckIcon,
-  },
-  {
-    id: "dispatch-details",
-    label: "Dispatch Details",
-    shortLabel: "Details",
-    icon: FileTextIcon,
-  },
-  {
-    id: "payment",
-    label: "Payment",
-    shortLabel: "Payment",
-    icon: IndianRupeeIcon,
-  },
-];
+// trackingSections moved to composable
 
 const activeSectionLabel = computed(() => {
   return (
@@ -316,40 +216,41 @@ const activeSectionIndex = computed(() => {
   return trackingSections.findIndex((s) => s.id === selectedSection.value);
 });
 
-const sectionMap = {
-  "order-details": { relation: "client_information", key: "job_details" },
-  "client-info": { relation: "client_information", key: "client_info" },
-  "card-specs": { relation: "client_information", key: "card_specs" },
-  "work-assign": { relation: "designing", key: "work_assign" },
-  "design-print": { relation: "designing", key: "design_print" },
-  "order-printing": { relation: "printing", key: "printing_status" },
-  "packaging-logistics": { relation: "packaging", key: "packaging_logistics" },
-  "packaging-status": { relation: "packaging", key: "packaging_status" },
-  "delivery-location": { relation: "dispatch_delivery", key: "delivery_location" },
-  "dispatch-mode": { relation: "dispatch_delivery", key: "dispatch_mode" },
-  "dispatch-details": { relation: "dispatch_delivery", key: "dispatch_details" },
-  payment: { relation: "payments", isArray: true },
+const currentStageStatus = computed(() => {
+  const config = sectionMap[selectedSection.value];
+  if (!config) return "Pending";
+  const stageData = props.order[config.relation];
+  return stageData?.status || "Pending";
+});
+
+const statusStyles = {
+  pending: "text-amber-500",
+  process: "text-blue-500",
+  completed: "text-emerald-500",
+  cancelled: "text-rose-500",
 };
+
+// sectionMap moved to composable
 
 // Check if a section is unlocked (accessible)
 // Check if a section is unlocked (accessible)
 const isSectionUnlocked = (index) => {
   const sectionId = trackingSections[index].id;
-  
+
   // First section is always unlocked
   if (index === 0) return true;
 
   // EXCEPTION: Payment section ONLY unlocks if its predecessor (Dispatch Details) is completed.
   // We don't auto-unlock it based on DB data alone.
   if (sectionId === 'payment') {
-      const prevSectionId = trackingSections[index - 1].id;
-      return completedSections.value.includes(prevSectionId);
+    const prevSectionId = trackingSections[index - 1].id;
+    return completedSections.value.includes(prevSectionId);
   }
 
   // For all other sections (Smart Unlocking):
   // 1. Unlock if this section already has valid data in DB
   if (completedSections.value.includes(sectionId)) return true;
-  
+
   // 2. Unlock if previous section is completed (to allow moving forward)
   const prevSectionId = trackingSections[index - 1].id;
   return completedSections.value.includes(prevSectionId);
@@ -363,162 +264,7 @@ const handleSectionClick = (sectionId, index) => {
 };
 
 // Helper to get validation errors for a specific section
-const getSectionErrors = (sectionId) => {
-  const order = props.order;
-  let errors = [];
-
-  switch (sectionId) {
-    case "order-details":
-      const details = order.client_information?.job_details || {};
-      if (!order.order_date) errors.push("Order Date");
-      if (!details.order_taken_by) errors.push("Order Taken By");
-      if (!details.order_placed_in) errors.push("Order Placed In");
-      if (!details.reference) errors.push("Reference");
-      break;
-
-    case "client-info":
-      const client = order.client_information?.client_info || {};
-      if (!client.name) errors.push("Name");
-      if (!client.address) errors.push("Place (Address)");
-      if (!client.phone) errors.push("Contact No");
-      if (!client.occasion) errors.push("Occasion");
-      if (!client.expected_delivery_date) errors.push("Expected Delivery Date");
-      break;
-
-    case "card-specs":
-      const specs = order.client_information?.card_specs || {};
-      if (!specs.type) errors.push("Product Type (Customize or Ready Made)");
-      if (!specs.card_size) errors.push("Card Size");
-      if (!specs.quantity) errors.push("Quantity");
-      if (!specs.specifications) errors.push("Specifications");
-      // Inner GSM, Envelope GSM, Card Lamination, and Envelope Lamination are all optional
-      break;
-
-    case "work-assign":
-      const work = order.designing?.work_assign || {};
-      if (!work.assigned_to) errors.push("Assigned To");
-      if (!work.assigned_date) errors.push("Assigned Date");
-      if (!work.deadline) errors.push("Deadline");
-      if (!work.content_by) errors.push("Content By");
-      if (!work.completed_by) errors.push("Completed By");
-      break;
-
-    case "design-print":
-      const design = order.designing?.design_print || {};
-      if (!design.design_outputs)
-        errors.push("Design Outputs (Select at least one)");
-      if (!design.print_addons)
-        errors.push("Print & Add-ons (Select at least one)");
-      break;
-
-    case "order-printing":
-      const printing = order.printing?.printing_status || {};
-
-      if (!printing.assigned_date) errors.push("Assigned Date");
-
-      // Validate Customize section if any data is present
-      const hasCustomizeData =
-        printing.customize_sent_to_print_date ||
-        printing.customize_delivery_date ||
-        printing.customize_follow_up;
-
-      if (hasCustomizeData) {
-        if (!printing.customize_sent_to_print_date)
-          errors.push("Sent to Print Date");
-        if (!printing.customize_delivery_date) errors.push("Delivery Date");
-
-        const followUpCount = printing.customize_follow_up
-          ? printing.customize_follow_up.split(",").filter((d) => d).length
-          : 0;
-        if (followUpCount < 1)
-          errors.push("Customize Card: At least Day 1 status must be checked");
-      }
-
-      // Validate Readymade section if any data is present
-      const hasReadymadeData =
-        printing.readymade_ordered ||
-        printing.readymade_sub_received ||
-        printing.readymade_sent_to_print ||
-        printing.readymade_follow_up;
-
-      if (hasReadymadeData) {
-        const followUpCount = printing.readymade_follow_up
-          ? printing.readymade_follow_up.split(",").filter((d) => d).length
-          : 0;
-        if (followUpCount < 1)
-          errors.push("Readymade Card: At least Day 1 status must be checked");
-      }
-      break;
-
-    case "packaging-logistics":
-      const logistics = order.packaging?.packaging_logistics || {};
-      if (!logistics.crafted_by) errors.push("Crafted By");
-      if (!logistics.names) errors.push("Names");
-      if (!logistics.date) errors.push("Date");
-      if (!logistics.qty_cards) errors.push("Qty of Cards");
-      if (!logistics.logistics_details)
-        errors.push("Envelope / Ribbon / Tag / Sticker");
-      break;
-
-    case "packaging-status":
-      const packing = order.packaging?.packaging_status || {};
-      if (!packing.packed_by) errors.push("Packed By");
-      break;
-
-    case "delivery-location":
-      const loc = order.dispatch_delivery?.delivery_location || {};
-      if (!loc.place_name) errors.push("Place Name");
-      break;
-
-    case "dispatch-mode":
-      const dispMode = order.dispatch_delivery?.dispatch_mode || {};
-      if (!dispMode.date) errors.push("Dispatch Details with Date");
-      if (!dispMode.expense) errors.push("Dispatch Expense");
-      if (!dispMode.signature_name) errors.push("Signature & Name");
-      break;
-
-    case "dispatch-details":
-      const dispDet = order.dispatch_delivery?.dispatch_details || {};
-      const modesStr = order.dispatch_delivery?.dispatch_mode?.modes || "";
-      const modes = modesStr.split(",");
-
-      if (modes.includes("Bus")) {
-        const bus = dispDet.bus || {};
-        if (!bus.bus_no) errors.push("Bus No");
-        if (!bus.reaching_time) errors.push("Bus Reaching Time");
-        if (!bus.contact_no) errors.push("Bus Contact No");
-      }
-      if (modes.includes("Courier")) {
-        const courier = dispDet.courier || {};
-        if (!courier.name) errors.push("Courier Name");
-        if (!courier.tracking_no) errors.push("Courier Tracking No");
-      }
-      if (modes.includes("Transport")) {
-        const transport = dispDet.transport || {};
-        if (!transport.name) errors.push("Transport Name");
-        if (!transport.lr_number) errors.push("Transport LR Number");
-      }
-      break;
-
-    case "payment":
-      const payments = order.payments || [];
-
-      if (!Array.isArray(payments) || payments.length === 0) {
-        errors.push("At least one payment record is required");
-      } else {
-        payments.forEach((p, i) => {
-          const prefix = `Payment ${i + 1}: `;
-          if (!p.payment_method) errors.push(prefix + "Payment Via");
-          if (!p.payment_date) errors.push(prefix + "Payment Date");
-          if (!p.amount) errors.push(prefix + "Amount");
-          if (!p.signature_name) errors.push(prefix + "Signature & Name");
-        });
-      }
-      break;
-  }
-
-  return errors;
-};
+// getSectionErrors removed, now using composable version
 
 const savingSectionId = ref(null);
 
@@ -528,12 +274,12 @@ const calculateCompletedStatus = () => {
 
   for (const section of trackingSections) {
     const config = sectionMap[section.id];
-    const sectionData = config.isArray 
-      ? props.order[config.relation] 
+    const sectionData = config.isArray
+      ? props.order[config.relation]
       : props.order[config.relation]?.[config.key];
 
     if (
-      sectionData && 
+      sectionData &&
       (Array.isArray(sectionData) ? sectionData.length > 0 : (sectionData._audit || Object.keys(sectionData).length > 0)) &&
       getSectionErrors(section.id).length === 0
     ) {
@@ -599,9 +345,15 @@ watch(() => props.order, (newOrder) => {
     Object.keys(sectionMap).forEach(key => {
       const config = sectionMap[key];
       if (config.isArray) return;
-      
+
+      // 1. Ensure the relation exists as an object
+      if (!newOrder[config.relation] || Array.isArray(newOrder[config.relation])) {
+        newOrder[config.relation] = {};
+      }
+
+      // 2. Ensure the key inside the relation exists as an object
       const relation = newOrder[config.relation];
-      if (relation && Array.isArray(relation[config.key]) && relation[config.key].length === 0) {
+      if (!relation[config.key] || Array.isArray(relation[config.key])) {
         relation[config.key] = {};
       }
     });
@@ -609,7 +361,7 @@ watch(() => props.order, (newOrder) => {
 }, { immediate: true, deep: true });
 
 const handleSaveSection = () => {
-  const errors = getSectionErrors(selectedSection.value);
+  const errors = getSectionErrors(selectedSection.value, props.order);
 
   if (errors.length > 0) {
     toastError("Please fill in the required fields:\n- " + errors.join("\n- "));
@@ -623,14 +375,32 @@ const handleSaveSection = () => {
   const config = sectionMap[selectedSection.value];
   if (config) {
     if (config.isArray) {
-        emit("save", { [config.relation]: props.order[config.relation] });
+      emit("save", { [config.relation]: props.order[config.relation] });
     } else {
-        const sectionData = props.order[config.relation]?.[config.key] || {};
-        emit("save", { [config.key]: sectionData });
+      const sectionData = props.order[config.relation]?.[config.key] || {};
+      emit("save", { [config.key]: sectionData });
     }
   } else {
     emit("save");
   }
+};
+
+const handleStatusChange = (newStatus) => {
+  const config = sectionMap[selectedSection.value];
+  if (!config) return;
+
+  if (newStatus === "Completed") {
+    const allErrors = validateStage(config.relation, props.order, sectionMap, trackingSections);
+
+    if (allErrors.length > 0) {
+      toastError("Cannot complete stage. Please fill mandatory fields:\n- " + allErrors.join("\n- "));
+      return;
+    }
+  }
+
+  // Emit Save with status update
+  savingSectionId.value = selectedSection.value;
+  emit("save", { status: newStatus, _stage: config.relation });
 };
 
 const selectPreviousSection = () => {
@@ -675,9 +445,11 @@ const activeSectionComponent = computed(() => {
 .custom-scrollbar::-webkit-scrollbar {
   height: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 20px;

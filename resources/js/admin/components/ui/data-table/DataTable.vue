@@ -1,8 +1,8 @@
 <template>
   <div :class="[
     !noWrapper
-      ? 'bg-white rounded-[2rem] border border-slate-200 shadow-soft-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col'
-      : 'flex flex-col',
+      ? 'bg-white rounded-[2rem] border border-slate-200 shadow-soft-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col min-h-[400px]'
+      : 'flex flex-col min-h-[400px]',
   ]">
     <!-- Header with Slots -->
     <div v-if="$slots['header-left'] || $slots['header-right']"
@@ -42,7 +42,7 @@
                         <span class="block truncate">
                           {{ getSelectedLabel(column) }}
                         </span>
-                        <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <span v-if="!filters[column.key]" class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                           <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                         </span>
                       </ListboxButton>
@@ -58,10 +58,6 @@
                             ]">
                               <span :class="[selected ? 'text-primary' : '', 'block truncate']">{{ column.placeholder ||
                                 "All Status" }}</span>
-                              <span v-if="selected"
-                                class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
-                                <CheckIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                              </span>
                             </li>
                           </ListboxOption>
 
@@ -72,10 +68,6 @@
                               'relative cursor-pointer select-none py-2 pl-4 pr-4 transition-colors font-semibold',
                             ]">
                               <span :class="[selected ? 'text-primary' : '', 'block truncate']">{{ opt.label }}</span>
-                              <span v-if="selected"
-                                class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
-                                <CheckIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                              </span>
                             </li>
                           </ListboxOption>
                         </ListboxOptions>

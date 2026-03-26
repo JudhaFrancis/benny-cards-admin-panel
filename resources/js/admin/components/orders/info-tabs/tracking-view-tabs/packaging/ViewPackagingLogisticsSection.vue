@@ -63,6 +63,69 @@
           >
         </div>
       </div>
+
+      <div class="flex flex-wrap gap-4">
+        <h3
+          class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 flex items-center gap-2"
+        >
+          <GiftIcon class="h-3.5 w-3.5" />
+          Gift Option
+        </h3>
+        <div
+          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border transition-all"
+          :class="
+            logistics.gift_type === 'with_gift'
+              ? 'border-primary bg-white shadow-sm'
+              : 'border-slate-100 bg-slate-50 opacity-50'
+          "
+        >
+          <div
+            class="p-2 rounded-lg"
+            :class="
+              logistics.gift_type === 'with_gift'
+                ? 'bg-primary text-white'
+                : 'bg-slate-200 text-slate-400'
+            "
+          >
+            <GiftIcon class="h-4 w-4" />
+          </div>
+          <span
+            class="text-xs font-bold"
+            :class="
+              logistics.gift_type === 'with_gift' ? 'text-slate-900' : 'text-slate-400'
+            "
+            >With Gift</span
+          >
+        </div>
+
+        <div
+          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border transition-all"
+          :class="
+            logistics.gift_type === 'without_gift'
+              ? 'border-primary bg-white shadow-sm'
+              : 'border-slate-100 bg-slate-50 opacity-50'
+          "
+        >
+          <div
+            class="p-2 rounded-lg"
+            :class="
+              logistics.gift_type === 'without_gift'
+                ? 'bg-primary text-white'
+                : 'bg-slate-200 text-slate-400'
+            "
+          >
+            <PackageIcon class="h-4 w-4" />
+          </div>
+          <span
+            class="text-xs font-bold"
+            :class="
+              logistics.gift_type === 'without_gift' ? 'text-slate-900' : 'text-slate-400'
+            "
+            >Without Gift</span
+          >
+        </div>
+      </div>
+
     </div>
 
     <!-- Details Grid -->
@@ -150,7 +213,7 @@
 
     <!-- Audit Information -->
     <div
-      v-if="order.packaging"
+      v-if="order.packaging && !hideAudit"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
@@ -179,10 +242,12 @@ import {
   Calendar as CalendarIcon,
   Hash as HashIcon,
   Clock as ClockIcon,
+  Gift as GiftIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({
   order: { type: Object, required: true },
+  hideAudit: { type: Boolean, default: false },
 });
 
 const logistics = computed(
@@ -191,21 +256,20 @@ const logistics = computed(
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
-  const d = date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const d = `${day}-${month}-${year}`;
   const t = date.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",

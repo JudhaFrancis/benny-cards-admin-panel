@@ -9,6 +9,9 @@ enum OrderStatus: string
     case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';
     case REFUNDED = 'refunded';
+    case DESIGNING_PROCESS = 'designing process';
+    case PRINTING_PROCESS = 'printing process';
+    case PACKAGING_PROCESS = 'packaging process';
 
     public function label(): string
     {
@@ -18,6 +21,9 @@ enum OrderStatus: string
             self::COMPLETED => 'Completed',
             self::CANCELLED => 'Cancelled',
             self::REFUNDED => 'Refunded',
+            self::DESIGNING_PROCESS => 'Designing Process',
+            self::PRINTING_PROCESS => 'Printing Process',
+            self::PACKAGING_PROCESS => 'Packaging Process',
         };
     }
 }

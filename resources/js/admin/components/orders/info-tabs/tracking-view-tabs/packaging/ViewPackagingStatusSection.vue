@@ -88,7 +88,7 @@
 
     <!-- Audit Information -->
     <div
-      v-if="order.packaging"
+      v-if="order.packaging && !hideAudit"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
@@ -117,6 +117,7 @@ import {
 
 const props = defineProps({
   order: { type: Object, required: true },
+  hideAudit: { type: Boolean, default: false },
 });
 
 const packagingStatus = computed(

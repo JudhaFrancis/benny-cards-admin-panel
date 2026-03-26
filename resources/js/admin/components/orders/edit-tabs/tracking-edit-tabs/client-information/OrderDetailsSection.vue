@@ -79,18 +79,18 @@
             <label v-for="place in ['NGL', 'MTM', 'TVL', 'Chennai', 'Online']" :key="place"
               class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 group hover:shadow-md"
               :class="jobDetails.order_placed_in === place
-                  ? 'bg-primary/5 border-primary shadow-sm'
-                  : 'bg-white border-slate-200 hover:border-primary/50'
+                ? 'bg-primary/5 border-primary shadow-sm'
+                : 'bg-white border-slate-200 hover:border-primary/50'
                 ">
               <div class="w-5 h-5 rounded-full border flex items-center justify-center transition-colors" :class="jobDetails.order_placed_in === place
-                  ? 'bg-primary border-primary text-white'
-                  : 'border-slate-300 bg-white group-hover:border-primary'
+                ? 'bg-primary border-primary text-white'
+                : 'border-slate-300 bg-white group-hover:border-primary'
                 ">
                 <div v-if="jobDetails.order_placed_in === place" class="w-2 h-2 rounded-full bg-white"></div>
               </div>
               <span class="text-xs font-medium" :class="jobDetails.order_placed_in === place
-                  ? 'text-primary'
-                  : 'text-slate-600'
+                ? 'text-primary'
+                : 'text-slate-600'
                 ">
                 {{ place }}
               </span>
@@ -115,18 +115,18 @@
             ]" :key="ref"
               class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 group hover:shadow-md"
               :class="jobDetails.reference === ref
-                  ? 'bg-emerald-50 border-emerald-500 shadow-sm'
-                  : 'bg-white border-slate-200 hover:border-emerald-500/50'
+                ? 'bg-emerald-50 border-emerald-500 shadow-sm'
+                : 'bg-white border-slate-200 hover:border-emerald-500/50'
                 ">
               <div class="w-5 h-5 rounded-full border flex items-center justify-center transition-colors" :class="jobDetails.reference === ref
-                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                  : 'border-slate-300 bg-white group-hover:border-emerald-500'
+                ? 'bg-emerald-500 border-emerald-500 text-white'
+                : 'border-slate-300 bg-white group-hover:border-emerald-500'
                 ">
                 <div v-if="jobDetails.reference === ref" class="w-2 h-2 rounded-full bg-white"></div>
               </div>
               <span class="text-xs font-medium" :class="jobDetails.reference === ref
-                  ? 'text-emerald-700'
-                  : 'text-slate-600'
+                ? 'text-emerald-700'
+                : 'text-slate-600'
                 ">
                 {{ ref }}
               </span>
@@ -197,22 +197,21 @@ const emit = defineEmits(["update:order"]);
 
 const jobDetails = computed(() => {
   if (!props.order.client_information) {
-    props.order.client_information = { job_details: {} };
+    props.order.client_information = { order_details: {} };
   }
-  if (!props.order.client_information.job_details) {
-    props.order.client_information.job_details = {};
+  if (!props.order.client_information.order_details || Array.isArray(props.order.client_information.order_details)) {
+    props.order.client_information.order_details = {};
   }
-  return props.order.client_information.job_details;
+  return props.order.client_information.order_details;
 });
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
-  const d = date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const d = `${day}-${month}-${year}`;
   const t = date.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",

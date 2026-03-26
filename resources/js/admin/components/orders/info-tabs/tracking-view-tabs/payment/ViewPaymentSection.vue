@@ -139,6 +139,7 @@
 
           <!-- Payment Audit info -->
           <div
+            v-if="!hideAudit"
             class="mt-4 pt-4 border-t border-slate-50 flex items-center justify-end text-[10px] text-slate-400"
           >
             <span class="flex items-center gap-2">
@@ -196,6 +197,7 @@ import {
 
 const props = defineProps({
   order: { type: Object, required: true },
+  hideAudit: { type: Boolean, default: false },
 });
 
 const paymentList = computed(() => props.order.payments || []);
@@ -225,21 +227,20 @@ const getMethodIcon = (methodValue) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
-  const d = date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const d = `${day}-${month}-${year}`;
   const t = date.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",

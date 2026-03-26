@@ -4,35 +4,16 @@
 
     <!-- Filters & Search (REMOVED) -->
 
-    <OrderStageTable
-      :orders="filteredOrders"
-      :loading="loading"
-      :stage="stage"
-      @view="handleView"
-      @edit="handleEdit"
-    />
+    <OrderStageTable :orders="filteredOrders" :loading="loading" :stage="stage" @view="handleView" @edit="handleEdit" />
 
     <!-- Dialogs -->
-    <StageViewDialog
-      :is-open="isViewModalOpen"
-      :order-id="selectedOrder?.id"
-      :stage="stage"
-      @close="isViewModalOpen = false"
-    />
+    <StageViewDialog :is-open="isViewModalOpen" :order-id="selectedOrder?.id" :stage="stage"
+      @close="isViewModalOpen = false" />
 
-    <StageEditDialog
-      :is-open="isEditModalOpen"
-      :order-id="selectedOrder?.id"
-      :stage="stage"
-      @close="isEditModalOpen = false"
-      @success="fetchOrders"
-    />
+    <StageEditDialog :is-open="isEditModalOpen" :order-id="selectedOrder?.id" :stage="stage"
+      @close="isEditModalOpen = false" @success="fetchOrders" />
 
-    <OrderCreateDialog
-      :is-open="isCreateModalOpen"
-      @close="isCreateModalOpen = false"
-      @success="fetchOrders"
-    />
+    <OrderCreateDialog :is-open="isCreateModalOpen" @close="isCreateModalOpen = false" @success="fetchOrders" />
   </div>
 </template>
 
@@ -71,10 +52,10 @@ const fetchOrders = async () => {
   loading.value = true;
   try {
     const params = {
-      per_page: 100, 
+      per_page: 100,
       stage: props.stage,
     };
-    
+
     const response = await axios.get("/api/v1/orders", { params });
     if (response.data.success) {
       orders.value = response.data.data.data.map((order, index) => ({
@@ -110,7 +91,7 @@ const filteredOrders = computed(() => {
 const getAssignedNameHelper = (order, stage) => {
   switch (stage) {
     case 'client-information':
-      return order.client_information?.job_details?.order_taken_by;
+      return order.client_information?.order_details?.order_taken_by;
     case 'designing':
       return order.designing?.work_assign?.assigned_to;
     case 'printing':
@@ -127,7 +108,7 @@ const getAssignedNameHelper = (order, stage) => {
 // Helper for stage status to match table component logic
 const getStageStatus = (order, stage) => {
   if (order.status === 'cancelled') return 'Cancelled';
-  
+
   const stageRelationMap = {
     'client-information': 'client_information',
     'designing': 'designing',
@@ -135,7 +116,7 @@ const getStageStatus = (order, stage) => {
     'packaging': 'packaging',
     'delivery': 'dispatch_delivery'
   };
-  
+
   const relation = stageRelationMap[stage];
   return order[relation]?.status || 'Pending';
 };

@@ -179,7 +179,7 @@ const dispatchMode = computed(() => {
   if (!props.order.dispatch_delivery) {
     props.order.dispatch_delivery = { dispatch_mode: {} };
   }
-  if (!props.order.dispatch_delivery.dispatch_mode) {
+  if (!props.order.dispatch_delivery.dispatch_mode || Array.isArray(props.order.dispatch_delivery.dispatch_mode)) {
     props.order.dispatch_delivery.dispatch_mode = {};
   }
   return props.order.dispatch_delivery.dispatch_mode;

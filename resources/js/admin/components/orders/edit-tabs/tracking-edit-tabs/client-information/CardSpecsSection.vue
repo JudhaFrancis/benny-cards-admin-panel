@@ -437,9 +437,9 @@ const formatAuditDate = (dateString) => {
 
 const cardSpecs = computed(() => {
   if (!props.order.client_information) {
-    props.order.client_information = { card_specs: { type: "customize", quantity: props.order.total_quantity } };
+    props.order.client_information = { card_specs: {} };
   }
-  if (!props.order.client_information.card_specs) {
+  if (!props.order.client_information.card_specs || Array.isArray(props.order.client_information.card_specs)) {
     props.order.client_information.card_specs = {
       type: "customize",
       quantity: props.order.total_quantity,

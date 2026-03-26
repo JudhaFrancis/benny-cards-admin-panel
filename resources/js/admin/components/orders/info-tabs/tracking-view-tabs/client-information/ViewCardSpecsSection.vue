@@ -202,7 +202,7 @@
 
     <!-- Audit Information -->
     <div
-      v-if="order.client_information"
+      v-if="order.client_information && !hideAudit"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
@@ -236,6 +236,7 @@ import {
 
 const props = defineProps({
   order: { type: Object, required: true },
+  hideAudit: { type: Boolean, default: false },
 });
 
 const cardSpecs = computed(() => props.order.client_information?.card_specs || {});

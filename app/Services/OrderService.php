@@ -23,11 +23,11 @@ class OrderService
         return Order::query()
             ->with([
                 'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'coupon',
-                'clientInformation.addedBy', 'clientInformation.modifiedBy',
-                'designing.addedBy', 'designing.modifiedBy',
-                'printing.addedBy', 'printing.modifiedBy',
-                'packaging.addedBy', 'packaging.modifiedBy',
-                'dispatchDelivery.addedBy', 'dispatchDelivery.modifiedBy',
+                'clientInformation.modifiedBy',
+                'designing.modifiedBy',
+                'printing.modifiedBy',
+                'packaging.modifiedBy',
+                'dispatchDelivery.modifiedBy',
                 'payments.addedBy', 'payments.modifiedBy'
             ])
             ->when($isStaff && isset($filters['stage']), function (Builder $query) use ($user) {
@@ -37,7 +37,7 @@ class OrderService
                 $query->where(function ($q) use ($userName, $userId) {
                     $q->where('added_by', $userId)
                       ->orWhereHas('clientInformation', function ($sub) use ($userName) {
-                          $sub->where('job_details->order_taken_by', $userName);
+                          $sub->where('order_details->order_taken_by', $userName);
                       })
                       ->orWhereHas('designing', function ($sub) use ($userName) {
                           $sub->where('work_assign->assigned_to', $userName);
@@ -77,11 +77,11 @@ class OrderService
     {
         return Order::with([
                 'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'coupon',
-                'clientInformation.addedBy', 'clientInformation.modifiedBy',
-                'designing.addedBy', 'designing.modifiedBy',
-                'printing.addedBy', 'printing.modifiedBy',
-                'packaging.addedBy', 'packaging.modifiedBy',
-                'dispatchDelivery.addedBy', 'dispatchDelivery.modifiedBy',
+                'clientInformation.modifiedBy',
+                'designing.modifiedBy',
+                'printing.modifiedBy',
+                'packaging.modifiedBy',
+                'dispatchDelivery.modifiedBy',
                 'payments.addedBy', 'payments.modifiedBy'
             ])
             ->findOrFail($id);
@@ -145,17 +145,16 @@ class OrderService
             // Initialize first stage tracking
             $order->clientInformation()->create([
                 'status' => 'Pending',
-                'added_by' => auth()->id(),
                 'modified_by' => auth()->id()
             ]);
 
         return $order->load([
             'items.product', 'customerDetails', 'coupon',
-            'clientInformation.addedBy', 'clientInformation.modifiedBy',
-            'designing.addedBy', 'designing.modifiedBy',
-            'printing.addedBy', 'printing.modifiedBy',
-            'packaging.addedBy', 'packaging.modifiedBy',
-            'dispatchDelivery.addedBy', 'dispatchDelivery.modifiedBy',
+            'clientInformation.modifiedBy',
+            'designing.modifiedBy',
+            'printing.modifiedBy',
+            'packaging.modifiedBy',
+            'dispatchDelivery.modifiedBy',
             'payments.addedBy', 'payments.modifiedBy'
         ]);
         });
@@ -202,7 +201,6 @@ class OrderService
             }
 
             if (isset($data['order_date'])) $order->order_date = $data['order_date'];
-            if (isset($data['status'])) $order->status = $data['status'];
 
             $order->updatePaymentStatus();
             $order->modified_by = auth()->id();
@@ -259,7 +257,7 @@ class OrderService
     public function updateTracking(Order $order, array $data): Order
     {
         $stageMap = [
-            'job_details' => 'clientInformation',
+            'order_details' => 'clientInformation',
             'client_info' => 'clientInformation',
             'card_specs' => 'clientInformation',
             'work_assign' => 'designing',
@@ -280,19 +278,68 @@ class OrderService
                     if (!isset($updatesByStage[$stageRelation])) {
                         $updatesByStage[$stageRelation] = [];
                     }
+
+                    // Strip audit details from the JSON data as requested
+                    if (is_array($content)) {
+                        unset($content['_audit']);
+                    }
+                    
                     $updatesByStage[$stageRelation][$section] = $content;
                 }
             }
 
-            if (isset($data['client_info']['expected_delivery_date'])) {
-                $order->update(['delivery_date' => $data['client_info']['expected_delivery_date']]);
+            // Handle direct status updates for a specific stage
+            if (isset($data['status'])) {
+                $relation = $data['_stage'] ?? null;
+                
+                // Fallback induction for _stage if not provided
+                if (!$relation) {
+                    foreach ($data as $key => $val) {
+                        if (isset($stageMap[$key])) {
+                            $relation = $stageMap[$key];
+                            break;
+                        }
+                    }
+                }
+
+                if ($relation) {
+                    $status = $data['status'];
+                    $order->{$relation}()->updateOrCreate(
+                        ['order_id' => $order->id],
+                        [
+                            'status' => $status,
+                            'modified_by' => auth()->id()
+                        ]
+                    );
+
+                    // Sequential Stage Triggering
+                    if ($status === 'Completed') {
+                        if ($relation === 'clientInformation') {
+                            $order->designing()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
+                        } elseif ($relation === 'designing') {
+                            $order->printing()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
+                        } elseif ($relation === 'printing') {
+                            $order->packaging()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
+                        } elseif ($relation === 'packaging') {
+                            $order->dispatchDelivery()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
+                        }
+                    }
+                }
+            }
+
+            // Sync delivery date to orders table from either client_info or order_details
+            $newDeliveryDate = $data['order_details']['expected_delivery_date'] 
+                ?? $data['client_info']['expected_delivery_date'] 
+                ?? null;
+
+            if ($newDeliveryDate) {
+                $order->update(['delivery_date' => $newDeliveryDate]);
             }
 
             foreach ($updatesByStage as $relation => $sectionData) {
                 $order->{$relation}()->updateOrCreate(
                     ['order_id' => $order->id],
                     array_merge($sectionData, [
-                        'added_by' => $order->{$relation} ? $order->{$relation}->added_by : auth()->id(),
                         'modified_by' => auth()->id()
                     ])
                 );

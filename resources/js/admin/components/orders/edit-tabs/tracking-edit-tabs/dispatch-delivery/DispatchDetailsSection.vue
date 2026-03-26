@@ -41,14 +41,17 @@
             Reaching Time <span class="text-red-500">*</span>
           </label>
           <div class="relative group">
-            <ClockIcon
-              class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
-            />
-            <input
-              type="time"
-              v-model="busDetails.reaching_time"
-              class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-            />
+          <TimePicker
+            v-model="busDetails.reaching_time"
+            placeholder="Select Reaching Time"
+            custom-class="pl-11 py-2.5 text-xs"
+          >
+            <template #leading>
+              <ClockIcon
+                class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+              />
+            </template>
+          </TimePicker>
           </div>
         </div>
 
@@ -281,6 +284,7 @@ import {
   Building as BuildingIcon,
   FileText as FileTextIcon,
 } from "lucide-vue-next";
+import TimePicker from "../../../../ui/pickers/TimePicker.vue";
 
 const props = defineProps({
   order: {
@@ -295,28 +299,28 @@ const dispatchDetails = computed(() => {
   if (!props.order.dispatch_delivery) {
     props.order.dispatch_delivery = { dispatch_details: {} };
   }
-  if (!props.order.dispatch_delivery.dispatch_details) {
+  if (!props.order.dispatch_delivery.dispatch_details || Array.isArray(props.order.dispatch_delivery.dispatch_details)) {
     props.order.dispatch_delivery.dispatch_details = {};
   }
   return props.order.dispatch_delivery.dispatch_details;
 });
 
 const busDetails = computed(() => {
-  if (!dispatchDetails.value.bus) {
+  if (!dispatchDetails.value.bus || Array.isArray(dispatchDetails.value.bus)) {
     dispatchDetails.value.bus = {};
   }
   return dispatchDetails.value.bus;
 });
 
 const courierDetails = computed(() => {
-  if (!dispatchDetails.value.courier) {
+  if (!dispatchDetails.value.courier || Array.isArray(dispatchDetails.value.courier)) {
     dispatchDetails.value.courier = {};
   }
   return dispatchDetails.value.courier;
 });
 
 const transportDetails = computed(() => {
-  if (!dispatchDetails.value.transport) {
+  if (!dispatchDetails.value.transport || Array.isArray(dispatchDetails.value.transport)) {
     dispatchDetails.value.transport = {};
   }
   return dispatchDetails.value.transport;

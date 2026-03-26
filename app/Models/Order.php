@@ -136,40 +136,40 @@ class Order extends Model
     }
 
 
-    protected $appends = ['tracking_status_label'];
+    protected $appends = ['resolved_status'];
 
-    public function getTrackingStatusLabelAttribute(): string
+    public function getResolvedStatusAttribute(): string
     {
-        if ((float)$this->total_amount > 0 && (float)$this->total_amount === (float)$this->paid_amount) {
-            return 'Completed';
+        $dispatch = $this->dispatchDelivery;
+        if ($dispatch) {
+            if ($dispatch->status === 'Completed') return 'Delivered';
+            if ($dispatch->status === 'Process') return 'Out for Delivery';
         }
 
-        // Higher stages priority
-        $dispatch = $this->dispatchDelivery;
-        if ($dispatch && $dispatch->status === 'Completed') return 'Dispatched';
-        
         $packaging = $this->packaging;
-        if ($packaging && $packaging->status === 'Completed') return 'Dispatched'; // Or 'Ready for Dispatch'
-        if ($packaging && $packaging->status === 'Process') return 'Packaging Process';
+        if ($packaging) {
+            if ($packaging->status === 'Completed') return 'Packed';
+            if ($packaging->status === 'Process') return 'Packing in Progress';
+        }
 
         $printing = $this->printing;
-        if ($printing && $printing->status === 'Completed') return 'Packaging Process';
-        if ($printing && $printing->status === 'Process') return 'Printing Process';
+        if ($printing) {
+            if ($printing->status === 'Completed') return 'Printed';
+            if ($printing->status === 'Process') return 'Printing in Progress';
+        }
 
         $designing = $this->designing;
-        if ($designing && $designing->status === 'Completed') return 'Printing Process';
-        if ($designing && $designing->status === 'Process') {
-            $workAssign = $designing->work_assign ?? [];
-            if (isset($workAssign['content_not_received']) && $workAssign['content_not_received']) return 'Content Not Received';
-            return 'Designing Process';
+        if ($designing) {
+            if ($designing->status === 'Completed') return 'Designed';
+            if ($designing->status === 'Process') return 'Designing in Progress';
         }
 
         $clientInfo = $this->clientInformation;
-        if ($clientInfo && $clientInfo->status === 'Completed') return 'Confirmed';
-        
-        if ((float)$this->total_amount > (float)$this->paid_amount && (float)$this->paid_amount > 0) return 'Payment Pending';
+        if ($clientInfo) {
+            if ($clientInfo->status === 'Completed') return 'Confirmed';
+        }
 
-        return 'New';
+        return 'New Order';
     }
 
     public function updatePaymentMethod(): void

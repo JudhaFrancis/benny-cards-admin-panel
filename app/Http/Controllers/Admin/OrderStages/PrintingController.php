@@ -4,35 +4,25 @@ namespace App\Http\Controllers\Admin\OrderStages;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\OrderPrinting;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class PrintingController extends Controller
 {
+    public function __construct(
+        protected OrderService $orderService
+    ) {}
+
     /**
      * Update Printing stage.
      */
     public function update(Request $request, int $id): JsonResponse
     {
         $order = Order::findOrFail($id);
-        // 1. Update/Create Individual Stage Table
-        $data = $request->all();
-        $stage = $order->printing()->updateOrCreate(
-            ['order_id' => $order->id],
-            array_merge($data, [
-                'added_by' => $order->printing ? $order->printing->added_by : auth()->id(),
-                'modified_by' => auth()->id()
-            ])
-        );
-
-        // 3. Auto-trigger Next Stage: Packaging
-        if ($request->status === 'Completed') {
-            $order->packaging()->firstOrCreate(
-                ['order_id' => $order->id],
-                ['status' => 'Pending']
-            );
-        }
+        
+        // Use central service for tracking updates
+        $this->orderService->updateTracking($order, array_merge($request->all(), ['_stage' => 'printing']));
 
         $order->modified_by = auth()->id();
         $order->save();

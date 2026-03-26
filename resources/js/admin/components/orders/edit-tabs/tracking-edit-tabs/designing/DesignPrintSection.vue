@@ -107,7 +107,8 @@ const designPrint = computed(() => {
   if (!props.order.designing) {
     props.order.designing = { design_print: {} };
   }
-  if (!props.order.designing.design_print) {
+  // Force design_print to be an object if it's an array or null
+  if (!props.order.designing.design_print || Array.isArray(props.order.designing.design_print)) {
     props.order.designing.design_print = {};
   }
   return props.order.designing.design_print;

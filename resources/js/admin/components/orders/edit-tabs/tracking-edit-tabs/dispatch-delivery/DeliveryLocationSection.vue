@@ -140,7 +140,7 @@ const deliveryLocation = computed(() => {
   if (!props.order.dispatch_delivery) {
     props.order.dispatch_delivery = { delivery_location: {} };
   }
-  if (!props.order.dispatch_delivery.delivery_location) {
+  if (!props.order.dispatch_delivery.delivery_location || Array.isArray(props.order.dispatch_delivery.delivery_location)) {
     props.order.dispatch_delivery.delivery_location = {};
   }
   return props.order.dispatch_delivery.delivery_location;

@@ -1,19 +1,18 @@
 <template>
   <div class="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto pb-20">
     <div class="flex items-center justify-between">
-      <button @click="$router.push(`/order-management/${stage}`)" class="group flex items-center gap-2.5 text-slate-400 hover:text-rose-500 transition-all duration-300">
-        <div class="p-2 rounded-lg bg-white border border-slate-200 group-hover:border-rose-500/30 group-hover:bg-rose-50 shadow-sm transition-all duration-300">
+      <button @click="$router.push(`/order-management/${stage}`)"
+        class="group flex items-center gap-2.5 text-slate-400 hover:text-rose-500 transition-all duration-300">
+        <div
+          class="p-2 rounded-lg bg-white border border-slate-200 group-hover:border-rose-500/30 group-hover:bg-rose-50 shadow-sm transition-all duration-300">
           <ArrowLeft class="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
         </div>
         <span class="font-bold text-[10px] uppercase tracking-[0.2em] transition-colors">Cancel Editing</span>
       </button>
 
       <div class="flex gap-3">
-        <button 
-          @click="handleSave" 
-          :disabled="isSaving"
-          class="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70"
-        >
+        <button @click="handleSave" :disabled="isSaving"
+          class="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70">
           <Loader2 v-if="isSaving" class="h-4 w-4 animate-spin" />
           <Check v-else class="h-4 w-4" />
           {{ isSaving ? 'SAVING...' : 'SAVE CHANGES' }}
@@ -28,39 +27,33 @@
     </div>
 
     <div v-else-if="order" class="space-y-6">
-       <!-- Dynamic Editable Sections Based on Stage -->
-       <div v-for="section in relevantSections" :key="section.id" class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-          <div class="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-            <div class="flex items-center gap-4">
-              <div class="p-3 rounded-2xl bg-primary/5 text-primary">
-                <component :is="section.icon" class="h-6 w-6" />
-              </div>
-              <div>
-                <h3 class="text-xl font-bold text-slate-900 tracking-tight">{{ section.label }}</h3>
-              </div>
+      <!-- Dynamic Editable Sections Based on Stage -->
+      <div v-for="section in relevantSections" :key="section.id"
+        class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+          <div class="flex items-center gap-4">
+            <div class="p-3 rounded-2xl bg-primary/5 text-primary">
+              <component :is="section.icon" class="h-6 w-6" />
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-slate-900 tracking-tight">{{ section.label }}</h3>
             </div>
           </div>
-          <div class="p-8">
-            <component 
-              :is="section.component" 
-              :order="order" 
-              :staff-options="staffOptions"
-              @update:order="(val) => (order = val)"
-            />
-          </div>
-       </div>
+        </div>
+        <div class="p-8">
+          <component :is="section.component" :order="order" :staff-options="staffOptions"
+            @update:order="(val) => (order = val)" />
+        </div>
+      </div>
     </div>
-    
+
     <!-- Sticky Save Bar for Mobile/Easy Access -->
     <div class="fixed bottom-6 right-6 z-50 md:hidden">
-       <button 
-          @click="handleSave" 
-          :disabled="isSaving"
-          class="w-16 h-16 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-90"
-        >
-          <Check v-if="!isSaving" class="h-6 w-6" />
-          <Loader2 v-else class="h-6 w-6 animate-spin" />
-        </button>
+      <button @click="handleSave" :disabled="isSaving"
+        class="w-16 h-16 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-90">
+        <Check v-if="!isSaving" class="h-6 w-6" />
+        <Loader2 v-else class="h-6 w-6 animate-spin" />
+      </button>
     </div>
   </div>
 </template>
@@ -74,17 +67,17 @@ import { useToast } from "../../composables/useToast";
 import PageHeader from "../../components/ui/layout/PageHeader.vue";
 
 // Section Components
-import OrderDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/OrderDetailsSection.vue";
-import ClientInfoSection from "../../components/orders/edit-tabs/tracking-edit-tabs/ClientInfoSection.vue";
-import CardSpecsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/CardSpecsSection.vue";
-import WorkAssignSection from "../../components/orders/edit-tabs/tracking-edit-tabs/WorkAssignSection.vue";
-import DesignPrintSection from "../../components/orders/edit-tabs/tracking-edit-tabs/DesignPrintSection.vue";
-import OrderPrintingSection from "../../components/orders/edit-tabs/tracking-edit-tabs/OrderPrintingSection.vue";
-import PackagingLogisticsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/PackagingLogisticsSection.vue";
-import PackagingStatusSection from "../../components/orders/edit-tabs/tracking-edit-tabs/PackagingStatusSection.vue";
-import DeliveryLocationSection from "../../components/orders/edit-tabs/tracking-edit-tabs/DeliveryLocationSection.vue";
-import DispatchModeSection from "../../components/orders/edit-tabs/tracking-edit-tabs/DispatchModeSection.vue";
-import DispatchDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/DispatchDetailsSection.vue";
+import OrderDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/OrderDetailsSection.vue";
+import ClientInfoSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/ClientInfoSection.vue";
+import CardSpecsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/CardSpecsSection.vue";
+import WorkAssignSection from "../../components/orders/edit-tabs/tracking-edit-tabs/designing/WorkAssignSection.vue";
+import DesignPrintSection from "../../components/orders/edit-tabs/tracking-edit-tabs/designing/DesignPrintSection.vue";
+import OrderPrintingSection from "../../components/orders/edit-tabs/tracking-edit-tabs/printing/OrderPrintingSection.vue";
+import PackagingLogisticsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/packaging/PackagingLogisticsSection.vue";
+import PackagingStatusSection from "../../components/orders/edit-tabs/tracking-edit-tabs/packaging/PackagingStatusSection.vue";
+import DeliveryLocationSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DeliveryLocationSection.vue";
+import DispatchModeSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DispatchModeSection.vue";
+import DispatchDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DispatchDetailsSection.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -111,7 +104,7 @@ const relevantSections = computed(() => {
   switch (stage.value) {
     case 'client-information':
       return [
-        { id: 'details', label: 'Order Details', icon: ClipboardList, component: OrderDetailsSection, key: 'job_details' },
+        { id: 'details', label: 'Order Details', icon: ClipboardList, component: OrderDetailsSection, key: 'order_details' },
         { id: 'client', label: 'Client Information', icon: User, component: ClientInfoSection, key: 'client_info' },
         { id: 'specs', label: 'Card Specifications', icon: CreditCard, component: CardSpecsSection, key: 'card_specs' }
       ];
@@ -145,7 +138,7 @@ const fetchOrder = async () => {
     const response = await axios.get(`/api/v1/orders/${route.params.id}`);
     if (response.data.success) {
       order.value = response.data.data;
-      
+
       const stageRelationMap = {
         'client-information': 'client_information',
         'designing': 'designing',
@@ -153,7 +146,7 @@ const fetchOrder = async () => {
         'packaging': 'packaging',
         'delivery': 'dispatch_delivery'
       };
-      
+
       const relation = stageRelationMap[stage.value];
       if (relation) {
         if (!order.value[relation]) order.value[relation] = {};
@@ -201,9 +194,11 @@ const handleSave = async () => {
     });
 
     if (stage.value === 'client-information') {
-       await axios.put(`/api/v1/orders/${order.value.id}`, {
-         order_date: order.value.order_date
-       });
+      const orderDetails = order.value[relation]?.order_details || {};
+      await axios.put(`/api/v1/orders/${order.value.id}`, {
+        order_date: order.value.order_date,
+        delivery_date: orderDetails.expected_delivery_date
+      });
     }
 
     const response = await axios.put(`/api/v1/orders/${order.value.id}/stages/${stage.value}`, payload);

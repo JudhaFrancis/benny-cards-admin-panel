@@ -44,17 +44,17 @@ import axios from "axios";
 import PageHeader from "../../components/ui/layout/PageHeader.vue";
 
 // Section Components
-import OrderDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/OrderDetailsSection.vue";
-import ClientInfoSection from "../../components/orders/edit-tabs/tracking-edit-tabs/ClientInfoSection.vue";
-import CardSpecsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/CardSpecsSection.vue";
-import WorkAssignSection from "../../components/orders/edit-tabs/tracking-edit-tabs/WorkAssignSection.vue";
-import DesignPrintSection from "../../components/orders/edit-tabs/tracking-edit-tabs/DesignPrintSection.vue";
-import OrderPrintingSection from "../../components/orders/edit-tabs/tracking-edit-tabs/OrderPrintingSection.vue";
-import PackagingLogisticsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/PackagingLogisticsSection.vue";
-import PackagingStatusSection from "../../components/orders/edit-tabs/tracking-edit-tabs/PackagingStatusSection.vue";
-import DeliveryLocationSection from "../../components/orders/edit-tabs/tracking-edit-tabs/DeliveryLocationSection.vue";
-import DispatchModeSection from "../../components/orders/edit-tabs/tracking-edit-tabs/DispatchModeSection.vue";
-import DispatchDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/DispatchDetailsSection.vue";
+import OrderDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/OrderDetailsSection.vue";
+import ClientInfoSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/ClientInfoSection.vue";
+import CardSpecsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/CardSpecsSection.vue";
+import WorkAssignSection from "../../components/orders/edit-tabs/tracking-edit-tabs/designing/WorkAssignSection.vue";
+import DesignPrintSection from "../../components/orders/edit-tabs/tracking-edit-tabs/designing/DesignPrintSection.vue";
+import OrderPrintingSection from "../../components/orders/edit-tabs/tracking-edit-tabs/printing/OrderPrintingSection.vue";
+import PackagingLogisticsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/packaging/PackagingLogisticsSection.vue";
+import PackagingStatusSection from "../../components/orders/edit-tabs/tracking-edit-tabs/packaging/PackagingStatusSection.vue";
+import DeliveryLocationSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DeliveryLocationSection.vue";
+import DispatchModeSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DispatchModeSection.vue";
+import DispatchDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DispatchDetailsSection.vue";
 
 const route = useRoute();
 const router = useRouter();

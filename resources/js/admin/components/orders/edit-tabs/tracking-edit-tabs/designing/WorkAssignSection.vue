@@ -319,7 +319,7 @@ const workAssign = computed(() => {
   if (!props.order.designing) {
     props.order.designing = { work_assign: {} };
   }
-  if (!props.order.designing.work_assign) {
+  if (!props.order.designing.work_assign || Array.isArray(props.order.designing.work_assign)) {
     props.order.designing.work_assign = {};
   }
   

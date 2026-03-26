@@ -1,19 +1,16 @@
 <template>
-  <InfoModal 
-    :is-open="isOpen" 
-    :title="`Edit Order #${orderData?.order_number || ''}`" 
-    :icon="Pencil"
-    max-width="xl"
-    @close="$emit('close')"
-  >
+  <InfoModal :is-open="isOpen" :title="`Edit Order #${orderData?.order_number || ''}`" :icon="Pencil" max-width="xl"
+    @close="$emit('close')">
     <template #header-extra>
-      <span class="text-xs text-slate-200 font-medium flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm shadow-sm">
+      <span
+        class="text-xs text-slate-200 font-medium flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm shadow-sm">
         <Calendar class="h-3.5 w-3.5" />
         {{ formatDate(orderData?.order_date) }}
       </span>
     </template>
     <div v-if="loading" class="space-y-6 px-1 py-6">
-      <div v-for="i in 2" :key="i" class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden p-6 space-y-4">
+      <div v-for="i in 2" :key="i"
+        class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden p-6 space-y-4">
         <div class="flex items-center gap-3 mb-2">
           <SkeletonLoader width="40px" height="40px" variant="circle" />
           <SkeletonLoader width="150px" height="24px" />
@@ -29,7 +26,8 @@
     </div>
 
     <div v-else-if="orderData" class="space-y-6 px-1 pb-6">
-      <div v-for="section in relevantSections" :key="section.id" class="bg-white rounded-3xl border border-slate-100 shadow-sm">
+      <div v-for="section in relevantSections" :key="section.id"
+        class="bg-white rounded-3xl border border-slate-100 shadow-sm">
         <div class="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
           <div class="flex items-center gap-3">
             <div class="p-2 rounded-xl bg-primary/5 text-primary">
@@ -44,44 +42,36 @@
             <!-- Status Selector -->
             <Listbox v-model="stageStatus">
               <div class="relative">
-                <ListboxButton class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all active:scale-95 group">
+                <ListboxButton
+                  class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all active:scale-95 group">
                   <Activity class="h-3.5 w-3.5 text-slate-400 group-hover:text-primary transition-colors" />
-                  <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider border-r border-slate-100 pr-2 mr-1">Status</span>
-                  
+                  <span
+                    class="text-[10px] font-bold text-slate-500 uppercase tracking-wider border-r border-slate-100 pr-2 mr-1">Status</span>
+
                   <div class="flex items-center gap-1.5">
-                    <span 
-                      :class="[
-                        'text-xs font-bold transition-colors',
-                        stageStatus === 'Completed' ? 'text-emerald-600' :
+                    <span :class="[
+                      'text-xs font-bold transition-colors',
+                      stageStatus === 'Completed' ? 'text-emerald-600' :
                         stageStatus === 'Process' ? 'text-blue-600' :
-                        'text-amber-600'
-                      ]"
-                    >
+                          'text-amber-600'
+                    ]">
                       {{ stageStatus === 'Process' ? 'Processing' : stageStatus }}
                     </span>
-                    <ChevronDown class="h-3 w-3 text-slate-400 group-hover:text-slate-600 transition-transform duration-300" />
+                    <ChevronDown
+                      class="h-3 w-3 text-slate-400 group-hover:text-slate-600 transition-transform duration-300" />
                   </div>
                 </ListboxButton>
 
-                <transition
-                  leave-active-class="transition duration-100 ease-in"
-                  leave-from-class="opacity-100"
-                  leave-to-class="opacity-0"
-                >
-                  <ListboxOptions class="absolute right-0 z-50 mt-2 w-48 overflow-auto rounded-2xl bg-white py-1.5 text-base shadow-xl ring-1 ring-slate-900/5 focus:outline-none sm:text-sm text-left">
-                    <ListboxOption
-                      v-for="option in statusOptions"
-                      :key="option.value"
-                      :value="option.value"
-                      v-slot="{ active, selected }"
-                      as="template"
-                    >
-                      <li
-                        :class="[
-                          active ? 'bg-slate-50 text-slate-900' : 'text-slate-600',
-                          'relative cursor-pointer select-none py-2.5 px-4 transition-colors flex items-center justify-between'
-                        ]"
-                      >
+                <transition leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100"
+                  leave-to-class="opacity-0">
+                  <ListboxOptions
+                    class="absolute right-0 z-50 mt-2 w-48 overflow-auto rounded-2xl bg-white py-1.5 text-base shadow-xl ring-1 ring-slate-900/5 focus:outline-none sm:text-sm text-left">
+                    <ListboxOption v-for="option in statusOptions" :key="option.value" :value="option.value"
+                      v-slot="{ active, selected }" as="template">
+                      <li :class="[
+                        active ? 'bg-slate-50 text-slate-900' : 'text-slate-600',
+                        'relative cursor-pointer select-none py-2.5 px-4 transition-colors flex items-center justify-between'
+                      ]">
                         <span :class="[selected ? 'font-bold text-slate-900' : 'font-medium', 'block truncate']">
                           {{ option.label }}
                         </span>
@@ -95,22 +85,19 @@
           </div>
         </div>
         <div class="p-6">
-          <component 
-            :is="section.component" 
-            :order="orderData" 
-            :staff-options="staffOptions"
-            :hide-audit="true"
-            @update:order="(val) => (orderData = val)"
-          />
+          <component :is="section.component" :order="orderData" :staff-options="staffOptions" :hide-audit="true"
+            @update:order="(val) => (orderData = val)" />
         </div>
       </div>
 
       <!-- Final Audit Row (Bottom Right) -->
       <div v-if="auditDetails" class="flex justify-end pt-2">
-        <div class="flex items-center gap-2 text-[10px] text-slate-400 bg-slate-50/50 px-3 py-1.5 rounded-xl border border-slate-100">
+        <div
+          class="flex items-center gap-2 text-[10px] text-slate-400 bg-slate-50/50 px-3 py-1.5 rounded-xl border border-slate-100">
           <Clock class="h-3 w-3" />
           <span>Last updated</span>
-          <span class="font-medium text-slate-600 px-1.5 py-0.5 rounded-full bg-white border border-slate-100 shadow-sm">
+          <span
+            class="font-medium text-slate-600 px-1.5 py-0.5 rounded-full bg-white border border-slate-100 shadow-sm">
             {{ formatAuditDate(auditDetails.updated_at) }}
           </span>
           <span>by</span>
@@ -123,17 +110,12 @@
 
     <template #footer>
       <div class="flex justify-end gap-3 w-full">
-        <button 
-          @click="$emit('close')" 
-          class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all font-medium"
-        >
+        <button @click="$emit('close')"
+          class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all font-medium">
           Cancel
         </button>
-        <button 
-          @click="handleSave" 
-          :disabled="isSaving"
-          class="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70"
-        >
+        <button @click="handleSave" :disabled="isSaving"
+          class="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70">
           <Loader2 v-if="isSaving" class="h-4 w-4 animate-spin" />
           <Check v-else class="h-4 w-4" />
           {{ isSaving ? 'Saving...' : 'Save Changes' }}
@@ -174,9 +156,10 @@ const formatAuditDate = (dateString) => {
 };
 import axios from "axios";
 import { useToast } from "../../composables/useToast";
+import { useOrderValidation } from "../../composables/useOrderValidation";
 import InfoModal from "../ui/modals/InfoModal.vue";
 
-// Section Components
+import SkeletonLoader from "../ui/loaders/SkeletonLoader.vue";
 import OrderDetailsSection from "../orders/edit-tabs/tracking-edit-tabs/client-information/OrderDetailsSection.vue";
 import ClientInfoSection from "../orders/edit-tabs/tracking-edit-tabs/client-information/ClientInfoSection.vue";
 import CardSpecsSection from "../orders/edit-tabs/tracking-edit-tabs/client-information/CardSpecsSection.vue";
@@ -198,6 +181,7 @@ const props = defineProps({
 const emit = defineEmits(["close", "success"]);
 
 const toast = useToast();
+const { validateStage, sectionMap, trackingSections } = useOrderValidation();
 const orderData = ref(null);
 const loading = ref(false);
 const isSaving = ref(false);
@@ -225,7 +209,7 @@ const relevantSections = computed(() => {
   switch (props.stage) {
     case 'client-information':
       return [
-        { id: 'details', label: 'Order Details', icon: ClipboardList, component: OrderDetailsSection, key: 'job_details' },
+        { id: 'details', label: 'Order Details', icon: ClipboardList, component: OrderDetailsSection, key: 'order_details' },
         { id: 'client', label: 'Client Information', icon: User, component: ClientInfoSection, key: 'client_info' },
         { id: 'specs', label: 'Card Specifications', icon: CreditCard, component: CardSpecsSection, key: 'card_specs' }
       ];
@@ -271,7 +255,7 @@ const auditDetails = computed(() => {
   // Return formatted audit info from the stage relationship
   return {
     updated_at: stageData.updated_at || stageData.created_at,
-    updated_by: stageData.modified_by?.name || stageData.added_by?.name || "System"
+    updated_by: stageData.modified_by?.name || orderData.value?.added_by?.name || "System"
   };
 });
 
@@ -310,8 +294,17 @@ const fetchStaff = async () => {
 const handleSave = async () => {
   isSaving.value = true;
   try {
+    if (stageStatus.value === "Completed") {
+      const stageErrors = validateStage(stageRelationKey.value, orderData.value, sectionMap, trackingSections);
+      if (stageErrors.length > 0) {
+        toast.error("Cannot complete stage. Please fill mandatory fields:\n- " + stageErrors.join("\n- "));
+        isSaving.value = false;
+        return;
+      }
+    }
+
     const payload = {
-       status: stageStatus.value
+      status: stageStatus.value
     };
     const stageData = orderData.value[stageRelationKey.value] || {};
     relevantSections.value.forEach(s => {
@@ -319,9 +312,9 @@ const handleSave = async () => {
     });
 
     if (props.stage === 'client-information') {
-       await axios.put(`/api/v1/orders/${orderData.value.id}`, {
-         order_date: orderData.value.order_date
-       });
+      await axios.put(`/api/v1/orders/${orderData.value.id}`, {
+        order_date: orderData.value.order_date
+      });
     }
 
     const response = await axios.put(`/api/v1/orders/${orderData.value.id}/stages/${props.stage}`, payload);
@@ -338,8 +331,8 @@ const handleSave = async () => {
   }
 };
 
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) fetchOrder();
+watch(() => [props.isOpen, props.orderId], ([newOpen, newId]) => {
+  if (newOpen && newId) fetchOrder();
 });
 
 onMounted(fetchStaff);

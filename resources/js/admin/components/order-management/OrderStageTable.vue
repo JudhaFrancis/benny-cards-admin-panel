@@ -8,18 +8,22 @@
           @click="$emit('view', order)">
           {{ order.order_number }}
         </span>
-        <span v-if="order.client_information?.job_details?.expected_delivery_date" class="text-[10px] mt-0.5"
-          :class="getCountdownColor(order.client_information.job_details.expected_delivery_date)">
-          {{ getCountdownText(order.client_information.job_details.expected_delivery_date) }}
+        <span v-if="order.delivery_date && order.status?.toLowerCase() !== 'delivered' && getStageStatus(order).toLowerCase() !== 'completed'" class="text-[10px] mt-0.5"
+          :class="getCountdownColor(order.delivery_date)">
+          {{ getCountdownText(order.delivery_date) }}
+        </span>
+        <span v-else class="text-[10px] mt-0.5 text-slate-400 font-medium">
+          -
         </span>
       </div>
     </template>
 
     <template #cell-printing_days="{ item: order }">
-      <span
+      <span v-if="getStageStatus(order).toLowerCase() !== 'completed'"
         :class="cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200', getPrintingDaysColor(order))">
         {{ getDaysFromAssigned(order) }}
       </span>
+      <span v-else class="text-slate-400 font-medium ml-4">-</span>
     </template>
 
     <template #cell-customer="{ item: order }">
@@ -38,7 +42,7 @@
 
     <template #cell-order_placed_in="{ item: order }">
       <span class="text-sm font-medium text-slate-700">
-        {{ order.client_information?.job_details?.order_placed_in || "N/A" }}
+        {{ order.client_information?.order_details?.order_placed_in || "N/A" }}
       </span>
     </template>
 
@@ -48,7 +52,7 @@
 
     <template #cell-delivery_date="{ item: order }">
       <span class="text-slate-500 font-medium">{{
-        formatDate(order.client_information?.job_details?.expected_delivery_date) }}</span>
+        formatDate(order.delivery_date) }}</span>
     </template>
 
     <template #cell-status="{ item: order }">
@@ -62,15 +66,15 @@
 
     <template #cell-created_at="{ item: order }">
       <div class="flex flex-col">
-        <span class="text-xs text-slate-600">{{ formatDate(order.created_at) }}</span>
-        <span class="text-[10px] text-slate-400">by {{ order.added_by?.name || "Admin" }}</span>
+        <span class="text-[10px] text-slate-600 font-extrabold uppercase tracking-tight">{{ formatDate(order.created_at) }}</span>
+        <span class="text-[9px] text-slate-400 font-medium">by {{ order.added_by?.name || "Admin" }}</span>
       </div>
     </template>
 
-    <template #cell-modified_by="{ item: order }">
+    <template #cell-modified_at="{ item: order }">
       <div class="flex flex-col">
-        <span class="text-xs text-slate-600">{{ getModifiedAt(order) }}</span>
-        <span class="text-[10px] text-slate-400">by {{ getModifiedBy(order) }}</span>
+        <span class="text-[10px] text-slate-600 font-extrabold uppercase tracking-tight">{{ formatDate(order[relationKey]?.updated_at || order.updated_at) }}</span>
+        <span class="text-[9px] text-slate-400 font-medium">by {{ order[relationKey]?.modified_by?.name || order.modified_by?.name || "N/A" }}</span>
       </div>
     </template>
 
@@ -90,6 +94,14 @@
 
     <template #cell-completed_by="{ item: order }">
       <span class="text-sm font-medium text-slate-700">{{ order.computed_completed_by }}</span>
+    </template>
+
+    <template #cell-start_time="{ item: order }">
+      <span class="text-sm font-medium text-slate-700">{{ formatTimeTo12h(order.packaging?.packaging_logistics?.start_time) }}</span>
+    </template>
+
+    <template #cell-end_time="{ item: order }">
+      <span class="text-sm font-medium text-slate-700">{{ formatTimeTo12h(order.packaging?.packaging_logistics?.end_time) }}</span>
     </template>
 
     <template #cell-actions="{ item: order }">
@@ -122,23 +134,49 @@ const props = defineProps({
 
 defineEmits(["view", "edit"]);
 
+const relationKey = computed(() => {
+  switch (props.stage) {
+    case 'client-information': return 'client_information';
+    case 'designing': return 'designing';
+    case 'printing': return 'printing';
+    case 'packaging': return 'packaging';
+    case 'delivery': return 'dispatch_delivery';
+    default: return props.stage.replace('-', '_');
+  }
+});
+
 const processedOrders = computed(() => {
   let filtered = props.orders;
 
   // Filter based on stage record existence
   filtered = filtered.filter(order => !!getStageData(order));
 
-  return filtered.map(order => ({
-    ...order,
-    computed_stage_status: getStageStatus(order),
-    computed_assigned_name: getAssignedName(order),
-    computed_process_status: getProcessStatus(order),
-    computed_completed_by: order.designing?.work_assign?.completed_by || "N/A"
-  }));
+  return filtered.map(order => {
+    const assignedDate = getAssignedDateRaw(order);
+    let printingDaysStatus = "N/A";
+    if (assignedDate) {
+      const assigned = new Date(assignedDate);
+      const today = new Date();
+      assigned.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      const diffTime = today - assigned;
+      const daysSinceAssigned = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      printingDaysStatus = daysSinceAssigned <= 7 ? "On Time" : "Delayed";
+    }
+
+    return {
+      ...order,
+      computed_stage_status: getStageStatus(order),
+      computed_assigned_name: getAssignedName(order),
+      computed_process_status: getProcessStatus(order),
+      computed_completed_by: order.designing?.work_assign?.completed_by || "N/A",
+      computed_printing_days_status: printingDaysStatus
+    };
+  });
 });
 
 const columns = computed(() => {
-  const stageDataKey = props.stage === 'delivery' ? 'dispatch_delivery' : props.stage.replace('-', '_');
+  const stageDataKey = relationKey.value;
 
   const cols = [
     { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
@@ -162,7 +200,7 @@ const columns = computed(() => {
       class: "whitespace-nowrap",
       type: "select",
       placeholder: "All Places",
-      filterKey: "client_information.job_details.order_placed_in",
+      filterKey: "client_information.order_details.order_placed_in",
       options: [
         { label: "MTM", value: "MTM" },
         { label: "TVL", value: "TVL" },
@@ -182,6 +220,23 @@ const columns = computed(() => {
     type: "date",
     filterKey: props.stage === 'client-information' ? "order_date" : null
   });
+
+  if (props.stage === 'packaging') {
+    cols.push({
+      key: "start_time",
+      label: "Start Time",
+      align: "left",
+      width: "120px",
+      class: "whitespace-nowrap"
+    });
+    cols.push({
+      key: "end_time",
+      label: "End Time",
+      align: "left",
+      width: "120px",
+      class: "whitespace-nowrap"
+    });
+  }
 
   if (props.stage === 'designing') {
     cols.push({
@@ -210,7 +265,20 @@ const columns = computed(() => {
   }
 
   if (props.stage === 'printing') {
-    cols.push({ key: "printing_days", label: "Printing Days", align: "left", width: "120px", class: "whitespace-nowrap", filter: false });
+    cols.push({
+      key: "printing_days",
+      label: "Printing Days",
+      align: "left",
+      width: "120px",
+      class: "whitespace-nowrap",
+      type: "select",
+      placeholder: "All Days",
+      filterKey: "computed_printing_days_status",
+      options: [
+        { label: "On Time", value: "On Time" },
+        { label: "Delayed", value: "Delayed" }
+      ]
+    });
   }
 
   // Add Status
@@ -238,13 +306,32 @@ const columns = computed(() => {
     width: "140px",
     class: "whitespace-nowrap",
     type: "date",
-    filterKey: "client_information.job_details.expected_delivery_date"
+    filterKey: "delivery_date"
+  });
+
+  // Add Audit
+  cols.push({
+    key: "created_at",
+    label: "Created",
+    align: "left",
+    width: "140px",
+    class: "whitespace-nowrap",
+    type: "date",
+    filterKey: "created_at"
+  });
+
+  cols.push({
+    key: "modified_at",
+    label: "Modified",
+    align: "left",
+    width: "140px",
+    class: "whitespace-nowrap",
+    type: "date",
+    filterKey: `${stageDataKey}.updated_at`
   });
 
   // Common final columns
   cols.push(
-    { key: "created_at", label: "Created", align: "left", width: "150px", type: "date", filterKey: "created_at" },
-    { key: "modified_by", label: "Modified", align: "left", width: "150px", type: "date", filterKey: `${stageDataKey}.updated_at` },
     { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" }
   );
 
@@ -266,18 +353,35 @@ const getCountdownColor = (dateString) => {
 };
 
 const getPrintingDaysColor = (order) => {
-  const dateString = order.client_information?.job_details?.expected_delivery_date;
-  if (!dateString) return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+  // Check age of assignment first
+  const dateStr = getAssignedDateRaw(order);
+  if (dateStr) {
+      const assigned = new Date(dateStr);
+      const today = new Date();
+      assigned.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      const diffTime = today - assigned;
+      const daysSinceAssigned = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      
+      // If within 7 days of assignment, show Green
+      if (daysSinceAssigned <= 7) {
+          return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+      }
+  }
 
-  const deliveryDate = new Date(dateString);
+  // Fallback to proximity to delivery if after 7 days
+  const deliveryDateString = order.delivery_date;
+  if (!deliveryDateString) return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+
+  const deliveryDate = new Date(deliveryDateString);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   deliveryDate.setHours(0, 0, 0, 0);
 
   const diffTime = deliveryDate - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const deliveryDiffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays <= 0) return "bg-rose-500/10 text-rose-500 border-rose-500/20";
+  if (deliveryDiffDays <= 0) return "bg-rose-500/10 text-rose-500 border-rose-500/20";
   return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
 };
 
@@ -312,17 +416,27 @@ const statusStyles = {
 
 const formatDate = (date) => {
   if (!date) return "N/A";
-  return new Date(date).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  });
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+const formatTimeTo12h = (timeStr) => {
+  if (!timeStr || typeof timeStr !== 'string') return "N/A";
+  const [h, m] = timeStr.split(":");
+  if (!h || !m) return timeStr;
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${String(hour12).padStart(2, '0')}:${m} ${ampm}`;
 };
 
 const getAssignedName = (order) => {
   switch (props.stage) {
     case 'client-information':
-      return order.client_information?.job_details?.order_taken_by || "N/A";
+      return order.client_information?.order_details?.order_taken_by || "N/A";
     case 'designing':
       return order.designing?.work_assign?.assigned_to || "N/A";
     case 'printing':

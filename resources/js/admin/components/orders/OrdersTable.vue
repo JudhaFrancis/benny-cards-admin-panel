@@ -1,14 +1,17 @@
 <template>
-  <DataTable :columns="columns" :items="orders" :loading="loading" empty-text="No orders found .">
+  <DataTable :columns="columns" :items="processedOrders" :loading="loading" empty-text="No orders found .">
     <!-- Custom Row Cells -->
     <template #cell-order_number="{ item: order }">
       <div class="flex flex-col">
         <span class="font-semibold text-slate-900 italic">{{
           order.order_number
         }}</span>
-        <span v-if="order.delivery_date" class="text-[10px] mt-0.5"
+        <span v-if="order.delivery_date && order.resolved_status?.toLowerCase() !== 'delivered'" class="text-[10px] mt-0.5"
           :class="getCountdownColor(order.delivery_date)">
           {{ getCountdownText(order.delivery_date) }}
+        </span>
+        <span v-else-if="order.resolved_status?.toLowerCase() === 'delivered'" class="text-[10px] mt-0.5 text-slate-400 font-bold uppercase tracking-wider">
+          Delivered
         </span>
       </div>
     </template>
@@ -33,19 +36,19 @@
 
     <template #cell-status="{ item: order }">
       <span :class="cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-        (order.tracking_status_label &&
-          orderStatusStyles[order.tracking_status_label.toLowerCase()]) ||
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors duration-200',
+        (order.resolved_status &&
+          orderStatusStyles[order.resolved_status.toLowerCase()]) ||
         'bg-slate-100 text-slate-800 border-slate-200',
       )
         ">
-        {{ order.tracking_status_label || "New" }}
+        {{ order.resolved_status || "New Order" }}
       </span>
     </template>
 
     <template #cell-delivery_date="{ item: order }">
       <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
-        {{ formatDate(order.client_information?.client_info?.expected_delivery_date) }}
+        {{ formatDate(order.delivery_date) }}
       </span>
     </template>
 
@@ -74,16 +77,16 @@
     </template>
 
     <template #cell-created_at="{ item: order }">
-      <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">
-        {{ formatDate(order.created_at) }}
-      </span>
+      <div class="flex flex-col">
+        <span class="text-[10px] text-slate-600 font-extrabold uppercase tracking-tight">{{ formatDate(order.created_at) }}</span>
+        <span class="text-[9px] text-slate-400 font-medium">by {{ order.added_by?.name || "Admin" }}</span>
+      </div>
     </template>
 
     <template #cell-modified_by="{ item: order }">
       <div class="flex flex-col">
-        <span class="text-[10px] text-slate-600 font-bold uppercase tracking-wider">
-          {{ order.designing?.modified_by?.name || order.designing?.added_by?.name || "N/A" }}
-        </span>
+        <span class="text-[10px] text-slate-600 font-extrabold uppercase tracking-tight">{{ formatDate(order.computed_modified_at) }}</span>
+        <span class="text-[9px] text-slate-400 font-medium">by {{ order.computed_modified_by }}</span>
       </div>
     </template>
 
@@ -143,6 +146,36 @@ const props = defineProps({
   },
 });
 
+const getStageData = (order) => {
+  // Logic to find the most recently updated stage
+  const stages = [
+    { key: 'dispatch_delivery', data: order.dispatch_delivery },
+    { key: 'packaging', data: order.packaging },
+    { key: 'printing', data: order.printing },
+    { key: 'designing', data: order.designing },
+    { key: 'client_information', data: order.client_information }
+  ];
+  
+  return stages
+    .filter(s => !!s.data && (s.data.updated_at || s.data.created_at))
+    .sort((a, b) => {
+      const dateA = new Date(a.data.updated_at || a.data.created_at);
+      const dateB = new Date(b.data.updated_at || b.data.created_at);
+      return dateB - dateA;
+    })[0]?.data || null;
+};
+
+const processedOrders = computed(() => {
+  return props.orders.map(order => {
+    const latestStage = getStageData(order);
+    return {
+      ...order,
+      computed_modified_at: latestStage?.updated_at || latestStage?.created_at || order.updated_at || order.created_at,
+      computed_modified_by: latestStage?.modified_by?.name || latestStage?.added_by?.name || order.added_by?.name || "Admin"
+    };
+  });
+});
+
 defineEmits(["view-info", "edit", "delete"]);
 
 const { getModulePermissions } = usePermissions();
@@ -187,22 +220,11 @@ const columns = computed(() => {
       { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name" },
       { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "order_date" },
       { key: "items", label: "Items", align: "center", width: "100px", class: "whitespace-nowrap", filterKey: "items_count" },
-      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "tracking_status_label" },
+      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status" },
       { key: "delivery_date", label: "Delivery Date", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "delivery_date" },
-      {
-        key: "payment",
-        label: "Payment Status",
-        align: "left",
-        width: "140px",
-        class: "whitespace-nowrap",
-        filterKey: "payment_status",
-        type: "select",
-        options: [
-          { label: "Paid", value: "paid" },
-          { label: "Unpaid", value: "unpaid" },
-          { label: "Due", value: "due" },
-        ]
-      },
+      { key: "payment", label: "Payment Status", align: "left", width: "140px", class: "whitespace-nowrap", filterKey: "payment_status", type: "select", options: [ { label: "Paid", value: "paid" }, { label: "Unpaid", value: "unpaid" }, { label: "Due", value: "due" } ] },
+      { key: "created_at", label: "Created", align: "left", width: "150px", type: "date", filterKey: "created_at" },
+      { key: "modified_by", label: "Modified", align: "left", width: "150px", type: "date", filterKey: "computed_modified_at" },
       { key: "actions", label: "Actions", align: "right", width: "130px", class: "whitespace-nowrap" },
     ];
   }
@@ -266,15 +288,16 @@ const getCountdownText = (dateString) => {
 };
 
 const orderStatusStyles = {
-  new: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  "new order": "bg-slate-500/10 text-slate-500 border-slate-500/20",
   confirmed: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  "content not received": "bg-rose-500/10 text-rose-500 border-rose-500/20",
-  "designing process": "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
-  "printing process": "bg-sky-500/10 text-sky-500 border-sky-500/20",
-  "packaging process": "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
-  dispatched: "bg-primary/10 text-primary border-primary/20",
-  "payment pending": "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  "designing in progress": "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  designed: "bg-indigo-500/20 text-indigo-600 border-indigo-500/30",
+  "printing in progress": "bg-sky-500/10 text-sky-500 border-sky-500/20",
+  printed: "bg-sky-500/20 text-sky-600 border-sky-500/30",
+  "packing in progress": "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  packed: "bg-cyan-500/20 text-cyan-600 border-cyan-500/30",
+  "out for delivery": "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  delivered: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   cancelled: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 

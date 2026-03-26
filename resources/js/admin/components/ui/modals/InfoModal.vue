@@ -14,8 +14,8 @@
         <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" />
       </TransitionChild>
 
-      <div class="fixed inset-0 overflow-y-auto">
-        <div class="flex min-h-full items-center justify-center p-4">
+      <div class="fixed inset-0 z-10 overflow-hidden">
+        <div class="flex min-h-full items-center justify-center p-4 sm:p-0">
           <TransitionChild
             as="template"
             enter="duration-300 ease-out"
@@ -28,7 +28,7 @@
             <DialogPanel
               :class="
                 cn(
-                  'w-full transform rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh]',
+                  'w-full transform rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[90vh] max-h-[90vh] overflow-hidden',
                   maxWidthClass,
                 )
               "

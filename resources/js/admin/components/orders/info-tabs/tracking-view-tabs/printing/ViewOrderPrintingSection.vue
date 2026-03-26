@@ -14,127 +14,101 @@
       </div>
     </div>
 
-    <!-- Readymade Card Status -->
-    <div
-      class="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-6"
-    >
-      <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-        <BoxIcon class="h-4 w-4 text-primary" /> Readymade Card Status
-      </h4>
-      <div class="flex flex-wrap gap-4">
+    <!-- Printing Status Indicators -->
+    <div class="flex flex-wrap gap-4">
+      <div
+        class="flex-1 min-w-[120px] flex items-center gap-3 p-3 rounded-xl border"
+        :class="
+          printingStatus.readymade_ordered
+            ? 'bg-white border-primary border shadow-sm'
+            : 'bg-slate-100/50 border-slate-100 opacity-50'
+        "
+      >
         <div
-          class="flex-1 min-w-[120px] flex items-center gap-3 p-3 rounded-xl border"
+          class="p-1.5 rounded-lg"
           :class="
             printingStatus.readymade_ordered
-              ? 'bg-white border-primary border shadow-sm'
-              : 'bg-slate-100/50 border-slate-100 opacity-50'
+              ? 'bg-primary text-white'
+              : 'bg-slate-200 text-slate-400'
           "
         >
-          <div
-            class="p-1.5 rounded-lg"
-            :class="
-              printingStatus.readymade_ordered
-                ? 'bg-primary text-white'
-                : 'bg-slate-200 text-slate-400'
-            "
-          >
-            <ShoppingCartIcon class="h-3.5 w-3.5" />
-          </div>
-          <span
-            class="text-xs font-bold"
-            :class="
-              printingStatus.readymade_ordered
-                ? 'text-slate-900'
-                : 'text-slate-400'
-            "
-            >Ordered</span
-          >
+          <ShoppingCartIcon class="h-3.5 w-3.5" />
         </div>
+        <span
+          class="text-xs font-bold"
+          :class="
+            printingStatus.readymade_ordered ? 'text-slate-900' : 'text-slate-400'
+          "
+          >Ordered</span
+        >
+      </div>
+      <div
+        class="flex-1 min-w-[120px] flex items-center gap-3 p-3 rounded-xl border"
+        :class="
+          printingStatus.readymade_sub_received
+            ? 'bg-white border-primary border shadow-sm'
+            : 'bg-slate-100/50 border-slate-100 opacity-50'
+        "
+      >
         <div
-          class="flex-1 min-w-[120px] flex items-center gap-3 p-3 rounded-xl border"
+          class="p-1.5 rounded-lg"
           :class="
             printingStatus.readymade_sub_received
-              ? 'bg-white border-primary border shadow-sm'
-              : 'bg-slate-100/50 border-slate-100 opacity-50'
+              ? 'bg-primary text-white'
+              : 'bg-slate-200 text-slate-400'
           "
         >
-          <div
-            class="p-1.5 rounded-lg"
-            :class="
-              printingStatus.readymade_sub_received
-                ? 'bg-primary text-white'
-                : 'bg-slate-200 text-slate-400'
-            "
-          >
-            <PackageIcon class="h-3.5 w-3.5" />
-          </div>
-          <span
-            class="text-xs font-bold"
-            :class="
-              printingStatus.readymade_sub_received
-                ? 'text-slate-900'
-                : 'text-slate-400'
-            "
-            >Received</span
-          >
+          <PackageIcon class="h-3.5 w-3.5" />
         </div>
+        <span
+          class="text-xs font-bold"
+          :class="
+            printingStatus.readymade_sub_received
+              ? 'text-slate-900'
+              : 'text-slate-400'
+          "
+          >Received</span
+        >
+      </div>
+      <div
+        class="flex-1 min-w-[120px] flex items-center gap-3 p-3 rounded-xl border"
+        :class="
+          printingStatus.readymade_sent_to_print
+            ? 'bg-white border-primary border shadow-sm'
+            : 'bg-slate-100/50 border-slate-100 opacity-50'
+        "
+      >
         <div
-          class="flex-1 min-w-[120px] flex items-center gap-3 p-3 rounded-xl border"
+          class="p-1.5 rounded-lg"
           :class="
             printingStatus.readymade_sent_to_print
-              ? 'bg-white border-primary border shadow-sm'
-              : 'bg-slate-100/50 border-slate-100 opacity-50'
+              ? 'bg-primary text-white'
+              : 'bg-slate-200 text-slate-400'
           "
         >
-          <div
-            class="p-1.5 rounded-lg"
-            :class="
-              printingStatus.readymade_sent_to_print
-                ? 'bg-primary text-white'
-                : 'bg-slate-200 text-slate-400'
-            "
-          >
-            <PrinterIcon class="h-3.5 w-3.5" />
-          </div>
-          <span
-            class="text-xs font-bold"
-            :class="
-              printingStatus.readymade_sent_to_print
-                ? 'text-slate-900'
-                : 'text-slate-400'
-            "
-            >To Print</span
-          >
+          <PrinterIcon class="h-3.5 w-3.5" />
         </div>
-      </div>
-      <div class="space-y-3" v-if="printingStatus.readymade_follow_up">
-        <label
-          class="text-[10px] font-black uppercase tracking-widest text-slate-400"
-          >Follow Up History</label
+        <span
+          class="text-xs font-bold"
+          :class="
+            printingStatus.readymade_sent_to_print
+              ? 'text-slate-900'
+              : 'text-slate-400'
+          "
+          >To Print</span
         >
-        <div class="flex flex-wrap gap-2">
-          <span
-            v-for="day in days"
-            :key="day"
-            class="px-2 py-1 rounded-md text-[10px] font-bold border"
-            :class="
-              readymadeFollowUpList.includes(day)
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                : 'bg-slate-50 text-slate-300 border-slate-100'
-            "
-          >
-            {{ day }}
-          </span>
-        </div>
       </div>
     </div>
 
-    <!-- Customize Card Status -->
+    <!-- Dynamic Card Type History -->
     <div
+      v-for="type in activeCardTypes"
+      :key="type.id"
       class="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-6"
     >
       <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-        <BrushIcon class="h-4 w-4 text-primary" /> Customize Card Status
+        <component :is="type.icon" class="h-4 w-4 text-primary" />
+        {{ type.label }} Status
       </h4>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="space-y-2">
@@ -145,7 +119,7 @@
           <div
             class="p-3 rounded-xl bg-white border border-slate-100 text-sm font-medium text-slate-900"
           >
-            {{ formatDate(printingStatus.customize_sent_to_print_date) || "—" }}
+            {{ formatDate(printingStatus[type.id + '_sent_to_print_date']) || "—" }}
           </div>
         </div>
         <div class="space-y-2">
@@ -156,11 +130,11 @@
           <div
             class="p-3 rounded-xl bg-white border border-slate-100 text-sm font-medium text-slate-900"
           >
-            {{ formatDate(printingStatus.customize_delivery_date) || "—" }}
+            {{ formatDate(printingStatus[type.id + '_delivery_date']) || "—" }}
           </div>
         </div>
       </div>
-      <div class="space-y-3" v-if="printingStatus.customize_follow_up">
+      <div class="space-y-3" v-if="printingStatus[type.id + '_follow_up']">
         <label
           class="text-[10px] font-black uppercase tracking-widest text-slate-400"
           >Follow Up History</label
@@ -171,7 +145,7 @@
             :key="day"
             class="px-2 py-1 rounded-md text-[10px] font-bold border"
             :class="
-              customizeFollowUpList.includes(day)
+              getFollowUpList(type.id).includes(day)
                 ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                 : 'bg-slate-50 text-slate-300 border-slate-100'
             "
@@ -207,14 +181,14 @@
 
     <!-- Audit Information -->
     <div
-      v-if="order.printing"
+      v-if="order.printing && !hideAudit"
       class="pt-6 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-2"
     >
       <ClockIcon class="h-3.5 w-3.5" />
       <span>
         Last updated by
         <strong class="text-slate-600">{{
-          order.printing.modified_by?.name || order.printing.added_by?.name || "System"
+          order.printing.modified_by?.name || order.added_by?.name || "System"
         }}</strong>
         on
         <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{
@@ -229,53 +203,64 @@
 import { computed } from "vue";
 import {
   Calendar as CalendarIcon,
-  Box as BoxIcon,
   ShoppingCart as ShoppingCartIcon,
   Package as PackageIcon,
   Printer as PrinterIcon,
   Brush as BrushIcon,
   Clock as ClockIcon,
+  Edit3 as Edit3Icon,
+  Box as BoxIcon,
+  Smartphone as SmartphoneIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({
   order: { type: Object, required: true },
+  hideAudit: { type: Boolean, default: false },
 });
 
 const printingStatus = computed(
   () => props.order.printing?.printing_status || {},
 );
 
-const readymadeFollowUpList = computed(() =>
-  printingStatus.value.readymade_follow_up
-    ? printingStatus.value.readymade_follow_up.split(",")
-    : [],
-);
+const typeConfig = [
+  { id: 'customize', label: 'Customize Card', icon: BrushIcon },
+  { id: 'semi_customize', label: 'Semi – Customize Card', icon: Edit3Icon },
+  { id: 'ready_made', label: 'Ready Made Card', icon: BoxIcon },
+  { id: 'digital_local', icon: SmartphoneIcon, label: 'Digital Local' },
+];
 
-const customizeFollowUpList = computed(() =>
-  printingStatus.value.customize_follow_up
-    ? printingStatus.value.customize_follow_up.split(",")
-    : [],
-);
+const activeCardTypes = computed(() => {
+  const selectedTypes = props.order.client_information?.card_specs?.type?.split(',') || [];
+  return typeConfig.filter(t => selectedTypes.includes(t.id));
+});
+
+const getFollowUpList = (typeId) => {
+  return printingStatus.value[typeId + '_follow_up'] 
+    ? printingStatus.value[typeId + '_follow_up'].split(',') 
+    : [];
+};
+
+const readymadeFollowUpList = computed(() => []);
+const customizeFollowUpList = computed(() => getFollowUpList('customize'));
 
 const days = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
-  const d = date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const d = `${day}-${month}-${year}`;
   const t = date.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",

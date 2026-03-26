@@ -72,7 +72,7 @@
           </span>
           <span>by</span>
           <span class="font-medium text-slate-600 underline decoration-slate-200 underline-offset-2">
-            {{ auditDetails.modified_by?.name || auditDetails.added_by?.name || "System" }}
+            {{ auditDetails.modified_by?.name || orderData?.added_by?.name || "System" }}
           </span>
         </div>
       </div>
