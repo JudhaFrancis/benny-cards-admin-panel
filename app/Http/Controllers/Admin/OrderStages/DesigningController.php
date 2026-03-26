@@ -17,6 +17,7 @@ class DesigningController extends Controller
     {
         $order = Order::findOrFail($id);
         // 1. Update/Create Individual Stage Table
+        $data = $request->all();
         $stage = $order->designing()->updateOrCreate(
             ['order_id' => $order->id],
             array_merge($data, [

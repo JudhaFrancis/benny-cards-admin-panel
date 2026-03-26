@@ -167,9 +167,7 @@
                   leave-from-class="opacity-100"
                   leave-to-class="opacity-0"
                 >
-                  <ListboxOptions
-                    class="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-xl ring-1 ring-slate-900/5 focus:outline-none sm:text-xs custom-scrollbar"
-                  >
+                  <ListboxOptions class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-xs shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none custom-scrollbar min-w-[140px] text-left">
                     <ListboxOption
                       v-slot="{ active, selected }"
                       v-for="method in paymentMethods"

@@ -28,14 +28,14 @@
             <DialogPanel
               :class="
                 cn(
-                  'w-full transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh]',
+                  'w-full transform rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh]',
                   maxWidthClass,
                 )
               "
             >
               <!-- Header -->
               <div
-                class="relative bg-primary text-white overflow-hidden shrink-0 sticky top-0 z-10"
+                class="relative bg-primary text-white overflow-hidden shrink-0 sticky top-0 z-10 rounded-t-[2.5rem]"
               >
                 <div
                   class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent"

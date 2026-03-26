@@ -67,26 +67,10 @@
         />
       </div>
 
-      <div class="space-y-2 md:col-span-2">
-        <label class="text-sm font-medium text-slate-700"
-          >Expected Delivery Date <span class="text-red-500">*</span></label
-        >
-        <div class="relative group">
-          <DatePicker
-            v-model="clientInfo.expected_delivery_date"
-            placeholder="Select Expected Delivery Date"
-            custom-class="pl-11 py-2.5 text-sm"
-            required
-          >
-            <template #leading>
-              <CalendarIcon
-                class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
-              />
-            </template>
-          </DatePicker>
-        </div>
-      </div>
     </div>
+
+    <!-- Spacer to provide room for dropdowns at the bottom -->
+    <div class="h-32 md:h-24"></div>
 
     <!-- Audit Footer -->
     <div
@@ -152,6 +136,7 @@ const occasionOptions = [
 ];
 
 const clientInfo = computed(() => {
+  // Ensure we return a reactive object that the user can bind to
   if (!props.order.client_information) {
     props.order.client_information = { client_info: {} };
   }
@@ -162,17 +147,16 @@ const clientInfo = computed(() => {
 });
 
 const autoFill = () => {
-  // Ensure the client_information object and client_info exist
-  if (!props.order.client_information) {
-    props.order.client_information = { client_info: {} };
-  }
-  if (!props.order.client_information.client_info) {
-    props.order.client_information.client_info = {};
-  }
-
   // Auto-fill from order customer details if available
   const cd = props.order.customer_details || props.order.customerDetails;
   if (cd) {
+    if (!props.order.client_information) {
+      props.order.client_information = { client_info: {} };
+    }
+    if (!props.order.client_information.client_info) {
+      props.order.client_information.client_info = {};
+    }
+    
     const target = props.order.client_information.client_info;
     // We fill ONLY if fields are currently empty or null
     if (!target.name) {
@@ -217,10 +201,12 @@ onMounted(() => {
 // Watch for changes in the order object
 watch(
   () => props.order,
-  () => {
-    autoFill();
+  (newVal) => {
+    if (newVal) {
+      autoFill();
+    }
   },
-  { deep: true },
+  { immediate: true, deep: true },
 );
 
 const save = () => {

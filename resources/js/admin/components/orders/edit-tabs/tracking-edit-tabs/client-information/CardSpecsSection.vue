@@ -8,95 +8,191 @@
         <CreditCardIcon class="h-4 w-4 text-primary" />
         Product Type <span class="text-red-500">*</span>
       </label>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Customize Card -->
         <label
-          class="relative flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group overflow-hidden"
+          class="relative flex flex-col items-center text-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group overflow-hidden h-full"
           :class="[
-            cardSpecs.type === 'customize'
+            cardTypes.includes('customize')
               ? 'bg-primary/5 border-primary shadow-md'
               : 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50',
           ]"
         >
           <div
-            class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+            class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors mb-2"
             :class="
-              cardSpecs.type === 'customize'
-                ? 'bg-primary text-white'
+              cardTypes.includes('customize')
+                ? 'bg-primary text-white scale-110'
                 : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
             "
           >
-            <BrushIcon class="h-5 w-5" />
+            <BrushIcon class="h-6 w-6" />
           </div>
-          <div class="flex-1">
+          <div>
             <span
-              class="block text-xs font-bold"
+              class="block text-xs font-bold whitespace-nowrap"
               :class="
-                cardSpecs.type === 'customize'
+                cardTypes.includes('customize')
                   ? 'text-primary'
                   : 'text-slate-700'
               "
               >Customize Card</span
             >
-            <span class="text-xs text-slate-400"
+            <span class="text-[10px] text-slate-400 leading-tight block mt-1"
               >Custom design and printing</span
             >
           </div>
           <div
-            v-if="cardSpecs.type === 'customize'"
+            v-if="cardTypes.includes('customize')"
             class="absolute top-2 right-2"
           >
             <div class="w-2 h-2 rounded-full bg-primary animate-ping"></div>
           </div>
           <input
-            type="radio"
-            name="card_type"
+            type="checkbox"
             value="customize"
-            v-model="cardSpecs.type"
+            v-model="cardTypes"
             class="absolute inset-0 opacity-0 cursor-pointer"
           />
         </label>
 
+        <!-- Semi-Customize Card -->
         <label
-          class="relative flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group overflow-hidden"
+          class="relative flex flex-col items-center text-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group overflow-hidden h-full"
           :class="[
-            cardSpecs.type === 'ready_made'
+            cardTypes.includes('semi_customize')
+              ? 'bg-indigo-50 border-indigo-500 shadow-md'
+              : 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50',
+          ]"
+        >
+          <div
+            class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors mb-2"
+            :class="
+              cardTypes.includes('semi_customize')
+                ? 'bg-indigo-500 text-white scale-110'
+                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+            "
+          >
+            <Edit3Icon class="h-6 w-6" />
+          </div>
+          <div>
+            <span
+              class="block text-xs font-bold whitespace-nowrap"
+              :class="
+                cardTypes.includes('semi_customize')
+                  ? 'text-indigo-700'
+                  : 'text-slate-700'
+              "
+              >Semi – Customize Card</span
+            >
+            <span class="text-[10px] text-slate-400 leading-tight block mt-1"
+              >Semi custom design and printing</span
+            >
+          </div>
+          <div
+            v-if="cardTypes.includes('semi_customize')"
+            class="absolute top-2 right-2"
+          >
+            <div class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></div>
+          </div>
+          <input
+            type="checkbox"
+            value="semi_customize"
+            v-model="cardTypes"
+            class="absolute inset-0 opacity-0 cursor-pointer"
+          />
+        </label>
+
+        <!-- Ready Made Card -->
+        <label
+          class="relative flex flex-col items-center text-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group overflow-hidden h-full"
+          :class="[
+            cardTypes.includes('ready_made')
               ? 'bg-emerald-50 border-emerald-500 shadow-md'
               : 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50',
           ]"
         >
           <div
-            class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+            class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors mb-2"
             :class="
-              cardSpecs.type === 'ready_made'
-                ? 'bg-emerald-500 text-white'
+              cardTypes.includes('ready_made')
+                ? 'bg-emerald-500 text-white scale-110'
                 : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
             "
           >
-            <BoxIcon class="h-5 w-5" />
+            <BoxIcon class="h-6 w-6" />
           </div>
-          <div class="flex-1">
+          <div>
             <span
-              class="block text-xs font-bold"
+              class="block text-xs font-bold whitespace-nowrap"
               :class="
-                cardSpecs.type === 'ready_made'
+                cardTypes.includes('ready_made')
                   ? 'text-emerald-700'
                   : 'text-slate-700'
               "
               >Ready Made Card</span
             >
-            <span class="text-xs text-slate-400">Pre-designed stock items</span>
+            <span class="text-[10px] text-slate-400 leading-tight block mt-1"
+              >Pre-designed stock items</span
+            >
           </div>
           <div
-            v-if="cardSpecs.type === 'ready_made'"
+            v-if="cardTypes.includes('ready_made')"
             class="absolute top-2 right-2"
           >
             <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
           </div>
           <input
-            type="radio"
-            name="card_type"
+            type="checkbox"
             value="ready_made"
-            v-model="cardSpecs.type"
+            v-model="cardTypes"
+            class="absolute inset-0 opacity-0 cursor-pointer"
+          />
+        </label>
+
+        <!-- Digital Local -->
+        <label
+          class="relative flex flex-col items-center text-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 group overflow-hidden h-full"
+          :class="[
+            cardTypes.includes('digital_local')
+              ? 'bg-violet-50 border-violet-500 shadow-md'
+              : 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50',
+          ]"
+        >
+          <div
+            class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors mb-2"
+            :class="
+              cardTypes.includes('digital_local')
+                ? 'bg-violet-500 text-white scale-110'
+                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+            "
+          >
+            <SmartphoneIcon class="h-6 w-6" />
+          </div>
+          <div>
+            <span
+              class="block text-xs font-bold whitespace-nowrap"
+              :class="
+                cardTypes.includes('digital_local')
+                  ? 'text-violet-700'
+                  : 'text-slate-700'
+              "
+              >Digital Local</span
+            >
+            <span class="text-[10px] text-slate-400 leading-tight block mt-1"
+              >Digital invitations and sharing</span
+            >
+          </div>
+          <div
+            v-if="cardTypes.includes('digital_local')"
+            class="absolute top-2 right-2"
+          >
+            <div class="w-2 h-2 rounded-full bg-violet-500 animate-ping"></div>
+          </div>
+          <input
+            type="checkbox"
+            value="digital_local"
+            v-model="cardTypes"
             class="absolute inset-0 opacity-0 cursor-pointer"
           />
         </label>
@@ -300,7 +396,9 @@ import { computed, watch, ref } from "vue";
 import {
   CreditCard as CreditCardIcon,
   Brush as BrushIcon,
+  Edit3 as Edit3Icon,
   Box as BoxIcon,
+  Smartphone as SmartphoneIcon,
   Settings as SettingsIcon,
   Maximize as MaximizeIcon,
   Layers as LayersIcon,
@@ -349,17 +447,19 @@ const cardSpecs = computed(() => {
   }
   return props.order.client_information.card_specs;
 });
-// though we should ideally just use 'type'
+const cardTypes = computed({
+  get: () => cardSpecs.value.type ? cardSpecs.value.type.split(",") : [],
+  set: (val) => {
+    cardSpecs.value.type = val.join(",");
+  },
+});
+
 watch(
   () => cardSpecs.value.type,
-  (newType) => {
-    if (newType === "customize") {
-      cardSpecs.value.card_type_customize = true;
-      cardSpecs.value.card_type_ready_made = false;
-    } else {
-      cardSpecs.value.card_type_customize = false;
-      cardSpecs.value.card_type_ready_made = true;
-    }
+  (newTypeStr) => {
+    const types = newTypeStr ? newTypeStr.split(",") : [];
+    cardSpecs.value.card_type_customize = types.includes("customize");
+    cardSpecs.value.card_type_ready_made = types.includes("ready_made");
   },
   { immediate: true },
 );

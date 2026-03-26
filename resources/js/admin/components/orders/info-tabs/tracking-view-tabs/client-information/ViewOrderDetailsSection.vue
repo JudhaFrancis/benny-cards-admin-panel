@@ -6,7 +6,7 @@
         <ClipboardListIcon class="h-5 w-5 text-primary" />
         Order Information
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="space-y-2">
           <label
             class="text-xs font-bold text-slate-500 uppercase tracking-wider"
@@ -39,6 +39,18 @@
           >
             <UserIcon class="h-4 w-4 text-slate-400" />
             {{ jobDetails.order_taken_by || "N/A" }}
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label
+            class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >Delivery Date</label
+          >
+          <div
+            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 flex items-center gap-2"
+          >
+            <CalendarIcon class="h-4 w-4 text-slate-400" />
+            {{ formatDate(jobDetails.expected_delivery_date) || "N/A" }}
           </div>
         </div>
       </div>
@@ -78,7 +90,7 @@
       </div>
       <div v-if="jobDetails.remarks" class="space-y-2">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
-          >Remarks</label
+          >Other Reference / Remarks</label
         >
         <div
           class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm text-slate-700 leading-relaxed italic"
@@ -115,6 +127,7 @@ import {
   User as UserIcon,
   Compass as CompassIcon,
   Clock as ClockIcon,
+  Calendar as CalendarIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({

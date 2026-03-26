@@ -102,11 +102,25 @@
 
               <!-- Content -->
               <div
-                class="flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar p-0 relative"
+                class="flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar p-10 relative"
               >
                 <!-- Main Content Container with white background for active tab illusion -->
-                <div class="bg-white min-h-full rounded-b-[2rem]">
-                  <div v-if="order" class="w-full">
+                <div class="bg-white min-h-full rounded-b-[2rem] p-8" v-if="!order">
+                    <div class="space-y-10">
+                        <div class="space-y-4">
+                            <SkeletonLoader width="250px" height="24px" />
+                            <div class="grid grid-cols-3 gap-6">
+                                <SkeletonLoader v-for="i in 3" :key="i" height="80px" />
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <SkeletonLoader width="200px" height="24px" />
+                            <SkeletonLoader height="300px" />
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white min-h-full rounded-b-[2rem]" v-else>
+                  <div class="w-full">
                     <Transition
                       mode="out-in"
                       enter-active-class="transition duration-200 ease-out"

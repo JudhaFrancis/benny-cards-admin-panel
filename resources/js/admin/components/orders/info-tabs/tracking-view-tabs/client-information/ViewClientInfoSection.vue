@@ -57,19 +57,6 @@
         </div>
       </div>
 
-      <div class="space-y-2">
-        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
-          >Expected Delivery Date</label
-        >
-        <div
-          class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100"
-        >
-          <CalendarIcon class="h-4 w-4 text-emerald-500" />
-          <span class="text-sm font-bold text-emerald-700">{{
-            formatDate(clientInfo.expected_delivery_date) || "N/A"
-          }}</span>
-        </div>
-      </div>
     </div>
 
     <!-- Audit Information -->

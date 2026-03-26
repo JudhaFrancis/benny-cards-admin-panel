@@ -171,7 +171,7 @@
               @after-leave="query = ''"
             >
               <ComboboxOptions
-                class="absolute z-50 mt-2 max-h-80 w-full overflow-auto rounded-[1.5rem] bg-white p-2 text-base shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar"
+                class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar text-left"
               >
                 <div
                   v-if="filteredProducts.length === 0 && query !== ''"

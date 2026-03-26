@@ -102,6 +102,16 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:order"]);
+ 
+const designPrint = computed(() => {
+  if (!props.order.designing) {
+    props.order.designing = { design_print: {} };
+  }
+  if (!props.order.designing.design_print) {
+    props.order.designing.design_print = {};
+  }
+  return props.order.designing.design_print;
+});
 
 
 const formatAuditDate = (dateString) => {

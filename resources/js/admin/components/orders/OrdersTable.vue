@@ -1,22 +1,14 @@
 <template>
-  <DataTable
-    :columns="columns"
-    :items="orders"
-    :loading="loading"
-    empty-text="No orders found matching your criteria."
-  >
+  <DataTable :columns="columns" :items="orders" :loading="loading" empty-text="No orders found .">
     <!-- Custom Row Cells -->
     <template #cell-order_number="{ item: order }">
       <div class="flex flex-col">
         <span class="font-semibold text-slate-900 italic">{{
           order.order_number
         }}</span>
-        <span 
-          v-if="order.client_information?.client_info?.expected_delivery_date" 
-          class="text-[10px] mt-0.5"
-          :class="getCountdownColor(order.client_information.client_info.expected_delivery_date)"
-        >
-          {{ getCountdownText(order.client_information.client_info.expected_delivery_date) }}
+        <span v-if="order.delivery_date" class="text-[10px] mt-0.5"
+          :class="getCountdownColor(order.delivery_date)">
+          {{ getCountdownText(order.delivery_date) }}
         </span>
       </div>
     </template>
@@ -40,16 +32,13 @@
     </template>
 
     <template #cell-status="{ item: order }">
-      <span
-        :class="
-          cn(
-            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-            (order.tracking_status_label &&
-              orderStatusStyles[order.tracking_status_label.toLowerCase()]) ||
-              'bg-slate-100 text-slate-800 border-slate-200',
-          )
-        "
-      >
+      <span :class="cn(
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
+        (order.tracking_status_label &&
+          orderStatusStyles[order.tracking_status_label.toLowerCase()]) ||
+        'bg-slate-100 text-slate-800 border-slate-200',
+      )
+        ">
         {{ order.tracking_status_label || "New" }}
       </span>
     </template>
@@ -61,16 +50,13 @@
     </template>
 
     <template #cell-payment="{ item: order }">
-      <span
-        :class="
-          cn(
-            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-            (order.payment_status &&
-              paymentStatusStyles[order.payment_status.toLowerCase()]) ||
-              'bg-slate-100 text-slate-800 border-slate-200',
-          )
-        "
-      >
+      <span :class="cn(
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
+        (order.payment_status &&
+          paymentStatusStyles[order.payment_status.toLowerCase()]) ||
+        'bg-slate-100 text-slate-800 border-slate-200',
+      )
+        ">
         {{ capitalize(order.payment_status) }}
       </span>
     </template>
@@ -104,41 +90,29 @@
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
         <!-- Main Actions (Always show view/edit, show others if in main 'Orders' view) -->
-        <button
-          v-if="canEdit && statusFilter === 'all'"
-          @click="sendWhatsApp(order)"
+        <button v-if="canEdit && statusFilter === 'all'" @click="sendWhatsApp(order)"
           :disabled="sendingWhatsapp === order.id"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-600 transition-all duration-200 disabled:opacity-50"
-          title="Send WhatsApp"
-        >
+          title="Send WhatsApp">
           <Loader2 v-if="sendingWhatsapp === order.id" class="h-4 w-4 animate-spin" />
           <MessageCircle v-else class="h-4 w-4" />
         </button>
 
-        <button
-          v-if="canView"
-          @click="$emit('view-info', order)"
+        <button v-if="canView" @click="$emit('view-info', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
-          title="View Info"
-        >
+          title="View Info">
           <Eye class="h-4 w-4" />
         </button>
 
-        <button
-          v-if="canEdit"
-          @click="$emit('edit', order)"
+        <button v-if="canEdit" @click="$emit('edit', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-all duration-200"
-          title="Edit Order"
-        >
+          title="Edit Order">
           <Pencil class="h-4 w-4" />
         </button>
 
-        <button
-          v-if="canDelete && statusFilter === 'all'"
-          @click="$emit('delete', order)"
+        <button v-if="canDelete && statusFilter === 'all'" @click="$emit('delete', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
-          title="Delete Order"
-        >
+          title="Delete Order">
           <Trash2 class="h-4 w-4" />
         </button>
       </div>
@@ -214,13 +188,13 @@ const columns = computed(() => {
       { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "order_date" },
       { key: "items", label: "Items", align: "center", width: "100px", class: "whitespace-nowrap", filterKey: "items_count" },
       { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "tracking_status_label" },
-      { key: "delivery_date", label: "Delivery Date", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "client_information.client_info.expected_delivery_date" },
-      { 
-        key: "payment", 
-        label: "Payment Status", 
-        align: "left", 
-        width: "140px", 
-        class: "whitespace-nowrap", 
+      { key: "delivery_date", label: "Delivery Date", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "delivery_date" },
+      {
+        key: "payment",
+        label: "Payment Status",
+        align: "left",
+        width: "140px",
+        class: "whitespace-nowrap",
         filterKey: "payment_status",
         type: "select",
         options: [
@@ -261,10 +235,10 @@ const getCountdownColor = (dateString) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   deliveryDate.setHours(0, 0, 0, 0);
-  
+
   const diffTime = deliveryDate - today;
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays <= 0) return "text-rose-500 font-medium";
   return "text-emerald-500 font-medium";
 };
@@ -275,13 +249,13 @@ const getCountdownText = (dateString) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   deliveryDate.setHours(0, 0, 0, 0);
-  
+
   const diffTime = deliveryDate - today;
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   const absDays = Math.abs(diffDays);
   const dayStr = absDays === 1 ? 'Day' : 'Days';
-  
+
   if (diffDays < 0) {
     return `${absDays} ${dayStr} Late`;
   } else if (diffDays === 0) {

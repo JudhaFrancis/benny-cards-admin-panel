@@ -8,54 +8,66 @@
   >
     <template #header-extra>
       <span class="text-xs text-slate-200 font-medium flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 backdrop-blur-sm shadow-sm">
-        <Activity class="h-3.5 w-3.5" />
-        {{ stageStatus }}
-      </span>
-      <span class="text-xs text-slate-200 font-medium flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 backdrop-blur-sm shadow-sm">
         <Calendar class="h-3.5 w-3.5" />
         {{ formatDate(orderData?.order_date) }}
       </span>
     </template>
 
-    <div v-if="loading" class="flex items-center justify-center p-12">
-      <Loader2 class="h-8 w-8 animate-spin text-primary" />
+    <div v-if="loading" class="space-y-6 px-1">
+      <div v-for="i in 3" :key="i" class="bg-slate-50/50 rounded-3xl border border-slate-100 overflow-hidden p-6 space-y-4">
+        <div class="flex items-center gap-3 mb-2">
+          <SkeletonLoader width="40px" height="40px" variant="circle" />
+          <SkeletonLoader width="150px" height="24px" />
+        </div>
+        <div class="space-y-2">
+          <SkeletonLoader width="60%" height="20px" />
+          <SkeletonLoader width="40%" height="20px" />
+        </div>
+      </div>
     </div>
 
     <div v-else-if="orderData" class="space-y-6 px-1">
 
       <div v-for="section in relevantSections" :key="section.id" class="bg-slate-50/50 rounded-3xl border border-slate-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3 bg-white/50">
-          <div class="p-2 rounded-xl bg-primary/5 text-primary">
-            <component :is="section.icon" class="h-5 w-5" />
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white/50">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-xl bg-primary/5 text-primary">
+              <component :is="section.icon" class="h-5 w-5" />
+            </div>
+            <h3 class="text-base font-bold text-slate-900 tracking-tight">{{ section.label }}</h3>
           </div>
-          <h3 class="text-base font-bold text-slate-900 tracking-tight">{{ section.label }}</h3>
+
+          <!-- Status & Audit (Only for first section) -->
+          <div v-if="relevantSections.indexOf(section) === 0" class="flex items-center gap-4">
+
+            <!-- Status Badge -->
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm">
+              <Activity class="h-3.5 w-3.5 text-slate-400" />
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider border-r border-slate-100 pr-2 mr-1">Status</span>
+              <span 
+                :class="[
+                  'text-xs font-bold transition-colors',
+                  stageStatus === 'Completed' ? 'text-emerald-600' :
+                  stageStatus === 'Process' ? 'text-blue-600' :
+                  'text-amber-600'
+                ]"
+              >
+                {{ stageStatus === 'Process' ? 'Processing' : stageStatus }}
+              </span>
+            </div>
+          </div>
         </div>
         <div class="p-6">
           <component :is="section.component" :order="orderData" readonly :hide-audit="true" />
         </div>
       </div>
 
-      <!-- Audit Row -->
-      <div v-if="orderData && auditDetails" class="flex flex-wrap items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-slate-100 mt-2 gap-4">
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm">
-          <Activity class="h-3.5 w-3.5 text-slate-400" />
-          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider border-r border-slate-100 pr-2 mr-1">Status</span>
-          <span 
-            :class="[
-              'text-xs font-bold transition-colors',
-              stageStatus === 'Completed' ? 'text-emerald-600' :
-              stageStatus === 'Process' ? 'text-blue-600' :
-              'text-amber-600'
-            ]"
-          >
-            {{ stageStatus === 'Process' ? 'Processing' : stageStatus }}
-          </span>
-        </div>
-
-        <div v-if="auditDetails" class="text-xs text-slate-400 flex items-center gap-2 justify-end">
-          <Clock class="h-3.5 w-3.5" />
+      <!-- Final Audit Row (Bottom Right) -->
+      <div v-if="auditDetails" class="flex justify-end pt-2">
+        <div class="flex items-center gap-2 text-[10px] text-slate-400 bg-slate-50/50 px-3 py-1.5 rounded-xl border border-slate-100">
+          <Clock class="h-3 w-3" />
           <span>Last updated</span>
-          <span class="font-medium bg-slate-100 px-2 py-0.5 rounded-full text-slate-600">
+          <span class="font-medium text-slate-600 px-1.5 py-0.5 rounded-full bg-white border border-slate-100 shadow-sm">
             {{ formatAuditDate(auditDetails.updated_at || auditDetails.created_at) }}
           </span>
           <span>by</span>

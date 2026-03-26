@@ -163,6 +163,16 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:order"]);
+ 
+const packagingStatus = computed(() => {
+  if (!props.order.packaging) {
+    props.order.packaging = { packaging_status: {} };
+  }
+  if (!props.order.packaging.packaging_status) {
+    props.order.packaging.packaging_status = {};
+  }
+  return props.order.packaging.packaging_status;
+});
 
 
 const toggleGift = (withGift) => {

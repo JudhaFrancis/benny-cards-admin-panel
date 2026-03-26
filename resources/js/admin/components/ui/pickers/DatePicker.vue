@@ -2,9 +2,9 @@
   <Popover v-slot="{ open }" class="relative">
     <PopoverButton
       :class="[
-        'w-full bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all text-left shadow-sm min-h-[31px] flex items-center justify-between group px-3 py-1.5',
+        'w-full bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all text-left shadow-sm min-h-[31px] flex items-center justify-between group px-3 py-1.5',
         customClass,
-        open || modelValue ? 'ring-4 ring-primary/10 border-primary bg-white text-slate-900' : ''
+        open || modelValue ? 'ring-4 ring-primary/10 border-primary bg-white text-slate-900' : 'text-slate-400/50'
       ]"
     >
       <div class="flex items-center gap-2 truncate">

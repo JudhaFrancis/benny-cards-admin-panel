@@ -116,7 +116,7 @@
                             @after-leave="searchQuery = ''"
                           >
                             <ComboboxOptions
-                              class="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar"
+                              class="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar text-left"
                             >
                               <div
                                 v-if="
@@ -247,7 +247,7 @@
                             leave-to-class="opacity-0"
                           >
                             <ListboxOptions
-                              class="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar"
+                              class="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar text-left"
                             >
                               <ListboxOption
                                 v-slot="{ active, selected }"

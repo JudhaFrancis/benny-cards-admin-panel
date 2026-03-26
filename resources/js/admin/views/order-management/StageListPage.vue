@@ -27,6 +27,12 @@
       @close="isEditModalOpen = false"
       @success="fetchOrders"
     />
+
+    <OrderCreateDialog
+      :is-open="isCreateModalOpen"
+      @close="isCreateModalOpen = false"
+      @success="fetchOrders"
+    />
   </div>
 </template>
 
@@ -37,8 +43,13 @@ import OrderStageTable from "../../components/order-management/OrderStageTable.v
 import StageViewDialog from "../../components/order-management/StageViewDialog.vue";
 import StageEditDialog from "../../components/order-management/StageEditDialog.vue";
 import { useAuth } from "../../composables/useAuth";
+import { usePermissions } from "../../composables/usePermissions";
+import { Plus as PlusIcon } from "lucide-vue-next";
+import OrderCreateDialog from "../../components/orders/OrderCreateDialog.vue";
 
 const { user } = useAuth();
+const { getModulePermissions } = usePermissions();
+const { canAdd: canCreate } = getModulePermissions("Order");
 
 const props = defineProps({
   stage: { type: String, required: true },
@@ -52,9 +63,11 @@ const loading = ref(true);
 // Modals State
 const isViewModalOpen = ref(false);
 const isEditModalOpen = ref(false);
+const isCreateModalOpen = ref(false);
 const selectedOrder = ref(null);
 
 const fetchOrders = async () => {
+  orders.value = [];
   loading.value = true;
   try {
     const params = {

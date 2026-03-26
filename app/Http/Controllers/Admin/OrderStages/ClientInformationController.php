@@ -17,6 +17,7 @@ class ClientInformationController extends Controller
     {
         $order = Order::findOrFail($id);
         // 1. Update/Create Individual Stage Table
+        $data = $request->all();
         $stage = $order->clientInformation()->updateOrCreate(
             ['order_id' => $order->id],
             array_merge($data, [

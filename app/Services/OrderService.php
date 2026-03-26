@@ -104,7 +104,8 @@ class OrderService
             $order = Order::create([
                 'order_number' => 'TEMP-' . uniqid(),
                 'order_date' => $data['order_date'] ?? now(),
-                'user_id' => $data['user_id'] ?? null,
+                'delivery_date' => $data['delivery_date'] ?? ($data['customer']['expected_delivery_date'] ?? null),
+                'user_id' => $data['user_id'] ?? auth()->id(),
                 'items_count' => $totals['items_count'],
                 'total_quantity' => $totals['total_quantity'],
                 'net_amount' => $totals['net_amount'],
@@ -281,6 +282,10 @@ class OrderService
                     }
                     $updatesByStage[$stageRelation][$section] = $content;
                 }
+            }
+
+            if (isset($data['client_info']['expected_delivery_date'])) {
+                $order->update(['delivery_date' => $data['client_info']['expected_delivery_date']]);
             }
 
             foreach ($updatesByStage as $relation => $sectionData) {

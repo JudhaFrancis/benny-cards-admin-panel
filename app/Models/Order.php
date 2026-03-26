@@ -19,6 +19,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'order_date',
+        'delivery_date',
         'user_id',
         'items_count',
         'total_quantity',
@@ -37,6 +38,7 @@ class Order extends Model
 
     protected $casts = [
         'order_date' => 'datetime',
+        'delivery_date' => 'datetime',
         'net_amount' => 'decimal:2',
         'discount' => 'decimal:2',
         'extra_charges' => 'decimal:2',

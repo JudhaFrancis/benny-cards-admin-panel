@@ -73,7 +73,32 @@
               </div>
 
               <!-- Main Content: Two Column Layout -->
-              <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
+              <div class="flex-1 overflow-hidden flex flex-col md:flex-row shadow-inner" v-if="isInitializing">
+                  <!-- Left Side Skeleton -->
+                  <div class="flex-1 p-8 space-y-10 overflow-y-auto custom-scrollbar">
+                      <div class="space-y-6">
+                          <SkeletonLoader width="200px" height="20px" />
+                          <div class="grid grid-cols-2 gap-6">
+                              <SkeletonLoader class="col-span-2" height="50px" />
+                              <SkeletonLoader height="50px" />
+                              <SkeletonLoader height="50px" />
+                              <SkeletonLoader class="col-span-2" height="150px" />
+                          </div>
+                      </div>
+                  </div>
+                  <!-- Right Side Skeleton -->
+                  <div class="w-full md:w-[380px] bg-gray-50/50 border-l border-gray-100 p-8 space-y-8">
+                      <SkeletonLoader width="150px" height="20px" />
+                      <div class="bg-white rounded-[2rem] p-6 border border-gray-100 space-y-4 shadow-sm">
+                          <SkeletonLoader height="20px" />
+                          <SkeletonLoader height="20px" />
+                          <SkeletonLoader height="20px" />
+                          <SkeletonLoader height="60px" class="mt-4" />
+                      </div>
+                  </div>
+              </div>
+
+              <div class="flex-1 overflow-hidden flex flex-col md:flex-row" v-else>
                 <!-- Left Side: Main Form (Scrollable) -->
                 <div class="flex-1 overflow-y-auto p-8 pb-32 custom-scrollbar">
                   <div class="space-y-10">
@@ -254,7 +279,7 @@
                                   @after-leave="item.search_query = ''"
                                 >
                                   <ComboboxOptions
-                                    class="absolute z-50 mt-2 max-h-72 w-full overflow-auto rounded-[1.5rem] bg-white p-2 text-base shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar"
+                                    class="absolute z-50 mt-2 max-h-72 w-full overflow-auto rounded-[1.5rem] bg-white p-2 text-base shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm custom-scrollbar text-left"
                                   >
                                     <div
                                       v-if="
@@ -441,7 +466,7 @@
 
                 <!-- Right Side: Order Summary (Sidebar) -->
                 <div
-                  class="w-full md:w-[380px] bg-gray-50/50 border-l border-gray-100 p-8 flex flex-col"
+                  class="w-full md:w-[380px] bg-gray-50/50 border-l border-gray-100 p-8 flex flex-col overflow-y-auto custom-scrollbar"
                 >
                   <h4 class="text-sm font-bold text-gray-700 mb-8 ml-1">
                     Order Summary

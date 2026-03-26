@@ -14,7 +14,7 @@
         </svg>
         Order Information
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="space-y-2">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Order No
@@ -41,6 +41,17 @@
           </label>
           <ContextDropdown v-model="jobDetails.order_taken_by" :options="staffOptions" placeholder="Select staff"
             :icon="UserIcon" />
+        </div>
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Delivery Date
+          </label>
+          <DatePicker v-model="jobDetails.expected_delivery_date" placeholder="Select Delivery Date"
+            custom-class="py-2.5 text-xs">
+            <template #leading>
+              <CalendarIcon class="h-4 w-4 text-slate-400" />
+            </template>
+          </DatePicker>
         </div>
       </div>
     </div>
@@ -100,6 +111,7 @@
               'Instagram',
               'Walk-In',
               'By Client',
+              'Other',
             ]" :key="ref"
               class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 group hover:shadow-md"
               :class="jobDetails.reference === ref
@@ -123,16 +135,21 @@
             </label>
           </div>
 
-          <div class="relative pt-2">
-            <input v-model="jobDetails.remarks"
-              class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
-              placeholder="Other reference/remarks..." />
-            <div class="absolute right-3 top-1/2 pt-1 -translate-y-1/2 text-slate-400">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
+          <div v-if="jobDetails.reference === 'Other' || jobDetails.remarks" class="space-y-2 pt-2">
+            <label class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider ml-1">
+              Other Reference / Remarks
+            </label>
+            <div class="relative">
+              <input v-model="jobDetails.remarks"
+                class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/30 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                placeholder="Enter details here..." />
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -157,8 +174,9 @@
 
 <script setup>
 import { computed } from "vue";
-import { User as UserIcon, Clock as ClockIcon } from "lucide-vue-next";
+import { User as UserIcon, Clock as ClockIcon, Calendar as CalendarIcon } from "lucide-vue-next";
 import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
+import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 
 const props = defineProps({
   order: {
