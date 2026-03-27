@@ -208,11 +208,11 @@ class OrderService
 
         return $order->load([
             'items.product', 'customerDetails', 'coupon',
-            'clientInformation.addedBy', 'clientInformation.modifiedBy',
-            'designing.addedBy', 'designing.modifiedBy',
-            'printing.addedBy', 'printing.modifiedBy',
-            'packaging.addedBy', 'packaging.modifiedBy',
-            'dispatchDelivery.addedBy', 'dispatchDelivery.modifiedBy',
+            'clientInformation.modifiedBy',
+            'designing.modifiedBy',
+            'printing.modifiedBy',
+            'packaging.modifiedBy',
+            'dispatchDelivery.modifiedBy',
             'payments.addedBy', 'payments.modifiedBy'
         ]);
         });
@@ -399,7 +399,15 @@ class OrderService
             ]);
         });
 
-        return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery']);
+        return $order->load([
+            'items.product', 'customerDetails', 'coupon',
+            'clientInformation.modifiedBy',
+            'designing.modifiedBy',
+            'printing.modifiedBy',
+            'packaging.modifiedBy',
+            'dispatchDelivery.modifiedBy',
+            'payments.addedBy', 'payments.modifiedBy'
+        ]);
     }
 
 
