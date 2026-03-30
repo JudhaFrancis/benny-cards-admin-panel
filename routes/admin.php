@@ -85,6 +85,7 @@ Route::prefix('v1')->group(function () {
 
                 // Products
                 Route::get('products/options', [ProductController::class , 'options']);
+                Route::get('products/list', [ProductController::class , 'productsList']);
                 Route::apiResource('products', ProductController::class);
 
                 // Payments

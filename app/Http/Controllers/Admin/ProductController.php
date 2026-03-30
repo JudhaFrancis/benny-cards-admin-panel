@@ -266,4 +266,29 @@ class ProductController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Get all products for dropdown/search (no pagination)
+     */
+    public function productsList()
+    {
+        $products = Product::select('id', 'title', 'price', 'photo')
+            ->where('status', 'active')
+            ->orderBy('title')
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'title' => $product->title,
+                    'price' => $product->price,
+                    'sku' => $product->sku,
+                    'image' => $product->photo,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $products,
+        ]);
+    }
 }

@@ -427,24 +427,11 @@ const availableProducts = ref([]);
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get("/api/v1/products/options");
+    const response = await axios.get("/api/v1/products/list");
     if (response.data.success && Array.isArray(response.data.data)) {
       availableProducts.value = response.data.data;
-    } else if (Array.isArray(response.data)) {
-      availableProducts.value = response.data;
     } else {
-      const listResponse = await axios.get("/api/v1/products?limit=100");
-      if (
-        listResponse.data &&
-        listResponse.data.data &&
-        Array.isArray(listResponse.data.data.data)
-      ) {
-        availableProducts.value = listResponse.data.data.data;
-      } else if (listResponse.data && Array.isArray(listResponse.data.data)) {
-        availableProducts.value = listResponse.data.data;
-      } else {
-        availableProducts.value = [];
-      }
+      availableProducts.value = [];
     }
   } catch (error) {
     console.error("Failed to fetch products", error);

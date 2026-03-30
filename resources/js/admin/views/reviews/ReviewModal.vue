@@ -501,11 +501,11 @@ const form = reactive({
 // Fetch Data for Dropdowns
 const fetchProducts = async () => {
   try {
-    const res = await axios.get("/api/v1/products"); // Assuming endpoint exists and returns ALL products or paginated.
-    // Ideally should support search on backend if list is huge.
-    // For now fetching all.
-    if (res.data.success) {
-      products.value = res.data.data.data || res.data.data; // Handle pagination or list
+    const res = await axios.get("/api/v1/products/list");
+    if (res.data.success && Array.isArray(res.data.data)) {
+      products.value = res.data.data;
+    } else {
+      products.value = [];
     }
   } catch (e) {
     console.error(e);

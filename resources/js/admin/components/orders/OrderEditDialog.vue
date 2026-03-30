@@ -671,25 +671,11 @@ watch(
 
 const fetchProducts = async () => {
     try {
-        const response = await axios.get("/api/v1/products/options");
+        const response = await axios.get("/api/v1/products/list");
         if (response.data.success && Array.isArray(response.data.data)) {
             products.value = response.data.data;
-        } else if (Array.isArray(response.data)) {
-            products.value = response.data;
-        } else if (Array.isArray(response.data.data)) {
-            products.value = response.data.data;
         } else {
-            const listResponse = await axios.get("/api/v1/products?limit=100");
-            const listData = listResponse.data;
-            if (listData.data && Array.isArray(listData.data.data)) {
-                products.value = listData.data.data;
-            } else if (Array.isArray(listData.data)) {
-                products.value = listData.data;
-            } else if (Array.isArray(listData)) {
-                products.value = listData;
-            } else {
-                products.value = [];
-            }
+            products.value = [];
         }
     } catch (e) {
         console.error("Failed to fetch products", e);
