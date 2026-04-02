@@ -3,9 +3,12 @@
     <!-- Custom Row Cells -->
     <template #cell-order_number="{ item: order }">
       <div class="flex flex-col">
-        <span class="font-semibold text-slate-900 italic">{{
-          order.order_number
-        }}</span>
+        <span
+          class="font-semibold text-slate-900 italic cursor-pointer hover:text-primary transition-colors duration-200"
+          @click="$emit('edit', order)"
+        >
+          {{ order.order_number }}
+        </span>
         <span v-if="order.delivery_date && order.resolved_status?.toLowerCase() !== 'delivered'" class="text-[10px] mt-0.5"
           :class="getCountdownColor(order.delivery_date)">
           {{ getCountdownText(order.delivery_date) }}

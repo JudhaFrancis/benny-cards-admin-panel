@@ -53,10 +53,10 @@
                 <!-- Product Thumbnail (Matched with ProductList table) -->
                 <div
                   class="relative w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shadow-sm shrink-0 group cursor-zoom-in bg-white"
-                  @click="previewImage(item.product?.photo, item.product_name)"
+                  @click="previewImage(item.product_image || item.product?.photo, item.product_name)"
                 >
                   <img
-                    :src="getImageSource(item.product?.photo)"
+                    :src="getImageSource(item.product_image || item.product?.photo)"
                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     @error="handleImageError"
                   />

@@ -43,8 +43,10 @@ class OrderController extends Controller
             'customer.phone' => 'required|string',
             'customer.address_1' => 'required|string',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.product_name' => 'required_without:items.*.product_id|string',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.product_image' => 'nullable',
         ]);
 
         $order = $this->orderService->createOrder($request->all());
@@ -75,6 +77,17 @@ class OrderController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $order = $this->orderService->getOrder($id);
+
+        $request->validate([
+            'customer.name' => 'nullable|string',
+            'customer.phone' => 'nullable|string',
+            'customer.address_1' => 'nullable|string',
+            'items' => 'nullable|array|min:1',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.product_name' => 'required_without:items.*.product_id|string',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.product_image' => 'nullable',
+        ]);
 
         $updatedOrder = $this->orderService->updateOrder($order, $request->all());
 

@@ -5,7 +5,7 @@
     <template #cell-order_number="{ item: order }">
       <div class="flex flex-col">
         <span class="font-semibold text-slate-900 italic hover:text-primary transition-colors cursor-pointer"
-          @click="$emit('view', order)">
+          @click="$emit('edit', order)">
           {{ order.order_number }}
         </span>
         <span v-if="order.delivery_date && order.status?.toLowerCase() !== 'delivered' && getStageStatus(order).toLowerCase() !== 'completed'" class="text-[10px] mt-0.5"

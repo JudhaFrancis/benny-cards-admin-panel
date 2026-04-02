@@ -167,18 +167,86 @@ const handleOrderSaved = async (updatedOrderData) => {
 
   try {
     isSaving.value = true;
-    const oid = selectedOrder.value.id; // or updatedOrderData.id
+    const oid = selectedOrder.value.id;
     const payload = updatedOrderData || selectedOrder.value;
 
-    const res = await axios.put(`/api/v1/orders/${oid}`, payload);
+    const formData = new FormData();
+    formData.append("_method", "PUT");
+
+    // Helper to append nested objects/arrays to FormData
+    const appendToFormData = (key, value) => {
+      if (value === null || value === undefined) {
+        formData.append(key, "");
+      } else if (value instanceof File) {
+        formData.append(key, value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v, index) => appendToFormData(`${key}[${index}]`, v));
+      } else if (typeof value === "object") {
+        Object.keys(value).forEach((k) => appendToFormData(`${key}[${k}]`, value[k]));
+      } else {
+        formData.append(key, value);
+      }
+    };
+
+    // Construct FormData from payload
+    const fieldsToInclude = [
+      "customer_name",
+      "customer_email",
+      "customer_phone",
+      "customer_address_1",
+      "customer_address_2",
+      "discount",
+      "extra_charges",
+      "paid_amount",
+      "remarks",
+      "payment_method",
+      "status",
+      "order_date",
+      "coupon_id"
+    ];
+
+    fieldsToInclude.forEach(field => {
+      if (payload[field] !== undefined) formData.append(field, payload[field]);
+    });
+
+    // Special handling for customer_details object if it exists
+    if (payload.customer_details) {
+      Object.keys(payload.customer_details).forEach(key => {
+        formData.append(`customer[${key}]`, payload.customer_details[key] || "");
+      });
+    }
+
+    // append items
+    if (payload.items && Array.isArray(payload.items)) {
+      payload.items.forEach((item, index) => {
+        formData.append(`items[${index}][id]`, item.id || "");
+        formData.append(`items[${index}][product_id]`, item.product_id || "");
+        formData.append(`items[${index}][product_name]`, item.product_name || "");
+        formData.append(`items[${index}][quantity]`, item.quantity || 1);
+        formData.append(`items[${index}][unit_price]`, item.unit_price || 0);
+        
+        if (item.product_image instanceof File) {
+          formData.append(`items[${index}][product_image]`, item.product_image);
+        } else {
+          formData.append(`items[${index}][product_image]`, item.product_image || "");
+        }
+      });
+    }
+
+    const res = await axios.post(`/api/v1/orders/${oid}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     if (res.data.success) {
       toast.success("Order updated successfully");
       isEditModalOpen.value = false;
-      fetchOrders(); // Refresh to be sure
+      fetchOrders();
     }
   } catch (e) {
     console.error(e);
-    toast.error("Failed to save changes");
+    toast.error(e.response?.data?.message || "Failed to save changes");
   } finally {
     isSaving.value = false;
   }

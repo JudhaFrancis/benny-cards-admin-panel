@@ -18,6 +18,7 @@ class OrderDesigning extends Model
         'status',
         'work_assign',
         'design_print',
+        'sticker_image',
         'modified_by'
     ];
 

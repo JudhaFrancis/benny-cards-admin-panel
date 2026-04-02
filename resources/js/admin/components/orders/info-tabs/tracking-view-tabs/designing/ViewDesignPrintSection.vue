@@ -62,6 +62,49 @@
       </div>
     </div>
 
+    <!-- Sticker Design Image View -->
+    <div v-if="order.designing?.sticker_image" class="space-y-4 pt-6 border-t border-slate-100">
+      <label
+        class="text-sm font-semibold text-slate-700 flex items-center gap-2"
+      >
+        <ImageIcon class="h-4 w-4 text-primary" />
+        Sticker Design Image
+      </label>
+      <div class="max-w-[280px] bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm group transition-all hover:shadow-md">
+        <div class="aspect-square relative flex items-center justify-center bg-slate-50">
+          <img :src="getImageSource(order.designing.sticker_image)" class="w-full h-full object-contain" />
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+             <button @click="isPreviewOpen = true" class="p-2 bg-white text-slate-900 rounded-xl hover:bg-slate-50 transition-all active:scale-95 shadow-lg" title="Preview">
+                <EyeIcon class="h-4 w-4" />
+             </button>
+             <a :href="getImageSource(order.designing.sticker_image)" :download="`sticker-${order.order_number}`" class="p-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all active:scale-95 shadow-lg" title="Download">
+                <DownloadIcon class="h-4 w-4" />
+             </a>
+          </div>
+        </div>
+        <div class="px-4 py-2 bg-slate-50/50 border-t border-slate-50 flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sticker Design</span>
+            <div class="flex items-center gap-3">
+               <button @click="isPreviewOpen = true" class="text-[10px] font-bold text-primary hover:underline">Preview</button>
+               <a :href="getImageSource(order.designing.sticker_image)" :download="`sticker-${order.order_number}`" class="text-[10px] font-bold text-primary hover:underline">Download</a>
+            </div>
+        </div>
+      </div>
+
+      <!-- Preview Modal -->
+      <teleport to="body">
+        <div v-if="isPreviewOpen" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm" @click="isPreviewOpen = false"></div>
+          <div class="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center gap-4">
+            <button @click="isPreviewOpen = false" class="absolute -top-12 right-0 p-2 text-white hover:text-slate-300 transition-colors">
+              <XIcon class="h-6 w-6" />
+            </button>
+            <img :src="getImageSource(order.designing.sticker_image)" class="max-w-full max-h-full rounded-2xl shadow-2xl object-contain bg-white" />
+          </div>
+        </div>
+      </teleport>
+    </div>
+
     <!-- Audit Information -->
     <div
       v-if="order.designing && !hideAudit"
@@ -83,19 +126,31 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import {
   Printer as PrinterIcon,
   Sparkles as SparklesIcon,
   CheckCircle as CheckCircleIcon,
   Circle as CircleIcon,
   Clock as ClockIcon,
+  Image as ImageIcon,
+  Eye as EyeIcon,
+  Download as DownloadIcon,
+  X as XIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({
   order: { type: Object, required: true },
   hideAudit: { type: Boolean, default: false },
 });
+
+const isPreviewOpen = ref(false);
+
+const getImageSource = (path) => {
+  if (!path) return "/images/placeholder.webp";
+  if (path.startsWith("data:") || path.startsWith("http")) return path;
+  return `/${path}`;
+};
 
 const designPrint = computed(() => props.order.designing?.design_print || {});
 

@@ -8,6 +8,9 @@ use App\Enums\OrderStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
 
 class OrderService
 {
@@ -129,6 +132,7 @@ class OrderService
                 $order->items()->create([
                     'product_id' => $item['product_id'],
                     'product_name' => $item['product_name'],
+                    'product_image' => $item['product_image'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'discount_amount' => $item['discount_amount'] ?? 0,
@@ -173,6 +177,7 @@ class OrderService
                     $order->items()->create([
                         'product_id' => $item['product_id'],
                         'product_name' => $item['product_name'],
+                        'product_image' => $item['product_image'],
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
                         'discount_amount' => $item['discount_amount'] ?? 0,
@@ -270,6 +275,22 @@ class OrderService
             'dispatch_details' => 'dispatchDelivery',
         ];
 
+        // Handle sticker image upload for designing stage
+        if (isset($data['sticker_image']) && $data['sticker_image'] instanceof UploadedFile) {
+            $file = $data['sticker_image'];
+            $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $uploadPath = public_path('uploads/stickers');
+            if (!File::exists($uploadPath)) {
+                File::makeDirectory($uploadPath, 0777, true);
+            }
+            $file->move($uploadPath, $filename);
+            
+            $order->designing()->updateOrCreate(
+                ['order_id' => $order->id],
+                ['sticker_image' => 'uploads/stickers/' . $filename]
+            );
+        }
+
         DB::transaction(function () use ($order, $data, $stageMap) {
             $updatesByStage = [];
             foreach ($data as $section => $content) {
@@ -277,6 +298,14 @@ class OrderService
                     $stageRelation = $stageMap[$section];
                     if (!isset($updatesByStage[$stageRelation])) {
                         $updatesByStage[$stageRelation] = [];
+                    }
+
+                    // Handle JSON strings from FormData
+                    if (is_string($content)) {
+                        $decoded = json_decode($content, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $content = $decoded;
+                        }
                     }
 
                     // Strip audit details from the JSON data as requested
@@ -415,13 +444,42 @@ class OrderService
     {
         $preparedItems = [];
         foreach ($items as $item) {
-            $product = Product::find($item['product_id']);
-            if (!$product) continue;
+            $productId = $item['product_id'] ?? null;
+            $product = $productId ? Product::find($productId) : null;
+            
+            // If it's not a catalog product, we must have a product_name
+            if (!$product && empty($item['product_name'])) continue;
+
             $quantity = $item['quantity'] ?? 1;
-            $unitPrice = $item['unit_price'] ?? $product->price;
+            $unitPrice = $item['unit_price'] ?? ($product ? $product->price : 0);
             $discountAmount = $item['discount_amount'] ?? 0;
             $totalPrice = max(0, ($quantity * $unitPrice) - $discountAmount);
-            $preparedItems[] = ['product_id' => $product->id, 'product_name' => $item['product_name'] ?? $product->title, 'quantity' => $quantity, 'unit_price' => $unitPrice, 'discount_amount' => $discountAmount, 'total_price' => $totalPrice];
+            
+            $productImage = $item['product_image'] ?? ($product ? $product->image : null);
+
+            // Handle manual item image upload
+            if (isset($item['product_image']) && $item['product_image'] instanceof UploadedFile) {
+                $file = $item['product_image'];
+                $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                
+                $uploadPath = public_path('uploads/orders');
+                if (!File::exists($uploadPath)) {
+                    File::makeDirectory($uploadPath, 0777, true);
+                }
+
+                $file->move($uploadPath, $filename);
+                $productImage = 'uploads/orders/' . $filename;
+            }
+
+            $preparedItems[] = [
+                'product_id' => $product ? $product->id : null,
+                'product_name' => $item['product_name'] ?? ($product ? $product->title : 'Unknown Product'),
+                'product_image' => $productImage,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'discount_amount' => $discountAmount,
+                'total_price' => $totalPrice
+            ];
         }
         return $preparedItems;
     }

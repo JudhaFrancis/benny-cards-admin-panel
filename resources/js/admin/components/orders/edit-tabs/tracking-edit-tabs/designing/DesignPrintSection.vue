@@ -64,6 +64,49 @@
       </div>
     </div>
 
+    <!-- Sticker Design Image -->
+    <div class="space-y-4 pt-4 border-t border-slate-100">
+      <label class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <ImageIcon class="h-3 w-3" /> Sticker Design Image (Optional)
+      </label>
+      
+      <div class="flex items-start gap-6">
+        <div v-if="imagePreview || props.order.designing?.sticker_image" class="relative group w-32 h-32 rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 shadow-sm">
+          <img :src="getImageSource(imagePreview || props.order.designing?.sticker_image)" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <button @click="removeImage" class="p-2 bg-rose-500 text-white rounded-xl hover:bg-rose-600 transition-all active:scale-90" title="Remove image">
+              <Trash2Icon class="h-4 w-4" />
+            </button>
+            <label class="p-2 bg-white text-slate-900 rounded-xl hover:bg-slate-50 transition-all active:scale-90 cursor-pointer" title="Change image">
+              <UploadIcon class="h-4 w-4" />
+              <input type="file" class="hidden" accept="image/*" @change="handleFileChange" />
+            </label>
+          </div>
+        </div>
+        
+        <label v-else class="w-32 h-32 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all text-slate-400 hover:text-primary group bg-slate-50/50">
+          <div class="p-3 rounded-full bg-white shadow-sm group-hover:scale-110 transition-transform">
+            <UploadIcon class="h-6 w-6" />
+          </div>
+          <div class="text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider block">Upload Sticker</span>
+            <span class="text-[9px] font-medium opacity-60">JPG, PNG or WEBP</span>
+          </div>
+          <input type="file" class="hidden" accept="image/*" @change="handleFileChange" />
+        </label>
+
+        <div class="flex-1 space-y-2">
+          <p class="text-xs text-slate-500 leading-relaxed pt-2">
+            Upload any sticker design or reference image for this order. This image will be accessible in the design and printing stages.
+          </p>
+          <ul class="text-[10px] text-slate-400 space-y-1">
+            <li class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-slate-300"></div> Max size: 2MB</li>
+            <li class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-slate-300"></div> Required for custom sticker jobs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <!-- Audit Footer -->
     <div
       v-if="designPrint._audit && !hideAudit"
@@ -87,8 +130,15 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
-import { Clock as ClockIcon, PlusCircle as PlusCircleIcon } from "lucide-vue-next";
+import { ref, computed } from "vue";
+import { 
+  Clock as ClockIcon, 
+  PlusCircle as PlusCircleIcon,
+  Image as ImageIcon,
+  Upload as UploadIcon,
+  Trash2 as Trash2Icon,
+  X as XIcon
+} from "lucide-vue-next";
 
 const props = defineProps({
   order: {
@@ -102,18 +152,42 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:order"]);
+
+const imagePreview = ref(null);
+
+const handleFileChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    imagePreview.value = URL.createObjectURL(file);
+    // Attach the file to the designing stage object so the dialog can find it
+    if (!props.order.designing) props.order.designing = {};
+    props.order.designing.design_print_file = file;
+  }
+};
+
+const removeImage = () => {
+  imagePreview.value = null;
+  if (props.order.designing) {
+    props.order.designing.design_print_file = null;
+    props.order.designing.sticker_image = null;
+  }
+};
+
+const getImageSource = (path) => {
+  if (!path) return "/images/placeholder.webp";
+  if (path.startsWith("blob:") || path.startsWith("data:") || path.startsWith("http")) return path;
+  return `/${path}`;
+};
  
 const designPrint = computed(() => {
   if (!props.order.designing) {
-    props.order.designing = { design_print: {} };
+    props.order.designing = {};
   }
-  // Force design_print to be an object if it's an array or null
   if (!props.order.designing.design_print || Array.isArray(props.order.designing.design_print)) {
     props.order.designing.design_print = {};
   }
   return props.order.designing.design_print;
 });
-
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -132,20 +206,20 @@ const formatAuditDate = (dateString) => {
 };
 
 const designOutputsList = computed({
-  get: () =>
-    designPrint.value.design_outputs
-      ? designPrint.value.design_outputs.split(",")
-      : [],
+  get: () => {
+    const val = designPrint.value?.design_outputs;
+    return val ? val.split(",") : [];
+  },
   set: (val) => {
     designPrint.value.design_outputs = val.join(",");
   },
 });
 
 const printAddonsList = computed({
-  get: () =>
-    designPrint.value.print_addons
-      ? designPrint.value.print_addons.split(",")
-      : [],
+  get: () => {
+    const val = designPrint.value?.print_addons;
+    return val ? val.split(",") : [];
+  },
   set: (val) => {
     designPrint.value.print_addons = val.join(",");
   },
