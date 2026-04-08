@@ -93,7 +93,7 @@ const getAssignedNameHelper = (order, stage) => {
     case 'client-information':
       return order.client_information?.order_details?.order_taken_by;
     case 'designing':
-      return order.designing?.work_assign?.assigned_to;
+      return order.designing?.work_assign?.assigned_to || order.designing?.work_assign?.completed_by;
     case 'printing':
       return order.printing?.printing_status?.assigned_to || order.designing?.work_assign?.assigned_to;
     case 'packaging':
