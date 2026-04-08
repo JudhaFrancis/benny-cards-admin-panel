@@ -24,6 +24,9 @@
       :columns="columns"
       :items="categories"
       :loading="loading"
+      :from="meta.from"
+      manual-filters
+      @filter-change="handleFilterChange"
       empty-text="No categories found matching your criteria."
     >
       <!-- Custom Category Cell -->
@@ -337,8 +340,9 @@ const selectedCategory = ref(null);
 const isPreviewOpen = ref(false);
 const previewImage = ref("");
 const previewTitle = ref("");
+const columnFilters = ref({});
 
-const meta = ref({});
+const meta = ref({ from: 1 });
 const links = ref({});
 const { getModulePermissions } = usePermissions();
 const { canAdd, canView, canEdit, canDelete } =
@@ -355,29 +359,21 @@ const columns = [
   { key: "actions", label: "Actions", align: "right" },
 ];
 
-const filters = reactive({});
-
-
-let searchTimeout = null;
-
 const fetchCategories = async (url = "/api/v1/categories") => {
   loading.value = true;
   try {
     const params = {
-      per_page: 50,
+      per_page: 10,
+      ...columnFilters.value
     };
 
-    const finalUrl = url.includes("?") ? url : url;
-    const response = await axios.get(finalUrl, { params });
+    const response = await axios.get(url, { params });
 
     if (response.data.success) {
-      categories.value = response.data.data.data.map((cat, index) => ({
-        ...cat,
-        sn: index + (response.data.data.from || 1),
-      }));
+      categories.value = response.data.data.data;
       meta.value = {
         total: response.data.data.total,
-        from: response.data.data.from,
+        from: response.data.data.from || 1,
         to: response.data.data.to,
       };
       links.value = {
@@ -390,6 +386,11 @@ const fetchCategories = async (url = "/api/v1/categories") => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = filters;
+  fetchCategories();
 };
 
 

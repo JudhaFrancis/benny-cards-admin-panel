@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\OrderService;
+use App\Services\OrderTrackingService;
 use App\Models\Order;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
@@ -13,7 +14,8 @@ use Illuminate\Validation\Rules\Enum;
 class OrderController extends Controller
 {
     public function __construct(
-        protected OrderService $orderService
+        protected OrderService $orderService,
+        protected OrderTrackingService $orderTrackingService
     ) {
     }
 
@@ -24,7 +26,7 @@ class OrderController extends Controller
     {
         $orders = $this->orderService->listOrders(
             $request->only(['status', 'search', 'stage']),
-            $request->get('limit', 15)
+            $request->get('limit', 10)
         );
 
         return response()->json([
@@ -139,7 +141,7 @@ class OrderController extends Controller
     {
         $order = $this->orderService->getOrder($id);
 
-        $updatedOrder = $this->orderService->updateTracking($order, $request->all());
+        $updatedOrder = $this->orderTrackingService->updateTracking($order, $request->all());
 
         return response()->json([
             'success' => true,

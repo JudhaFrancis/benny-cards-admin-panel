@@ -1,5 +1,5 @@
 <template>
-  <DataTable :columns="columns" :items="processedOrders" :loading="loading" empty-text="No orders found .">
+  <DataTable :columns="columns" :items="processedOrders" :from="from" manual-filters :loading="loading" @filter-change="$emit('filter-change', $event)" empty-text="No orders found .">
     <!-- Custom Row Cells -->
     <template #cell-order_number="{ item: order }">
       <div class="flex flex-col">
@@ -146,6 +146,10 @@ const props = defineProps({
   statusFilter: {
     type: String,
     default: "all",
+  },
+  from: {
+    type: Number,
+    default: 1,
   },
 });
 

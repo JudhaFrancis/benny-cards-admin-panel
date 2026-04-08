@@ -4,7 +4,37 @@
 
     <!-- Filters & Search (REMOVED) -->
 
-    <OrderStageTable :orders="filteredOrders" :loading="loading" :stage="stage" @view="handleView" @edit="handleEdit" />
+    <OrderStageTable :orders="filteredOrders" :loading="loading" :stage="stage" :from="meta.from" @view="handleView" @edit="handleEdit" @filter-change="handleFilterChange" />
+
+    <!-- Pagination Controls -->
+    <div
+      v-if="meta.total > 0"
+      class="bg-white rounded-2xl border border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm"
+    >
+      <p class="text-[11px] text-gray-500 font-medium">
+        Showing
+        <span class="text-gray-700"
+          >{{ (page - 1) * 10 + 1 }} to {{ Math.min(page * 10, meta.total) }}</span
+        >
+        of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
+      </p>
+      <div class="flex items-center gap-2">
+        <button
+          @click="page--"
+          :disabled="page <= 1"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronLeftIcon class="h-4 w-4" />
+        </button>
+        <button
+          @click="page++"
+          :disabled="page >= meta.last_page"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronRightIcon class="h-4 w-4" />
+        </button>
+      </div>
+    </div>
 
     <!-- Dialogs -->
     <StageViewDialog :is-open="isViewModalOpen" :order-id="selectedOrder?.id" :stage="stage"
@@ -25,7 +55,8 @@ import StageViewDialog from "../../components/order-management/StageViewDialog.v
 import StageEditDialog from "../../components/order-management/StageEditDialog.vue";
 import { useAuth } from "../../composables/useAuth";
 import { usePermissions } from "../../composables/usePermissions";
-import { Plus as PlusIcon } from "lucide-vue-next";
+import { Plus as PlusIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from "lucide-vue-next";
+import axios from "axios";
 import OrderCreateDialog from "../../components/orders/OrderCreateDialog.vue";
 
 const { user } = useAuth();
@@ -40,6 +71,9 @@ const props = defineProps({
 
 const orders = ref([]);
 const loading = ref(true);
+const page = ref(1);
+const meta = ref({ total: 0, from: 1 });
+const columnFilters = ref({});
 
 // Modals State
 const isViewModalOpen = ref(false);
@@ -52,22 +86,33 @@ const fetchOrders = async () => {
   loading.value = true;
   try {
     const params = {
-      per_page: 100,
+      page: page.value,
+      per_page: 10,
       stage: props.stage,
+      ...columnFilters.value
     };
 
     const response = await axios.get("/api/v1/orders", { params });
     if (response.data.success) {
-      orders.value = response.data.data.data.map((order, index) => ({
-        ...order,
-        sn: index + (response.data.data.from || 1),
-      }));
+      orders.value = response.data.data.data;
+      meta.value = {
+        total: response.data.data.total,
+        from: response.data.data.from || 1,
+        current_page: response.data.data.current_page,
+        last_page: response.data.data.last_page,
+      };
     }
   } catch (error) {
     console.error("Error fetching orders:", error);
   } finally {
     loading.value = false;
   }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = filters;
+  page.value = 1; // Reset to first page on filter change
+  fetchOrders();
 };
 
 const filteredOrders = computed(() => {
@@ -77,7 +122,7 @@ const filteredOrders = computed(() => {
   const userRole = user.value?.role?.name?.toLowerCase();
   const userName = user.value?.name;
 
-  if (userRole && userRole !== 'super-admin' && userRole !== 'admin') {
+  if (userRole && userRole !== 'super-admin') {
     items = items.filter((o) => {
       const assignedName = getAssignedNameHelper(o, props.stage);
       return assignedName === userName;
@@ -134,5 +179,9 @@ const handleEdit = (order) => {
 onMounted(fetchOrders);
 
 // Refetch if stage or filter changes (if we want backend filter)
-watch(() => props.stage, fetchOrders);
+watch(() => props.stage, () => {
+  page.value = 1;
+  fetchOrders();
+});
+watch(page, fetchOrders);
 </script>

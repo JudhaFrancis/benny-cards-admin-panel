@@ -1,5 +1,6 @@
 <template>
-  <DataTable :columns="columns" :items="processedOrders" :loading="loading" empty-text="No records found.">
+  <DataTable :columns="columns" :items="processedOrders" :loading="loading" :from="from" manual-filters
+    @filter-change="$emit('filter-change', $event)" empty-text="No records found.">
 
 
     <template #cell-order_number="{ item: order }">
@@ -129,10 +130,11 @@ import DataTable from "../ui/data-table/DataTable.vue";
 const props = defineProps({
   orders: { type: Array, required: true },
   loading: { type: Boolean, default: false },
-  stage: { type: String, required: true }
+  stage: { type: String, required: true },
+  from: { type: Number, default: 1 }
 });
 
-defineEmits(["view", "edit"]);
+const emit = defineEmits(["view", "edit", "filter-change"]);
 
 const relationKey = computed(() => {
   switch (props.stage) {
@@ -149,7 +151,7 @@ const processedOrders = computed(() => {
   let filtered = props.orders;
 
   // Filter based on stage record existence
-  filtered = filtered.filter(order => !!getStageData(order));
+  // The backend already filters for orders that have this stage record
 
   return filtered.map(order => {
     const assignedDate = getAssignedDateRaw(order);

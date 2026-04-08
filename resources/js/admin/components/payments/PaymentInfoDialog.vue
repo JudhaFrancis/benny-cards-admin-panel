@@ -25,7 +25,7 @@
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="w-full max-w-2xl transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all border border-gray-100 flex flex-col"
+              class="w-full max-w-6xl transform rounded-[2.5rem] bg-white shadow-2xl transition-all border border-slate-100 flex flex-col h-[85vh] overflow-hidden"
             >
               <div
                 class="bg-primary text-white overflow-hidden shrink-0 sticky top-0 z-10"
@@ -122,29 +122,7 @@
                       </span>
                     </div>
                   </div>
-                  <div class="space-y-1.5">
-                    <p
-                      class="text-xs font-bold text-gray-400 uppercase tracking-widest"
-                    >
-                      Method
-                    </p>
-                    <p class="text-sm font-bold text-gray-700 capitalize">
-                      {{ payment.payment_method.replace("_", " ") }}
-                    </p>
-                  </div>
-                  <div class="space-y-1.5">
-                    <p
-                      class="text-xs font-bold text-gray-400 uppercase tracking-widest"
-                    >
-                      Transaction ID
-                    </p>
-                    <p
-                      class="text-sm font-semibold text-gray-900 font-mono tracking-tight"
-                    >
-                      {{ payment.transaction_id || "N/A" }}
-                    </p>
-                  </div>
-                  <div class="space-y-1.5">
+                  <div class="space-y-1.5 min-w-[200px]">
                     <p
                       class="text-xs font-bold text-gray-400 uppercase tracking-widest"
                     >
@@ -154,20 +132,58 @@
                       {{ formatDate(payment.payment_date) }}
                     </p>
                   </div>
-                  <div class="space-y-1.5">
+                  <div class="space-y-1.5 min-w-[200px]">
                     <p
                       class="text-xs font-bold text-gray-400 uppercase tracking-widest"
                     >
                       Added By
                     </p>
-                    <div class="flex items-center gap-2">
-                      <div
-                        class="w-2 h-2 rounded-full bg-primary/40 animate-pulse"
-                      ></div>
-                      <p class="text-sm font-bold text-gray-700">
-                        {{ payment.added_by?.name || "System" }}
-                      </p>
+                    <div class="flex items-center gap-2 text-primary font-bold">
+                      {{ payment.added_by?.name || "System" }}
                     </div>
+                  </div>
+                </div>
+
+                <div class="space-y-4 pt-6 border-t border-gray-100">
+                  <p
+                    class="text-xs font-bold text-gray-400 uppercase tracking-widest"
+                  >
+                    Payment Breakdown
+                  </p>
+                  <div class="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
+                    <table class="w-full text-left text-sm">
+                      <thead class="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                          <th class="px-4 py-3 font-bold text-gray-600">Method</th>
+                          <th class="px-4 py-3 font-bold text-gray-600">Transaction ID</th>
+                          <th class="px-4 py-3 font-bold text-right text-gray-600">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-50 bg-white">
+                        <tr v-for="(item, idx) in (payment.payment_details || [])" :key="idx" class="hover:bg-gray-50/50 transition-colors">
+                          <td class="px-4 py-3 align-middle">
+                            <div class="flex items-center gap-2">
+                              <span class="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                              <span class="font-bold text-gray-700 capitalize">{{ item.method?.replace('_', ' ') }}</span>
+                            </div>
+                          </td>
+                          <td class="px-4 py-3 align-middle font-mono text-xs text-gray-500">
+                            {{ item.transaction_id || 'N/A' }}
+                          </td>
+                          <td class="px-4 py-3 align-middle text-right font-black text-gray-900">
+                            ₹{{ Number(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }) }}
+                          </td>
+                        </tr>
+                      </tbody>
+                      <tfoot class="bg-gray-50/50 border-t border-gray-100">
+                        <tr>
+                          <td colspan="2" class="px-4 py-3 font-bold text-gray-500 text-right">Total Detailed Amount</td>
+                          <td class="px-4 py-3 font-black text-primary text-right">
+                             ₹{{ Number(payment.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }) }}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
                 </div>
 

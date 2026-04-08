@@ -21,11 +21,20 @@ class BrandController extends Controller
                 $query->where('title', 'like', "%{$search}%")
                     ->orWhere('slug', 'like', "%{$search}%");
             })
+            ->when($request->title, function ($query, $title) {
+                $query->where('title', 'like', "%{$title}%");
+            })
             ->when($request->status !== null && $request->status !== '', function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
+            ->when($request->created_at, function ($query, $date) {
+                $query->whereDate('created_at', $date);
+            })
+            ->when($request->updated_at, function ($query, $date) {
+                $query->whereDate('updated_at', $date);
+            })
             ->latest()
-            ->paginate($request->per_page ?? 15);
+            ->paginate($request->per_page ?? 10);
 
         return response()->json([
             'success' => true,

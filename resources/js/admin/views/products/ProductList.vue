@@ -44,6 +44,9 @@
       :columns="columns"
       :items="products"
       :loading="loading"
+      :from="meta.from"
+      manual-filters
+      @filter-change="handleFilterChange"
       empty-text="No products found in this category."
     >
       <!-- Image Cell -->
@@ -67,10 +70,9 @@
         </div>
       </template>
 
-      <!-- Info Cell -->
       <template #cell-title="{ item: product }">
-        <div class="flex flex-col min-w-[200px]">
-          <span class="text-sm font-bold text-gray-700 tracking-tight">{{
+        <div class="flex flex-col max-w-[350px]">
+          <span class="text-sm font-bold text-gray-700 tracking-tight truncate" :title="product.title">{{
             product.title
           }}</span>
           <div class="flex items-center gap-2 mt-0.5">
@@ -422,15 +424,17 @@ const { getModulePermissions } = usePermissions();
 const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Product");
 
 // State
+// State
 const products = ref([]);
 const loading = ref(true);
-const meta = ref({});
+const meta = ref({ from: 1 });
 const links = ref({});
 const isModalOpen = ref(false);
 const isInfoModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedProduct = ref(null);
 const isDeleting = ref(false);
+const columnFilters = ref({});
 const options = reactive({
   categories: [],
   brands: [],
@@ -452,7 +456,7 @@ const tabOptions = [
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
   { key: "photo", label: "Product", width: "80px", filter: false },
-  { key: "title", label: "Title & Meta", sortable: true },
+  { key: "title", label: "Title & Meta", sortable: true, width: "350px" },
   { key: "price", label: "Price", filterKey: "price" },
   { key: "status", label: "Status" },
   { key: "created_at", label: "Created", type: "date" },
@@ -469,17 +473,15 @@ const fetchProducts = async (url = "/api/v1/products") => {
     const response = await axios.get(url, {
       params: {
         type: filters.type,
-        per_page: 50,
+        per_page: 10,
+        ...columnFilters.value
       },
     });
     if (response.data.success) {
-      products.value = response.data.data.data.map((product, index) => ({
-        ...product,
-        sn: index + (response.data.data.from || 1),
-      }));
+      products.value = response.data.data.data;
       meta.value = {
         total: response.data.data.total,
-        from: response.data.data.from,
+        from: response.data.data.from || 1,
         to: response.data.data.to,
       };
       links.value = {
@@ -493,6 +495,11 @@ const fetchProducts = async (url = "/api/v1/products") => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = filters;
+  fetchProducts();
 };
 
 const fetchOptions = async () => {

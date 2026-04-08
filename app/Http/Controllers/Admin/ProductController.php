@@ -27,6 +27,12 @@ class ProductController extends Controller
                         ->orWhere('summary', 'like', "%{$search}%");
                 });
             })
+            ->when($request->title, function ($query, $title) {
+                $query->where('title', 'like', "%{$title}%");
+            })
+            ->when($request->price, function ($query, $price) {
+                $query->where('price', 'like', "%{$price}%");
+            })
             ->when($request->type, function ($query, $type) {
                 $query->where('type', $type);
             })
@@ -39,8 +45,14 @@ class ProductController extends Controller
             ->when($request->brand_id, function ($query, $brandId) {
                 $query->where('brand_id', $brandId);
             })
+            ->when($request->created_at, function ($query, $date) {
+                $query->whereDate('created_at', $date);
+            })
+            ->when($request->updated_at, function ($query, $date) {
+                $query->whereDate('updated_at', $date);
+            })
             ->latest()
-            ->paginate($request->per_page ?? 15);
+            ->paginate($request->per_page ?? 10);
 
         return response()->json([
             'success' => true,

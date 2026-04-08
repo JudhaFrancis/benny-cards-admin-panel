@@ -16,11 +16,7 @@ class Payment extends Model
         'signature_name',
         'payment_number',
         'payment_date',
-        'amount',
-        'payment_method',
         'payment_status',
-        'transaction_id',
-        'payment_gateway',
         'payment_details',
         'notes',
         'added_by',
@@ -29,9 +25,18 @@ class Payment extends Model
 
     protected $casts = [
         'payment_date' => 'datetime',
-        'amount' => 'decimal:2',
         'payment_details' => 'array',
     ];
+
+    protected $appends = ['amount'];
+
+    public function getAmountAttribute()
+    {
+        if (!is_array($this->payment_details)) return 0;
+        return array_reduce($this->payment_details, function ($carry, $item) {
+            return $carry + (float)($item['amount'] ?? 0);
+        }, 0);
+    }
 
     // Relationships
     public function order(): BelongsTo

@@ -25,7 +25,7 @@ class PriceRangeController extends Controller
                 $query->where('status', $request->status);
             })
             ->latest()
-            ->paginate($request->per_page ?? 15);
+            ->paginate($request->per_page ?? 10);
 
         return response()->json([
             'success' => true,

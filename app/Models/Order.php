@@ -113,7 +113,10 @@ class Order extends Model
     // Helper methods
     public function calculatePaidAmount(): float
     {
-        return (float) $this->payments()->where('payment_status', 'completed')->sum('amount');
+        $payments = $this->payments()->where('payment_status', 'completed')->get();
+        return (float) $payments->sum(function ($payment) {
+            return (float) $payment->amount; // Uses the getAmountAttribute accessor
+        });
     }
 
     public function updatePaymentStatus(): void

@@ -21,10 +21,42 @@
       :status-filter="statusFilter"
       :orders="filteredOrders"
       :loading="loading"
+      :from="meta.from"
+      @filter-change="handleFilterChange"
       @view-info="handleViewInfo"
       @edit="handleEdit"
       @delete="handleConfirmDelete"
     />
+
+    <!-- Pagination Controls -->
+    <div
+      v-if="meta.total > 0"
+      class="bg-white rounded-2xl border border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm"
+    >
+      <p class="text-[11px] text-gray-500 font-medium">
+        Showing
+        <span class="text-gray-700"
+          >{{ meta.from || 0 }} to {{ (meta.from || 0) + filteredOrders.length - 1 }}</span
+        >
+        of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
+      </p>
+      <div class="flex items-center gap-2">
+        <button
+          @click="page--"
+          :disabled="page <= 1"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronLeftIcon class="h-4 w-4" />
+        </button>
+        <button
+          @click="page++"
+          :disabled="page >= meta.last_page"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronRightIcon class="h-4 w-4" />
+        </button>
+      </div>
+    </div>
 
     <!-- Dialogs -->
     <OrderInfoDialog
@@ -63,10 +95,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import {
-  Search as SearchIcon,
-  Plus as PlusIcon,
-  Activity as ActivityIcon,
   CreditCard as CreditCardIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-vue-next";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -90,25 +121,24 @@ const loading = ref(true);
 const isSaving = ref(false);
 const page = ref(1);
 const statusFilter = ref("all");
-const meta = ref({ total: 0 });
+const columnFilters = ref({});
+const meta = ref({ total: 0, from: 1 });
 
 const fetchOrders = async () => {
   loading.value = true;
   try {
     const params = {
       page: page.value,
-      per_page: 100,
+      per_page: 10,
+      ...columnFilters.value
     };
 
     const response = await axios.get("/api/v1/orders", { params });
     if (response.data.success) {
-      orders.value = response.data.data.data.map((order, index) => ({
-        ...order,
-        sn: index + (response.data.data.from || 1),
-      }));
+      orders.value = response.data.data.data;
       meta.value = {
         total: response.data.data.total,
-        from: response.data.data.from,
+        from: response.data.data.from || 1,
         current_page: response.data.data.current_page,
         last_page: response.data.data.last_page,
       };
@@ -119,6 +149,12 @@ const fetchOrders = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = filters;
+  page.value = 1;
+  fetchOrders();
 };
 
 onMounted(() => {

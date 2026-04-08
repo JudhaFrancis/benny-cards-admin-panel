@@ -22,7 +22,7 @@ class PaymentController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('payment_number', 'like', "%{$search}%")
-                        ->orWhere('transaction_id', 'like', "%{$search}%")
+                        ->orWhere('payment_details', 'like', "%{$search}%")
                         ->orWhereHas('order', function ($o) use ($search) {
                             $o->where('order_number', 'like', "%{$search}%");
                         });
@@ -54,11 +54,12 @@ class PaymentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'order_id' => 'required|exists:orders,id',
-            'amount' => 'required|numeric|min:0',
             'payment_date' => 'required|date',
-            'payment_method' => 'required|in:cash,card,upi,net_banking,qr_code,bank_transfer,cheque,wallet',
             'payment_status' => 'nullable|in:pending,completed,failed,refunded,cancelled',
-            'transaction_id' => 'nullable|string',
+            'payment_details' => 'required|array',
+            'payment_details.*.method' => 'required|in:cash,card,upi,net_banking,qr_code,bank_transfer,cheque,wallet',
+            'payment_details.*.amount' => 'required|numeric|min:0',
+            'payment_details.*.transaction_id' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
@@ -76,11 +77,9 @@ class PaymentController extends Controller
             $payment = Payment::create([
                 'order_id' => $request->order_id,
                 'payment_number' => 'TEMP-' . uniqid(),
-                'amount' => $request->amount,
                 'payment_date' => $request->payment_date,
-                'payment_method' => $request->payment_method,
                 'payment_status' => $request->payment_status ?? 'completed',
-                'transaction_id' => $request->transaction_id,
+                'payment_details' => $request->payment_details,
                 'notes' => $request->notes,
                 'added_by' => auth()->id(),
             ]);
@@ -140,10 +139,11 @@ class PaymentController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'amount' => 'required|numeric|min:0',
             'payment_date' => 'required|date',
-            'payment_method' => 'required|in:cash,card,upi,net_banking,qr_code,bank_transfer,cheque,wallet',
-            'transaction_id' => 'nullable|string',
+            'payment_details' => 'required|array',
+            'payment_details.*.method' => 'required|in:cash,card,upi,net_banking,qr_code,bank_transfer,cheque,wallet',
+            'payment_details.*.amount' => 'required|numeric|min:0',
+            'payment_details.*.transaction_id' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
@@ -160,10 +160,8 @@ class PaymentController extends Controller
 
             $payment = Payment::findOrFail($id);
             $payment->update($request->only([
-                'amount',
                 'payment_date',
-                'payment_method',
-                'transaction_id',
+                'payment_details',
                 'notes'
             ]) + ['modified_by' => auth()->id()]);
 

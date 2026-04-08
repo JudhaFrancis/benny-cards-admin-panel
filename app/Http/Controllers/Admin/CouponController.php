@@ -19,14 +19,23 @@ class CouponController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where('code', 'like', "%{$search}%");
             })
+            ->when($request->code, function ($query, $code) {
+                $query->where('code', 'like', "%{$code}%");
+            })
             ->when($request->status !== null && $request->status !== '', function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
             ->when($request->type !== null && $request->type !== '', function ($query) use ($request) {
                 $query->where('type', $request->type);
             })
+            ->when($request->created_at, function ($query, $date) {
+                $query->whereDate('created_at', $date);
+            })
+            ->when($request->updated_at, function ($query, $date) {
+                $query->whereDate('updated_at', $date);
+            })
             ->latest()
-            ->paginate($request->per_page ?? 15);
+            ->paginate($request->per_page ?? 10);
 
         return response()->json([
             'success' => true,

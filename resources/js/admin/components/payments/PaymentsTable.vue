@@ -35,9 +35,15 @@
     </template>
 
     <template #cell-method="{ item: payment }">
-      <span class="capitalize text-slate-600 font-medium">{{
-        payment.payment_method.replace("_", " ")
-      }}</span>
+      <div class="flex flex-wrap gap-1 max-w-[200px]">
+        <span 
+          v-for="(method, idx) in [...new Set((payment.payment_details || []).map(d => d.method))]" 
+          :key="idx"
+          class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200 capitalize"
+        >
+          {{ method.replace('_', ' ') }}
+        </span>
+      </div>
     </template>
 
     <template #cell-status="{ item: payment }">
