@@ -111,12 +111,15 @@ class OrderTrackingService
             }
 
             // Sync delivery date to orders table from either client_info or order_details
-            $newDeliveryDate = $data['order_details']['expected_delivery_date'] 
-                ?? $data['client_info']['expected_delivery_date'] 
+            $clientInfoUpdates = $updatesByStage['clientInformation'] ?? [];
+            $newDeliveryDate = $clientInfoUpdates['order_details']['expected_delivery_date'] 
+                ?? $clientInfoUpdates['client_info']['expected_delivery_date'] 
                 ?? null;
 
             if ($newDeliveryDate) {
-                $order->update(['delivery_date' => $newDeliveryDate]);
+                // Ensure date format is correct for database if it's an ISO string from frontend
+                $formattedDate = date('Y-m-d H:i:s', strtotime($newDeliveryDate));
+                $order->update(['delivery_date' => $formattedDate]);
             }
 
             foreach ($updatesByStage as $relation => $sectionData) {

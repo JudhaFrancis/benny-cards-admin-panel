@@ -181,6 +181,7 @@ onMounted(fetchOrders);
 // Refetch if stage or filter changes (if we want backend filter)
 watch(() => props.stage, () => {
   page.value = 1;
+  columnFilters.value = {}; // Reset filters when switching between stages
   fetchOrders();
 });
 watch(page, fetchOrders);

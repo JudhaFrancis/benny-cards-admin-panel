@@ -25,7 +25,7 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orders = $this->orderService->listOrders(
-            $request->only(['status', 'search', 'stage']),
+            $request->all(),
             $request->get('limit', 10)
         );
 

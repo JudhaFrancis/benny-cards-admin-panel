@@ -31,18 +31,18 @@
           <tr class="bg-slate-50/50 border-b border-slate-100 sticky top-[49px] z-10">
             <th v-for="column in columns" :key="'filter-' + column.key" class="px-3 py-2 border-slate-100">
               <div v-if="shouldShowFilter(column)" class="relative group min-w-[120px]">
-                <DatePicker v-if="column.type === 'date'" v-model="filters[column.key]" placeholder="Select Date" />
+                <DatePicker v-if="column.type === 'date'" v-model="filters[column.filterKey || column.key]" placeholder="Select Date" />
                 <div v-else-if="column.type === 'select'" class="relative">
-                  <Listbox v-model="filters[column.key]">
+                  <Listbox v-model="filters[column.filterKey || column.key]">
                     <div class="relative">
                       <ListboxButton :class="[
                         'w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all pr-8 text-left shadow-sm min-h-[31px] flex items-center',
-                        !filters[column.key] ? 'text-slate-400/50' : 'text-slate-700'
+                        !filters[column.filterKey || column.key] ? 'text-slate-400/50' : 'text-slate-700'
                       ]">
                         <span class="block truncate">
                           {{ getSelectedLabel(column) }}
                         </span>
-                        <span v-if="!filters[column.key]" class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <span v-if="!filters[column.filterKey || column.key]" class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                           <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                         </span>
                       </ListboxButton>
@@ -75,9 +75,9 @@
                     </div>
                   </Listbox>
                 </div>
-                <input v-else type="text" v-model="filters[column.key]" :placeholder="`Filter ${column.label}...`"
+                <input v-else type="text" v-model="filters[column.filterKey || column.key]" :placeholder="`Filter ${column.label}...`"
                   class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-400/50 pr-8 shadow-sm" />
-                <button v-if="filters[column.key]" @click="filters[column.key] = ''"
+                <button v-if="filters[column.filterKey || column.key]" @click="filters[column.filterKey || column.key] = ''"
                   class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-md hover:bg-slate-100">
                   <XIcon class="h-3 w-3" />
                 </button>
@@ -228,7 +228,7 @@ const resolveValue = (obj, path) => {
 };
 
 const getSelectedLabel = (column) => {
-  const value = filters.value[column.key];
+  const value = filters.value[column.filterKey || column.key];
   if (value === "" || value === undefined || value === null) return column.placeholder || "All Status";
   const option = column.options?.find(opt => opt.value === value);
   return option ? option.label : value;

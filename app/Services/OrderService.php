@@ -15,7 +15,8 @@ class OrderService
 {
     public function __construct(
         protected OrderTrackingService $trackingService
-    ) {}
+    ) {
+    }
 
     /**
      * Update order tracking details.
@@ -64,48 +65,279 @@ class OrderService
 
                 // Critical: Always filter by stage existence to fix pagination bugs for everyone.
                 if ($stageRelation) {
-                    $query->whereHas($stageRelation);
-                }
+                    $query->whereHas($stageRelation, function ($sub) use ($filters, $stage) {
+                        // Capture the date from any possible key name
+                        $assignedDate = data_get($filters, 'computed_assigned_date') 
+                                     ?: data_get($filters, 'assigned_date')
+                                     ?: data_get($filters, 'date');
 
+                        if ($assignedDate) {
+                            $time = strtotime($assignedDate);
+                            // Try every possible formatting of the date
+                            $vals = [
+                                date('d-m-Y', $time),
+                                date('Y-m-d', $time),
+                                date('d/m/Y', $time),
+                                date('m-d-Y', $time)
+                            ];
+                            
+                            $col = match ($stage) {
+                                'designing' => 'work_assign',
+                                'printing' => 'printing_status',
+                                'packaging' => 'packaging_logistics',
+                                'delivery' => 'dispatch_mode',
+                                default => null
+                            };
+                            
+                            if ($col) {
+                                $sub->where(function($q) use ($col, $vals) {
+                                    foreach ($vals as $v) {
+                                        $q->orWhere($col, 'LIKE', "%{$v}%");
+                                    }
+                                });
+                            }
+                        }
+
+                        // Printing Days Status Filter (Delayed / On Time)
+                        $printingDays = data_get($filters, 'printing_days_status');
+                        if ($stage === 'printing' && $printingDays && $printingDays !== 'all') {
+                            if ($printingDays === 'delayed') {
+                                $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.assigned_date')), '%d-%m-%Y'), CURDATE()) < 0");
+                            } else {
+                                $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.assigned_date')), '%d-%m-%Y'), CURDATE()) >= 0");
+                            }
+                        }
+
+                        // Packaging Start/End Time Filters
+                        // Packaging Start/End Time Filters (Hyper-Robust)
+                        // Packaging Start/End Time Filters (Hybrid Format Match)
+                        if ($stage === 'packaging') {
+                            $startTime = data_get($filters, 'start_time');
+                            if ($startTime) {
+                                $time = strtotime($startTime);
+                                $sub->where(function($q) use ($startTime, $time) {
+                                    $q->orWhere('packaging_logistics', 'LIKE', '%' . date('H:i', $time) . '%')
+                                      ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i A', $time) . '%')
+                                      ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i a', $time) . '%')
+                                      ->orWhere('packaging_logistics', 'LIKE', '%' . preg_replace('/[^0-9]/', '%', $startTime) . '%');
+                                });
+                            }
+                            $endTime = data_get($filters, 'end_time');
+                            if ($endTime) {
+                                $time = strtotime($endTime);
+                                $sub->where(function($q) use ($endTime, $time) {
+                                    $q->orWhere('packaging_logistics', 'LIKE', '%' . date('H:i', $time) . '%')
+                                      ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i A', $time) . '%')
+                                      ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i a', $time) . '%')
+                                      ->orWhere('packaging_logistics', 'LIKE', '%' . preg_replace('/[^0-9]/', '%', $endTime) . '%');
+                                });
+                            }
+                        }
+                    });
+                }
                 // If NOT Super Admin, further restrict to assigned records.
                 if (!$isSuperAdmin) {
                     $userName = $user->name;
                     $userId = $user->id;
 
-                $query->where(function ($q) use ($userName, $userId) {
-                    $q->where('added_by', $userId)
-                      ->orWhereHas('clientInformation', function ($sub) use ($userName) {
-                          $sub->where('order_details->order_taken_by', $userName);
-                      })
-                      ->orWhereHas('designing', function ($sub) use ($userName) {
-                          $sub->where('work_assign->assigned_to', $userName);
-                      })
-                      ->orWhereHas('printing', function ($sub) use ($userName) {
-                          $sub->where('printing_status->assigned_to', $userName);
-                      })
-                      ->orWhereHas('packaging', function ($sub) use ($userName) {
-                          $sub->where('packaging_logistics->crafted_by', $userName)
-                              ->orWhere('packaging_status->packed_by', $userName);
-                      })
-                      ->orWhereHas('dispatchDelivery', function ($sub) use ($userName) {
-                          $sub->where('dispatch_mode->signature_name', $userName);
-                      });
+                    $query->where(function ($q) use ($userName, $userId, $stage) {
+                        $q->where('added_by', $userId);
+
+                        // Stage-specific assignment checks
+                        if ($stage === 'client-information') {
+                            $q->orWhereHas('clientInformation', fn($sub) => $sub->where('order_details->order_taken_by', $userName));
+                        } elseif ($stage === 'designing') {
+                            $q->orWhereHas('designing', fn($sub) => $sub->where('work_assign->assigned_to', $userName));
+                        } elseif ($stage === 'printing') {
+                            $q->orWhereHas('printing', fn($sub) => $sub->where('printing_status->assigned_to', $userName));
+                        } elseif ($stage === 'packaging') {
+                            $q->orWhereHas('packaging', fn($sub) => $sub->where('packaging_logistics->crafted_by', $userName)->orWhere('packaging_status->packed_by', $userName));
+                        } elseif ($stage === 'delivery') {
+                            $q->orWhereHas('dispatchDelivery', fn($sub) => $sub->where('dispatch_mode->signature_name', $userName));
+                        }
+                    });
+                }
+            })
+            ->when(data_get($filters, 'resolved_status') ?: data_get($filters, 'status'), function (Builder $query, $value) {
+                if ($value !== 'all') {
+                    $query->where(function ($q) use ($value) {
+                        // 1. Check main table status first
+                        $q->where('status', '=', $value);
+
+                        // 2. High-Precision Stage Mapping (matches the model's getResolvedStatusAttribute logic)
+                        if (stripos('Delivered', $value) !== false) {
+                            $q->orWhereHas('dispatchDelivery', fn($sq) => $sq->where('status', 'Completed'));
+                        }
+                        
+                        if (stripos('Out for Delivery', $value) !== false) {
+                            $q->orWhereHas('dispatchDelivery', fn($sq) => $sq->where('status', 'Process'));
+                        }
+
+                        if (stripos('Packed', $value) !== false) {
+                            $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Completed'))
+                              ->whereDoesntHave('dispatchDelivery');
+                        }
+
+                        if (stripos('Packing in Progress', $value) !== false) {
+                            $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Process'));
+                        }
+
+                        if (stripos('Printed', $value) !== false) {
+                            $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Completed'))
+                              ->whereDoesntHave('packaging');
+                        }
+
+                        if (stripos('Printing in Progress', $value) !== false) {
+                            $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Process'));
+                        }
+
+                        if (stripos('Designed', $value) !== false) {
+                            $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Completed'))
+                              ->whereDoesntHave('printing');
+                        }
+
+                        if (stripos('Designing in Progress', $value) !== false) {
+                            $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Process'));
+                        }
+
+                        if (stripos('Confirmed', $value) !== false) {
+                            $q->orWhereHas('clientInformation', fn($sq) => $sq->where('status', 'Completed'))
+                              ->whereDoesntHave('designing');
+                        }
+
+                        if (stripos('New Order', $value) !== false) {
+                            $q->orWhereDoesntHave('clientInformation');
+                        }
+                    });
+                }
+            })
+
+            ->when(data_get($filters, 'order_date'), function (Builder $query, $value) {
+                $query->whereDate('order_date', $value);
+            })
+            ->when(data_get($filters, 'delivery_date'), function (Builder $query, $value) {
+                $query->whereDate('delivery_date', $value);
+            })
+            ->when(data_get($filters, 'items_count'), function (Builder $query, $value) {
+                $query->where('items_count', $value);
+            })
+            ->when(data_get($filters, 'order_number'), function (Builder $query, $value) {
+                $query->where('order_number', 'like', "%{$value}%");
+            })
+            ->when(data_get($filters, 'customer_details_name') ?: data_get($filters, 'customer_details.name'), function (Builder $query, $value) {
+                $query->whereHas('customerDetails', function (Builder $sub) use ($value) {
+                    $sub->where('name', 'like', "%{$value}%");
                 });
             })
-            ->when(isset($filters['status']) && $filters['status'] !== 'all', function (Builder $query) use ($filters) {
-                $query->where('status', $filters['status']);
-            })
-            ->when(isset($filters['order_number']), function (Builder $query) use ($filters) {
-                $query->where('order_number', 'like', "%{$filters['order_number']}%");
-            })
-            ->when(isset($filters['customer_details.name']), function (Builder $query) use ($filters) {
-                $query->whereHas('customerDetails', function (Builder $sub) use ($filters) {
-                    $sub->where('name', 'like', "%{$filters['customer_details.name']}%");
+            ->when(data_get($filters, 'customer_details_phone') ?: data_get($filters, 'customer_details.phone'), function (Builder $query, $value) {
+                $query->whereHas('customerDetails', function (Builder $sub) use ($value) {
+                    $sub->where('phone', 'like', "%{$value}%");
                 });
             })
-            ->when(isset($filters['customer_details.phone']), function (Builder $query) use ($filters) {
-                $query->whereHas('customerDetails', function (Builder $sub) use ($filters) {
-                    $sub->where('phone', 'like', "%{$filters['customer_details.phone']}%");
+            ->when(data_get($filters, 'created_at'), function (Builder $query, $value) {
+                $query->whereDate('created_at', $value);
+            })
+            ->when(data_get($filters, 'computed_modified_at') ?: data_get($filters, 'updated_at'), function (Builder $query, $value) {
+                $query->where(function ($q) use ($value) {
+                    // Check main table
+                    $q->whereDate('updated_at', $value)
+                      // Check all stage tables
+                      ->orWhereHas('clientInformation', fn($sub) => $sub->whereDate('updated_at', $value))
+                      ->orWhereHas('designing', fn($sub) => $sub->whereDate('updated_at', $value))
+                      ->orWhereHas('printing', fn($sub) => $sub->whereDate('updated_at', $value))
+                      ->orWhereHas('packaging', fn($sub) => $sub->whereDate('updated_at', $value))
+                      ->orWhereHas('dispatchDelivery', fn($sub) => $sub->whereDate('updated_at', $value));
+                });
+            })
+            // Client Information Stage Filters
+            // Stage-Aware Assignment Filters (Assigned Name)
+            ->when(data_get($filters, 'computed_assigned_name'), function (Builder $query, $value) {
+                $query->where(function ($q) use ($value) {
+                    $q->whereHas('clientInformation', function ($sub) use ($value) {
+                        $sub->where('order_details->order_taken_by', 'like', "%{$value}%");
+                    })
+                        ->orWhereHas('designing', function ($sub) use ($value) {
+                            $sub->where('work_assign->assigned_to', 'like', "%{$value}%");
+                        })
+                        ->orWhereHas('printing', function ($sub) use ($value) {
+                            $sub->where('printing_status->assigned_to', 'like', "%{$value}%");
+                        })
+                        ->orWhereHas('packaging', function ($sub) use ($value) {
+                            $sub->where('packaging_logistics->crafted_by', 'like', "%{$value}%");
+                        })
+                        ->orWhereHas('dispatchDelivery', function ($sub) use ($value) {
+                            $sub->where('dispatch_mode->signature_name', 'like', "%{$value}%");
+                        });
+                });
+            })
+            // Process Status (Designing)
+            ->when(data_get($filters, 'computed_process_status'), function (Builder $query, $value) {
+                if ($value === 'Content Received') {
+                    $query->whereHas('designing', fn($sub) => $sub->where('work_assign->content_received', true));
+                } elseif ($value === 'Content Not Received') {
+                    $query->whereHas('designing', fn($sub) => $sub->where('work_assign->content_received', false));
+                }
+            })
+            // Completed By (Designing)
+            ->when(data_get($filters, 'computed_completed_by'), function (Builder $query, $value) {
+                $query->whereHas('designing', fn($sub) => $sub->where('work_assign->completed_by', 'like', "%{$value}%"));
+            })
+            // Printing Days Status (Printing)
+            ->when(data_get($filters, 'computed_printing_days_status'), function (Builder $query, $value) {
+                // This logic mirrors the frontend date calculation roughly
+                if ($value === 'Delayed') {
+                    $query->whereHas('printing', function ($sub) {
+                        $sub->whereRaw('DATEDIFF(NOW(), json_unquote(json_extract(printing_status, "$.assigned_date"))) > 7');
+                    });
+                } elseif ($value === 'On Time') {
+                    $query->whereHas('printing', function ($sub) {
+                        $sub->whereRaw('DATEDIFF(NOW(), json_unquote(json_extract(printing_status, "$.assigned_date"))) <= 7');
+                    });
+                }
+            })
+
+            ->when(data_get($filters, 'printing_days_status') && data_get($filters, 'printing_days_status') !== 'all', function (Builder $query) use ($filters) {
+                $status = data_get($filters, 'printing_days_status');
+                $query->whereHas('printing', function ($sub) use ($status) {
+                    if ($status === 'delayed') {
+                        $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.assigned_date')), '%d-%m-%Y'), CURDATE()) < 0");
+                    } else {
+                        $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.assigned_date')), '%d-%m-%Y'), CURDATE()) >= 0");
+                    }
+                });
+            })
+            ->when(data_get($filters, 'client_information.order_details.order_placed_in') ?: data_get($filters, 'client_information_order_details_order_placed_in'), function (Builder $query, $value) {
+                $query->whereHas('clientInformation', function (Builder $sub) use ($value) {
+                    $sub->where('order_details->order_placed_in', $value);
+                });
+            })
+            // Stage-Aware Status Filter (Strict to current stage if provided)
+            ->when(data_get($filters, 'computed_stage_status'), function (Builder $query, $value) use ($filters) {
+                $stage = data_get($filters, 'stage');
+
+                $query->where(function ($q) use ($value, $stage) {
+                    if ($stage) {
+                        $relationMapping = [
+                            'client-information' => 'clientInformation',
+                            'designing' => 'designing',
+                            'printing' => 'printing',
+                            'packaging' => 'packaging',
+                            'delivery' => 'dispatchDelivery'
+                        ];
+
+                        $relation = $relationMapping[$stage] ?? null;
+                        if ($relation) {
+                            $q->whereHas($relation, fn($sub) => $sub->where('status', 'like', "%{$value}%"));
+                            return;
+                        }
+                    }
+
+                    // Fallback for global search or unknown stage
+                    $q->whereHas('clientInformation', fn($sub) => $sub->where('status', 'like', "%{$value}%"))
+                        ->orWhereHas('designing', fn($sub) => $sub->where('status', 'like', "%{$value}%"))
+                        ->orWhereHas('printing', fn($sub) => $sub->where('status', 'like', "%{$value}%"))
+                        ->orWhereHas('packaging', fn($sub) => $sub->where('status', 'like', "%{$value}%"))
+                        ->orWhereHas('dispatchDelivery', fn($sub) => $sub->where('status', 'like', "%{$value}%"));
                 });
             })
             ->when(isset($filters['payment_status']) && $filters['payment_status'] !== '', function (Builder $query) use ($filters) {
@@ -274,6 +506,11 @@ class OrderService
 
             if (isset($data['order_date']))
                 $order->order_date = $data['order_date'];
+            if (isset($data['delivery_date'])) {
+                $order->delivery_date = $data['delivery_date'];
+            } elseif (isset($data['customer']['expected_delivery_date'])) {
+                $order->delivery_date = $data['customer']['expected_delivery_date'];
+            }
 
             $order->updatePaymentStatus();
             $order->modified_by = auth()->id();
@@ -327,184 +564,32 @@ class OrderService
         return $order->load(['items.product', 'customerDetails', 'payments', 'coupon', 'clientInformation', 'designing', 'printing', 'packaging', 'dispatchDelivery']);
     }
 
-    /**
-     * Update order tracking details.
-     */
-    public function updateTracking(Order $order, array $data): Order
-    {
-        $stageMap = [
-            'order_details' => 'clientInformation',
-            'client_info' => 'clientInformation',
-            'card_specs' => 'clientInformation',
-            'work_assign' => 'designing',
-            'design_print' => 'designing',
-            'printing_status' => 'printing',
-            'packaging_logistics' => 'packaging',
-            'packaging_status' => 'packaging',
-            'delivery_location' => 'dispatchDelivery',
-            'dispatch_mode' => 'dispatchDelivery',
-            'dispatch_details' => 'dispatchDelivery',
-        ];
 
-        DB::transaction(function () use ($order, $data, $stageMap) {
-            $updatesByStage = [];
-            foreach ($data as $section => $content) {
-                if (isset($stageMap[$section])) {
-                    $stageRelation = $stageMap[$section];
-                    if (!isset($updatesByStage[$stageRelation])) {
-                        $updatesByStage[$stageRelation] = [];
-                    }
-
-                    // Strip audit details from the JSON data as requested
-                    if (is_array($content)) {
-                        unset($content['_audit']);
-                    }
-                    
-                    $updatesByStage[$stageRelation][$section] = $content;
-                }
-            }
-
-            // Handle direct status updates for a specific stage
-            if (isset($data['status'])) {
-                $relation = $data['_stage'] ?? null;
-                
-                // Fallback induction for _stage if not provided
-                if (!$relation) {
-                    foreach ($data as $key => $val) {
-                        if (isset($stageMap[$key])) {
-                            $relation = $stageMap[$key];
-                            break;
-                        }
-                    }
-                }
-
-                if ($relation) {
-                    $status = $data['status'];
-                    $order->{$relation}()->updateOrCreate(
-                        ['order_id' => $order->id],
-                        [
-                            'status' => $status,
-                            'modified_by' => auth()->id()
-                        ]
-                    );
-
-                    // Sequential Stage Triggering
-                    if ($status === 'Completed') {
-                        if ($relation === 'clientInformation') {
-                            $order->designing()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
-                        } elseif ($relation === 'designing') {
-                            $order->printing()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
-                        } elseif ($relation === 'printing') {
-                            $order->packaging()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
-                        } elseif ($relation === 'packaging') {
-                            $order->dispatchDelivery()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
-                        }
-                    }
-                }
-            }
-
-            // Sync delivery date to orders table from either client_info or order_details
-            $newDeliveryDate = $data['order_details']['expected_delivery_date'] 
-                ?? $data['client_info']['expected_delivery_date'] 
-                ?? null;
-
-            if ($newDeliveryDate) {
-                $order->update(['delivery_date' => $newDeliveryDate]);
-            }
-
-            foreach ($updatesByStage as $relation => $sectionData) {
-                $order->{$relation}()->updateOrCreate(
-                    ['order_id' => $order->id],
-                    array_merge($sectionData, [
-                        'modified_by' => auth()->id()
-                    ])
-                );
-            }
-
-            if (isset($data['payment_info'])) {
-                $paymentInfo = $data['payment_info'];
-                $payments = $paymentInfo['payments'] ?? $paymentInfo;
-                if (!is_array($payments)) $payments = [$payments];
-
-                $existingPaymentIds = $order->payments()->where('payment_status', 'completed')->pluck('id')->toArray();
-                $processedIds = [];
-
-                foreach ($payments as $payInfo) {
-                    $amount = $payInfo['amount'] ?? 0;
-                    if ($amount <= 0) continue;
-
-                    $paymentData = [
-                        'payment_method' => $payInfo['payment_method'] ?? 'cash', 
-                        'transaction_id' => $payInfo['transaction_id'] ?? null, 
-                        'signature_name' => $payInfo['signature_name'] ?? null, 
-                        'payment_status' => 'completed', 
-                        'payment_date' => $payInfo['payment_date'] ?? now(), 
-                        'amount' => $amount, 
-                        'added_by' => auth()->id(), 
-                        'modified_by' => auth()->id()
-                    ];
-
-                    if (isset($payInfo['id'])) {
-                        $payment = $order->payments()->find($payInfo['id']);
-                        if ($payment) { 
-                            $payment->update($paymentData); 
-                            $processedIds[] = $payment->id; 
-                        }
-                    } else {
-                        $paymentData['payment_number'] = 'TEMP-' . time() . '-' . rand(1000, 9999);
-                        $newPayment = $order->payments()->create($paymentData);
-                        $newPayment->update(['payment_number' => 'PAY' . $newPayment->id . '-' . date('dmY')]);
-                        $processedIds[] = $newPayment->id;
-                    }
-                }
-
-                $idsToDelete = array_diff($existingPaymentIds, $processedIds);
-                if (!empty($idsToDelete)) $order->payments()->whereIn('id', $idsToDelete)->delete();
-
-                $order->updatePaymentStatus();
-            }
-
-            // Update total amount based on dispatch expense
-            $order->refresh();
-            $expense = (float) ($order->dispatchDelivery->dispatch_mode['expense'] ?? 0);
-            $totalAmount = max(0, $order->net_amount + ($order->extra_charges ?? 0) - $order->discount + $expense);
-            $order->update([
-                'total_amount' => $totalAmount, 
-                'balance_due' => max(0, $totalAmount - $order->paid_amount), 
-                'modified_by' => auth()->id()
-            ]);
-        });
-
-        return $order->load([
-            'items.product', 'customerDetails', 'coupon',
-            'clientInformation.modifiedBy',
-            'designing.modifiedBy',
-            'printing.modifiedBy',
-            'packaging.modifiedBy',
-            'dispatchDelivery.modifiedBy',
-            'payments.addedBy', 'payments.modifiedBy'
-        ]);
-    }
 
 
     protected function prepareOrderItems(array $items): array
     {
         $preparedItems = [];
         foreach ($items as $item) {
-            $product = Product::find($item['product_id']);
-            if (!$product) continue;
+            $productId = $item['product_id'] ?? null;
+            $product = $productId ? Product::find($productId) : null;
+
+            // If it's not a catalog product, we must have a product_name
+            if (!$product && empty($item['product_name']))
+                continue;
+
             $quantity = $item['quantity'] ?? 1;
             $unitPrice = $item['unit_price'] ?? ($product ? $product->price : 0);
             $discountAmount = $item['discount_amount'] ?? 0;
             $totalPrice = max(0, ($quantity * $unitPrice) - $discountAmount);
-            
+
             $productImage = $item['product_image'] ?? ($product ? $product->image : null);
 
             // Handle manual item image upload
             if (isset($item['product_image']) && $item['product_image'] instanceof UploadedFile) {
                 $file = $item['product_image'];
                 $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-                
+
                 $uploadPath = public_path('uploads/orders');
                 if (!File::exists($uploadPath)) {
                     File::makeDirectory($uploadPath, 0777, true);
