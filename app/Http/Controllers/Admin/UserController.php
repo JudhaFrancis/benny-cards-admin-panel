@@ -38,19 +38,31 @@ class UserController extends Controller
             $query->where('name', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%");
         })
-            ->when(!$isSuperAdmin && !$isManagement, function ($query) use ($currentUser) {
-                $query->where('id', $currentUser->id);
+            ->when($request->name, function ($query, $name) {
+                $query->where('name', 'like', "%{$name}%");
             })
-            ->when($request->role_id, function ($query, $role_id) {
-                if (is_array($role_id)) {
-                    $query->whereIn('role_id', $role_id);
-                } else {
-                    $query->where('role_id', $role_id);
+            ->when($request->email, function ($query, $email) {
+                $query->where('email', 'like', "%{$email}%");
+            })
+            ->when($request->status !== null && $request->status !== '', function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->when($request->{'role.name'} || $request->role_id, function ($query) use ($request) {
+                $roleName = $request->{'role.name'};
+                if ($roleName) {
+                    $query->whereHas('role', function ($q) use ($roleName) {
+                        $q->where('name', 'like', "%{$roleName}%");
+                    });
+                }
+                if ($request->role_id) {
+                    $query->where('role_id', $request->role_id);
                 }
             })
-            ->when($request->role_ids, function ($query, $role_ids) {
-                $ids = is_string($role_ids) ? explode(',', $role_ids) : $role_ids;
-                $query->whereIn('role_id', $ids);
+            ->when($request->created_at, function ($query, $date) {
+                $query->whereDate('created_at', $date);
+            })
+            ->when(!$isSuperAdmin && !$isManagement, function ($query) use ($currentUser) {
+                $query->where('id', $currentUser->id);
             })
             ->with('role')
             ->latest()

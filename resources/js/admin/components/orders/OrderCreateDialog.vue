@@ -212,13 +212,22 @@
                           <PlusIcon class="h-4 w-4 text-primary" /> Select
                           Products
                         </h4>
-                        <button
-                          type="button"
-                          @click="addItem"
-                          class="px-4 py-2 bg-primary/5 text-primary rounded-2xl font-semibold hover:bg-primary/10 transition-all flex items-center gap-2 active:scale-95 text-sm"
-                        >
-                          <PlusIcon class="h-4 w-4" /> Add Item
-                        </button>
+                        <div class="flex items-center gap-3">
+                          <button
+                            type="button"
+                            @click="addItem"
+                            class="px-4 py-2 bg-primary/5 text-primary rounded-2xl font-semibold hover:bg-primary/10 transition-all flex items-center gap-2 active:scale-95 text-sm"
+                          >
+                            <PlusIcon class="h-4 w-4" /> Add Item
+                          </button>
+                          <button
+                            type="button"
+                            @click="addManualItem"
+                            class="px-4 py-2 bg-gray-100 text-gray-600 rounded-2xl font-semibold hover:bg-gray-200 transition-all flex items-center gap-2 active:scale-95 text-sm border border-gray-200"
+                          >
+                            <PlusIcon class="h-4 w-4" /> Add Manual
+                          </button>
+                        </div>
                       </div>
 
                       <div class="space-y-4">
@@ -233,7 +242,9 @@
                               class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2"
                               >Product</label
                             >
+                            <!-- Standard Product Selection -->
                             <Combobox
+                              v-if="!item.is_manual"
                               v-model="item.product_id"
                               @update:modelValue="handleProductChange(index)"
                             >
@@ -378,6 +389,51 @@
                                 </transition>
                               </div>
                             </Combobox>
+
+                            <!-- Manual Product Entry -->
+                            <div v-else class="flex flex-col gap-2 mt-1">
+                              <input
+                                v-model="item.product_name"
+                                type="text"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold outline-none"
+                                placeholder="Enter custom product name..."
+                              />
+                              <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center relative group/img">
+                                  <img v-if="item.product_image" :src="getImageSource(item.product_image)" class="w-full h-full object-cover" @error="handleImageError" />
+                                  <PackageIcon v-else class="h-4 w-4 text-gray-300" />
+                                  
+                                  <!-- Remove Image Button -->
+                                  <button 
+                                    v-if="item.product_image && item.is_manual"
+                                    type="button"
+                                    @click="item.product_image = ''"
+                                    class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all text-white"
+                                  >
+                                    <XIcon class="h-4 w-4" />
+                                  </button>
+                                </div>
+                                <div class="flex-1">
+                                  <input
+                                    :id="'manual-image-' + index"
+                                    type="file"
+                                    class="hidden"
+                                    accept="image/*"
+                                    @change="(e) => {
+                                      const file = e.target.files[0];
+                                      if (file) item.product_image = file;
+                                    }"
+                                  />
+                                  <label
+                                    :for="'manual-image-' + index"
+                                    class="flex items-center justify-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-500 hover:border-primary hover:text-primary transition-all cursor-pointer border-dashed"
+                                  >
+                                    <PlusIcon class="h-3 w-3" />
+                                    {{ item.product_image ? 'Change Image' : 'Upload Image' }}
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
                           </div>
 
                           <!-- Qty -->
@@ -390,7 +446,8 @@
                               v-model.number="item.quantity"
                               type="number"
                               min="1"
-                              class="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-xs"
+                              class="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-xs appearance-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              @focus="$event.target.select()"
                             />
                           </div>
 
@@ -410,7 +467,8 @@
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                class="w-full pl-7 pr-2 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-xs"
+                                class="w-full pl-7 pr-2 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary transition-all font-bold text-center text-xs appearance-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                @focus="$event.target.select()"
                               />
                             </div>
                           </div>
@@ -661,25 +719,11 @@ const finalTotal = computed(() => {
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get("/api/v1/products/options");
+    const response = await axios.get("/api/v1/products/list");
     if (response.data.success && Array.isArray(response.data.data)) {
       products.value = response.data.data;
-    } else if (Array.isArray(response.data)) {
-      products.value = response.data;
-    } else if (Array.isArray(response.data.data)) {
-      products.value = response.data.data;
     } else {
-      const listResponse = await axios.get("/api/v1/products?limit=100");
-      const listData = listResponse.data;
-      if (listData.data && Array.isArray(listData.data.data)) {
-        products.value = listData.data.data;
-      } else if (Array.isArray(listData.data)) {
-        products.value = listData.data;
-      } else if (Array.isArray(listData)) {
-        products.value = listData;
-      } else {
-        products.value = [];
-      }
+      products.value = [];
     }
   } catch (error) {
     console.error("Failed to fetch products", error);
@@ -705,9 +749,22 @@ const addItem = () => {
   form.items.push({
     product_id: "",
     product_name: "",
+    product_image: "",
     quantity: 1,
     unit_price: 0,
     search_query: "",
+    is_manual: false,
+  });
+};
+
+const addManualItem = () => {
+  form.items.push({
+    product_id: null,
+    product_name: "",
+    product_image: "",
+    quantity: 1,
+    unit_price: 0,
+    is_manual: true,
   });
 };
 
@@ -721,12 +778,14 @@ const handleProductChange = (index) => {
   const product = products.value.find((p) => p.id === item.product_id);
   if (product) {
     item.product_name = product.title;
+    item.product_image = product.image;
     item.unit_price = parseFloat(product.price) || 0;
   }
 };
 
 const getImageSource = (path) => {
   if (!path) return "/images/placeholder.webp";
+  if (path instanceof File) return URL.createObjectURL(path);
   if (path.startsWith("data:") || path.startsWith("http")) return path;
   return `/${path}`;
 };
@@ -784,7 +843,43 @@ const handleSubmit = async () => {
 
   loading.value = true;
   try {
-    const response = await axios.post("/api/v1/orders", form);
+    const formData = new FormData();
+    
+    // Append customer details
+    formData.append("customer[name]", form.customer.name || "");
+    formData.append("customer[email]", form.customer.email || "");
+    formData.append("customer[phone]", form.customer.phone || "");
+    formData.append("customer[address_1]", form.customer.address_1 || "");
+    formData.append("customer[address_2]", form.customer.address_2 || "");
+    
+    // Append order fields
+    formData.append("discount", form.discount || 0);
+    formData.append("extra_charges", form.extra_charges || 0);
+    formData.append("paid_amount", form.paid_amount || 0);
+    formData.append("remarks", form.remarks || "");
+    formData.append("payment_method", form.payment_method || "cash");
+    formData.append("status", form.status || "pending");
+
+    // Append items
+    form.items.forEach((item, index) => {
+      formData.append(`items[${index}][product_id]`, item.product_id || "");
+      formData.append(`items[${index}][product_name]`, item.product_name || "");
+      formData.append(`items[${index}][quantity]`, item.quantity || 1);
+      formData.append(`items[${index}][unit_price]`, item.unit_price || 0);
+      
+      if (item.product_image instanceof File) {
+        formData.append(`items[${index}][product_image]`, item.product_image);
+      } else {
+        formData.append(`items[${index}][product_image]`, item.product_image || "");
+      }
+    });
+
+    const response = await axios.post("/api/v1/orders", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     if (response.data.success) {
       toast.success("Order created successfully");
       emit("success");

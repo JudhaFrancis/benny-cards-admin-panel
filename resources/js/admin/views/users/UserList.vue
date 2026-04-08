@@ -24,6 +24,9 @@
       :columns="columns"
       :items="users"
       :loading="loading"
+      :from="meta.from"
+      manual-filters
+      @filter-change="handleFilterChange"
       empty-text="No users found matching your criteria."
     >
       <!-- Custom User Cell -->
@@ -373,8 +376,9 @@ const isModalOpen = ref(false);
 const isViewMode = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedUser = ref(null);
+const columnFilters = ref({});
 
-const meta = ref({});
+const meta = ref({ from: 1 });
 const links = ref({});
 const { getModulePermissions } = usePermissions();
 const { canAdd, canView, canEdit, canDelete } = getModulePermissions("User");
@@ -392,21 +396,18 @@ const fetchUsers = async (url = "/api/v1/users") => {
   loading.value = true;
   try {
     const params = {
-      per_page: 50, // Fetch more for better local filtering
+      per_page: 10,
+      ...columnFilters.value
     };
 
-    // Check if url is just path or full URL
-    const finalUrl = url.includes("?") ? url : url;
-    const response = await axios.get(finalUrl, { params });
+    // If it's a pagination URL, params might be in the URL already or we append them
+    const response = await axios.get(url, { params });
 
     if (response.data.success) {
-      users.value = response.data.data.data.map((user, index) => ({
-        ...user,
-        sn: index + (response.data.data.from || 1),
-      }));
+      users.value = response.data.data.data;
       meta.value = {
         total: response.data.data.total,
-        from: response.data.data.from,
+        from: response.data.data.from || 1,
         to: response.data.data.to,
       };
       links.value = {
@@ -419,6 +420,11 @@ const fetchUsers = async (url = "/api/v1/users") => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = filters;
+  fetchUsers();
 };
 
 

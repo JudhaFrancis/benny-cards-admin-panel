@@ -10,17 +10,17 @@ export function useOrderValidation() {
     const details = order.client_information?.order_details || {};
     const client = order.client_information?.client_info || {};
     const specs = order.client_information?.card_specs || {};
-    const designing = order.designing || {};
-    const work = designing.work_assign || {};
-    const designPrint = designing.design_print || {};
-    const printing = order.printing?.printing_status || {};
-    const packaging = order.packaging || {};
-    const packLog = packaging.packaging_logistics || {};
-    const packStat = packaging.packaging_status || {};
-    const dispatch = order.dispatch_delivery || {};
-    const delivery = dispatch.delivery_location || {};
-    const dispMode = dispatch.dispatch_mode || {};
-    const dispDetails = dispatch.dispatch_details || {};
+    const designing = Array.isArray(order.designing) ? {} : (order.designing || {});
+    const work = Array.isArray(designing.work_assign) ? {} : (designing.work_assign || {});
+    const designPrint = Array.isArray(designing.design_print) ? {} : (designing.design_print || {});
+    const printing = Array.isArray(order.printing?.printing_status) ? {} : (order.printing?.printing_status || {});
+    const packaging = Array.isArray(order.packaging) ? {} : (order.packaging || {});
+    const packLog = Array.isArray(packaging.packaging_logistics) ? {} : (packaging.packaging_logistics || {});
+    const packStat = Array.isArray(packaging.packaging_status) ? {} : (packaging.packaging_status || {});
+    const dispatch = Array.isArray(order.dispatch_delivery) ? {} : (order.dispatch_delivery || {});
+    const delivery = Array.isArray(dispatch.delivery_location) ? {} : (dispatch.delivery_location || {});
+    const dispMode = Array.isArray(dispatch.dispatch_mode) ? {} : (dispatch.dispatch_mode || {});
+    const dispDetails = Array.isArray(dispatch.dispatch_details) ? {} : (dispatch.dispatch_details || {});
 
     switch (sectionId) {
       case "order-details":

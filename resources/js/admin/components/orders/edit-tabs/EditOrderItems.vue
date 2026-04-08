@@ -57,9 +57,10 @@
                     type="number"
                     :value="item.unit_price"
                     @input="updateUnitPriceValue(item.id, $event.target.value)"
-                    class="w-full pl-6 pr-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-primary transition-all font-bold text-xs"
+                    class="w-full pl-6 pr-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-primary transition-all font-bold text-xs appearance-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     step="0.01"
                     min="0"
+                    @focus="$event.target.select()"
                   />
                 </div>
                 <p class="text-xs text-slate-500 font-bold">
@@ -86,9 +87,10 @@
                     type="number"
                     :value="item.quantity"
                     @input="updateQuantityValue(item.id, $event.target.value)"
-                    class="w-full text-center text-xs font-black text-slate-900 bg-transparent border-none focus:ring-0 p-0 appearance-none [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+                    class="w-full text-center text-xs font-black text-slate-900 bg-transparent border-none focus:ring-0 p-0 appearance-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     @keypress="isNumber($event)"
                     min="1"
+                    @focus="$event.target.select()"
                   />
                 </div>
                 <button
@@ -427,24 +429,11 @@ const availableProducts = ref([]);
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get("/api/v1/products/options");
+    const response = await axios.get("/api/v1/products/list");
     if (response.data.success && Array.isArray(response.data.data)) {
       availableProducts.value = response.data.data;
-    } else if (Array.isArray(response.data)) {
-      availableProducts.value = response.data;
     } else {
-      const listResponse = await axios.get("/api/v1/products?limit=100");
-      if (
-        listResponse.data &&
-        listResponse.data.data &&
-        Array.isArray(listResponse.data.data.data)
-      ) {
-        availableProducts.value = listResponse.data.data.data;
-      } else if (listResponse.data && Array.isArray(listResponse.data.data)) {
-        availableProducts.value = listResponse.data.data;
-      } else {
-        availableProducts.value = [];
-      }
+      availableProducts.value = [];
     }
   } catch (error) {
     console.error("Failed to fetch products", error);

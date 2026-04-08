@@ -24,6 +24,9 @@
       :columns="columns"
       :items="coupons"
       :loading="loading"
+      :from="meta.from"
+      manual-filters
+      @filter-change="handleFilterChange"
       empty-text="No coupons found matching your criteria."
     >
       <!-- Custom Code Cell -->
@@ -288,15 +291,14 @@ const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Coupons");
 // State
 const coupons = ref([]);
 const loading = ref(true);
-const meta = ref({});
+const meta = ref({ from: 1 });
 const links = ref({});
 const isModalOpen = ref(false);
 const isInfoModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedCoupon = ref(null);
 const isDeleting = ref(false);
-
-const filters = reactive({});
+const columnFilters = ref({});
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
@@ -311,24 +313,21 @@ const columns = [
 
 
 
-
 // Methods
 const fetchCoupons = async (url = "/api/v1/coupons") => {
   loading.value = true;
   try {
     const response = await axios.get(url, {
       params: {
-        per_page: 50,
+        per_page: 10,
+        ...columnFilters.value
       },
     });
     if (response.data.success) {
-      coupons.value = response.data.data.data.map((coupon, index) => ({
-        ...coupon,
-        sn: index + (response.data.data.from || 1),
-      }));
+      coupons.value = response.data.data.data;
       meta.value = {
         total: response.data.data.total,
-        from: response.data.data.from,
+        from: response.data.data.from || 1,
         to: response.data.data.to,
       };
       links.value = {
@@ -342,6 +341,11 @@ const fetchCoupons = async (url = "/api/v1/coupons") => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = filters;
+  fetchCoupons();
 };
 
 

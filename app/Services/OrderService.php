@@ -9,16 +9,31 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
+
+
 class OrderService
 {
+    public function __construct(
+        protected OrderTrackingService $trackingService
+    ) {}
+
+    /**
+     * Update order tracking details.
+     */
+    public function updateTracking(Order $order, array $data): Order
+    {
+        return $this->trackingService->updateTracking($order, $data);
+    }
     /**
      * Get paginated orders with filters.
      */
-    public function listOrders(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function listOrders(array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
         $user = auth()->user();
-        $isAdmin = $user && $user->role && in_array($user->role->name, ['super-admin', 'Admin']);
-        $isStaff = $user && !$isAdmin;
+        $userRole = strtolower($user->role?->name ?? '');
+        $isSuperAdmin = $userRole === 'super-admin';
+        $isAdmin = $userRole === 'admin';
+        $isStaff = $user && !$isSuperAdmin && !$isAdmin;
 
         return Order::query()
             ->with([
@@ -36,40 +51,73 @@ class OrderService
                 'payments.addedBy',
                 'payments.modifiedBy'
             ])
-            ->when($isStaff && isset($filters['stage']), function (Builder $query) use ($user) {
-                $userName = $user->name;
-                $userId = $user->id;
+            ->when(isset($filters['stage']), function (Builder $query) use ($filters, $isSuperAdmin, $user) {
+                $stage = $filters['stage'];
+                $stageRelation = match ($stage) {
+                    'client-information' => 'clientInformation',
+                    'designing' => 'designing',
+                    'printing' => 'printing',
+                    'packaging' => 'packaging',
+                    'delivery' => 'dispatchDelivery',
+                    default => null
+                };
+
+                // Critical: Always filter by stage existence to fix pagination bugs for everyone.
+                if ($stageRelation) {
+                    $query->whereHas($stageRelation);
+                }
+
+                // If NOT Super Admin, further restrict to assigned records.
+                if (!$isSuperAdmin) {
+                    $userName = $user->name;
+                    $userId = $user->id;
 
                 $query->where(function ($q) use ($userName, $userId) {
                     $q->where('added_by', $userId)
-                        ->orWhereHas('clientInformation', function ($sub) use ($userName) {
-                            $sub->where('order_details->order_taken_by', $userName);
-                        })
-                        ->orWhereHas('designing', function ($sub) use ($userName) {
-                            $sub->where('work_assign->assigned_to', $userName)
-                                ->orWhere('work_assign->completed_by', $userName);
-                        })
-                        ->orWhereHas('printing', function ($sub) use ($userName) {
-                            $sub->where('printing_status->assigned_to', $userName);
-                        })
-                        ->orWhereHas('packaging', function ($sub) use ($userName) {
-                            $sub->where('packaging_logistics->crafted_by', $userName)
-                                ->orWhere('packaging_status->packed_by', $userName);
-                        })
-                        ->orWhereHas('dispatchDelivery', function ($sub) use ($userName) {
-                            $sub->where('dispatch_mode->signature_name', $userName);
-                        });
+                      ->orWhereHas('clientInformation', function ($sub) use ($userName) {
+                          $sub->where('order_details->order_taken_by', $userName);
+                      })
+                      ->orWhereHas('designing', function ($sub) use ($userName) {
+                          $sub->where('work_assign->assigned_to', $userName);
+                      })
+                      ->orWhereHas('printing', function ($sub) use ($userName) {
+                          $sub->where('printing_status->assigned_to', $userName);
+                      })
+                      ->orWhereHas('packaging', function ($sub) use ($userName) {
+                          $sub->where('packaging_logistics->crafted_by', $userName)
+                              ->orWhere('packaging_status->packed_by', $userName);
+                      })
+                      ->orWhereHas('dispatchDelivery', function ($sub) use ($userName) {
+                          $sub->where('dispatch_mode->signature_name', $userName);
+                      });
                 });
             })
             ->when(isset($filters['status']) && $filters['status'] !== 'all', function (Builder $query) use ($filters) {
                 $query->where('status', $filters['status']);
+            })
+            ->when(isset($filters['order_number']), function (Builder $query) use ($filters) {
+                $query->where('order_number', 'like', "%{$filters['order_number']}%");
+            })
+            ->when(isset($filters['customer_details.name']), function (Builder $query) use ($filters) {
+                $query->whereHas('customerDetails', function (Builder $sub) use ($filters) {
+                    $sub->where('name', 'like', "%{$filters['customer_details.name']}%");
+                });
+            })
+            ->when(isset($filters['customer_details.phone']), function (Builder $query) use ($filters) {
+                $query->whereHas('customerDetails', function (Builder $sub) use ($filters) {
+                    $sub->where('phone', 'like', "%{$filters['customer_details.phone']}%");
+                });
+            })
+            ->when(isset($filters['payment_status']) && $filters['payment_status'] !== '', function (Builder $query) use ($filters) {
+                $query->where('payment_status', $filters['payment_status']);
             })
             ->when(isset($filters['search']), function (Builder $query) use ($filters) {
                 $query->where(function ($q) use ($filters) {
                     $q->where('order_number', 'like', "%{$filters['search']}%")
                         ->orWhereHas('customerDetails', function (Builder $sub) use ($filters) {
                             $sub->where('name', 'like', "%{$filters['search']}%")
-                                ->orWhere('email', 'like', "%{$filters['search']}%");
+                                ->orWhere('email', 'like', "%{$filters['search']}%")
+                                ->orWhere('phone', 'like', "%{$filters['search']}%");
                         });
                 });
             })
@@ -142,6 +190,7 @@ class OrderService
                 $order->items()->create([
                     'product_id' => $item['product_id'],
                     'product_name' => $item['product_name'],
+                    'product_image' => $item['product_image'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'discount_amount' => $item['discount_amount'] ?? 0,
@@ -190,6 +239,7 @@ class OrderService
                     $order->items()->create([
                         'product_id' => $item['product_id'],
                         'product_name' => $item['product_name'],
+                        'product_image' => $item['product_image'],
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
                         'discount_amount' => $item['discount_amount'] ?? 0,
@@ -309,7 +359,7 @@ class OrderService
                     if (is_array($content)) {
                         unset($content['_audit']);
                     }
-
+                    
                     $updatesByStage[$stageRelation][$section] = $content;
                 }
             }
@@ -317,7 +367,7 @@ class OrderService
             // Handle direct status updates for a specific stage
             if (isset($data['status'])) {
                 $relation = $data['_stage'] ?? null;
-
+                
                 // Fallback induction for _stage if not provided
                 if (!$relation) {
                     foreach ($data as $key => $val) {
@@ -354,8 +404,8 @@ class OrderService
             }
 
             // Sync delivery date to orders table from either client_info or order_details
-            $newDeliveryDate = $data['order_details']['expected_delivery_date']
-                ?? $data['client_info']['expected_delivery_date']
+            $newDeliveryDate = $data['order_details']['expected_delivery_date'] 
+                ?? $data['client_info']['expected_delivery_date'] 
                 ?? null;
 
             if ($newDeliveryDate) {
@@ -374,33 +424,31 @@ class OrderService
             if (isset($data['payment_info'])) {
                 $paymentInfo = $data['payment_info'];
                 $payments = $paymentInfo['payments'] ?? $paymentInfo;
-                if (!is_array($payments))
-                    $payments = [$payments];
+                if (!is_array($payments)) $payments = [$payments];
 
                 $existingPaymentIds = $order->payments()->where('payment_status', 'completed')->pluck('id')->toArray();
                 $processedIds = [];
 
                 foreach ($payments as $payInfo) {
                     $amount = $payInfo['amount'] ?? 0;
-                    if ($amount <= 0)
-                        continue;
+                    if ($amount <= 0) continue;
 
                     $paymentData = [
-                        'payment_method' => $payInfo['payment_method'] ?? 'cash',
-                        'transaction_id' => $payInfo['transaction_id'] ?? null,
-                        'signature_name' => $payInfo['signature_name'] ?? null,
-                        'payment_status' => 'completed',
-                        'payment_date' => $payInfo['payment_date'] ?? now(),
-                        'amount' => $amount,
-                        'added_by' => auth()->id(),
+                        'payment_method' => $payInfo['payment_method'] ?? 'cash', 
+                        'transaction_id' => $payInfo['transaction_id'] ?? null, 
+                        'signature_name' => $payInfo['signature_name'] ?? null, 
+                        'payment_status' => 'completed', 
+                        'payment_date' => $payInfo['payment_date'] ?? now(), 
+                        'amount' => $amount, 
+                        'added_by' => auth()->id(), 
                         'modified_by' => auth()->id()
                     ];
 
                     if (isset($payInfo['id'])) {
                         $payment = $order->payments()->find($payInfo['id']);
-                        if ($payment) {
-                            $payment->update($paymentData);
-                            $processedIds[] = $payment->id;
+                        if ($payment) { 
+                            $payment->update($paymentData); 
+                            $processedIds[] = $payment->id; 
                         }
                     } else {
                         $paymentData['payment_number'] = 'TEMP-' . time() . '-' . rand(1000, 9999);
@@ -411,8 +459,7 @@ class OrderService
                 }
 
                 $idsToDelete = array_diff($existingPaymentIds, $processedIds);
-                if (!empty($idsToDelete))
-                    $order->payments()->whereIn('id', $idsToDelete)->delete();
+                if (!empty($idsToDelete)) $order->payments()->whereIn('id', $idsToDelete)->delete();
 
                 $order->updatePaymentStatus();
             }
@@ -422,23 +469,20 @@ class OrderService
             $expense = (float) ($order->dispatchDelivery->dispatch_mode['expense'] ?? 0);
             $totalAmount = max(0, $order->net_amount + ($order->extra_charges ?? 0) - $order->discount + $expense);
             $order->update([
-                'total_amount' => $totalAmount,
-                'balance_due' => max(0, $totalAmount - $order->paid_amount),
+                'total_amount' => $totalAmount, 
+                'balance_due' => max(0, $totalAmount - $order->paid_amount), 
                 'modified_by' => auth()->id()
             ]);
         });
 
         return $order->load([
-            'items.product',
-            'customerDetails',
-            'coupon',
+            'items.product', 'customerDetails', 'coupon',
             'clientInformation.modifiedBy',
             'designing.modifiedBy',
             'printing.modifiedBy',
             'packaging.modifiedBy',
             'dispatchDelivery.modifiedBy',
-            'payments.addedBy',
-            'payments.modifiedBy'
+            'payments.addedBy', 'payments.modifiedBy'
         ]);
     }
 
@@ -448,13 +492,37 @@ class OrderService
         $preparedItems = [];
         foreach ($items as $item) {
             $product = Product::find($item['product_id']);
-            if (!$product)
-                continue;
+            if (!$product) continue;
             $quantity = $item['quantity'] ?? 1;
-            $unitPrice = $item['unit_price'] ?? $product->price;
+            $unitPrice = $item['unit_price'] ?? ($product ? $product->price : 0);
             $discountAmount = $item['discount_amount'] ?? 0;
             $totalPrice = max(0, ($quantity * $unitPrice) - $discountAmount);
-            $preparedItems[] = ['product_id' => $product->id, 'product_name' => $item['product_name'] ?? $product->title, 'quantity' => $quantity, 'unit_price' => $unitPrice, 'discount_amount' => $discountAmount, 'total_price' => $totalPrice];
+            
+            $productImage = $item['product_image'] ?? ($product ? $product->image : null);
+
+            // Handle manual item image upload
+            if (isset($item['product_image']) && $item['product_image'] instanceof UploadedFile) {
+                $file = $item['product_image'];
+                $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                
+                $uploadPath = public_path('uploads/orders');
+                if (!File::exists($uploadPath)) {
+                    File::makeDirectory($uploadPath, 0777, true);
+                }
+
+                $file->move($uploadPath, $filename);
+                $productImage = 'uploads/orders/' . $filename;
+            }
+
+            $preparedItems[] = [
+                'product_id' => $product ? $product->id : null,
+                'product_name' => $item['product_name'] ?? ($product ? $product->title : 'Unknown Product'),
+                'product_image' => $productImage,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'discount_amount' => $discountAmount,
+                'total_price' => $totalPrice
+            ];
         }
         return $preparedItems;
     }

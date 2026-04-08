@@ -21,14 +21,28 @@ class CategoryController extends Controller
                 $query->where('title', 'like', "%{$search}%")
                     ->orWhere('slug', 'like', "%{$search}%");
             })
+            ->when($request->title, function ($query, $title) {
+                $query->where('title', 'like', "%{$title}%");
+            })
+            ->when($request->{'parent.title'}, function ($query, $parentTitle) {
+                $query->whereHas('parent', function ($q) use ($parentTitle) {
+                    $q->where('title', 'like', "%{$parentTitle}%");
+                });
+            })
             ->when($request->status !== null && $request->status !== '', function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
             ->when($request->is_parent !== null && $request->is_parent !== '', function ($query) use ($request) {
                 $query->where('is_parent', $request->is_parent);
             })
+            ->when($request->created_at, function ($query, $date) {
+                $query->whereDate('created_at', $date);
+            })
+            ->when($request->updated_at, function ($query, $date) {
+                $query->whereDate('updated_at', $date);
+            })
             ->latest()
-            ->paginate($request->per_page ?? 15);
+            ->paginate($request->per_page ?? 10);
 
         return response()->json([
             'success' => true,

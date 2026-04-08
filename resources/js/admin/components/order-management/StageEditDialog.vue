@@ -303,13 +303,20 @@ const handleSave = async () => {
       }
     }
 
-    const payload = {
-      status: stageStatus.value
-    };
+    const formData = new FormData();
+    formData.append('_method', 'PUT');
+    formData.append('status', stageStatus.value);
+    
     const stageData = orderData.value[stageRelationKey.value] || {};
     relevantSections.value.forEach(s => {
-      payload[s.key] = stageData[s.key] || {};
+      const content = stageData[s.key] || {};
+      formData.append(s.key, JSON.stringify(content));
     });
+
+    // Handle sticker image if in designing stage
+    if (props.stage === 'designing' && stageData.design_print_file) {
+      formData.append('sticker_image', stageData.design_print_file);
+    }
 
     if (props.stage === 'client-information') {
       await axios.put(`/api/v1/orders/${orderData.value.id}`, {
@@ -317,7 +324,9 @@ const handleSave = async () => {
       });
     }
 
-    const response = await axios.put(`/api/v1/orders/${orderData.value.id}/stages/${props.stage}`, payload);
+    const response = await axios.post(`/api/v1/orders/${orderData.value.id}/stages/${props.stage}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     if (response.data.success) {
       toast.success(`${stageTitle.value} updated successfully`);
       emit('success');

@@ -123,7 +123,7 @@
                 ]" :style="column.width ? { width: column.width } : {}">
                   <slot :name="`cell-${column.key}`" :item="item" :column="column" :index="index">
                     <template v-if="column.key.toLowerCase() === 'sn'">
-                      {{ index + 1 }}
+                      {{ from + index }}
                     </template>
                     <template v-else>
                       {{ resolveValue(item, column.key) }}
@@ -172,6 +172,18 @@ const props = defineProps({
     type: Number,
     default: 5,
   },
+  from: {
+    type: Number,
+    default: 1,
+  },
+  manualFilters: {
+    type: Boolean,
+    default: false,
+  },
+  skeletonRows: {
+    type: Number,
+    default: 5,
+  },
   emptyText: {
     type: String,
     default: "No matching results found.",
@@ -182,7 +194,10 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(["filter-change"]);
+
 const filters = ref({});
+let debounceTimeout = null;
 
 const hasActiveFilters = computed(() => {
   return Object.values(filters.value).some(val => val !== "" && val !== null);
@@ -191,6 +206,14 @@ const hasActiveFilters = computed(() => {
 const resetFilters = () => {
   filters.value = {};
 };
+
+// Watch filters and emit for server-side search
+watch(filters, (newFilters) => {
+  if (debounceTimeout) clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    emit("filter-change", { ...newFilters });
+  }, 500);
+}, { deep: true });
 
 const shouldShowFilter = (column) => {
   const skip = ['sn', 'actions', 'action'];
@@ -212,6 +235,7 @@ const getSelectedLabel = (column) => {
 };
 
 const filteredItems = computed(() => {
+  if (props.manualFilters) return props.items;
   if (!hasActiveFilters.value) return props.items;
 
   return props.items.filter((item) => {
@@ -219,8 +243,7 @@ const filteredItems = computed(() => {
       const filterValue = filters.value[column.key];
       if (filterValue === undefined || filterValue === "" || filterValue === null) return true;
 
-      // Use resolveValue to handle nested keys if needed, 
-      // but prioritize the specific data field if provided in column meta
+      // Use resolveValue to handle nested keys if needed
       const dataField = column.filterKey || column.key;
       let val = resolveValue(item, dataField);
 

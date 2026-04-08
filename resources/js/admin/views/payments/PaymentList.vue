@@ -31,6 +31,36 @@
       @delete="handleConfirmDelete"
     />
 
+    <!-- Pagination Controls -->
+    <div
+      v-if="meta.total > 0"
+      class="bg-white rounded-2xl border border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm"
+    >
+      <p class="text-[11px] text-gray-500 font-medium">
+        Showing
+        <span class="text-gray-700"
+          >{{ (page - 1) * 10 + 1 }} to {{ Math.min(page * 10, meta.total) }}</span
+        >
+        of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
+      </p>
+      <div class="flex items-center gap-2">
+        <button
+          @click="page--"
+          :disabled="page <= 1"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronLeftIcon class="h-4 w-4" />
+        </button>
+        <button
+          @click="page++"
+          :disabled="page >= meta.last_page"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronRightIcon class="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+
     <!-- Dialogs -->
     <PaymentInfoDialog
       :is-open="isInfoModalOpen"
@@ -66,9 +96,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import {
-  Search as SearchIcon,
-  Plus as PlusIcon,
   Activity as ActivityIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-vue-next";
 import axios from "axios";
 import { usePermissions } from "../../composables/usePermissions";
@@ -95,7 +125,7 @@ const fetchPayments = async () => {
   try {
     const params = {
       page: page.value,
-      per_page: 100,
+      per_page: 10,
     };
 
     const response = await axios.get("/api/v1/payments", { params });

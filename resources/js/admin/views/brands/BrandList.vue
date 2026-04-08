@@ -24,6 +24,9 @@
       :columns="columns"
       :items="brands"
       :loading="loading"
+      :from="meta.from"
+      manual-filters
+      @filter-change="handleFilterChange"
       empty-text="No brands found matching your criteria."
     >
       <!-- Custom Brand Cell -->
@@ -233,15 +236,14 @@ const { canAdd, canView, canEdit, canDelete } = getModulePermissions("Brands");
 // State
 const brands = ref([]);
 const loading = ref(true);
-const meta = ref({});
+const meta = ref({ from: 1 });
 const links = ref({});
 const isModalOpen = ref(false);
 const isInfoModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedBrand = ref(null);
 const isDeleting = ref(false);
-
-const filters = reactive({});
+const columnFilters = ref({});
 
 const columns = [
   { key: "sn", label: "S.No", width: "80px" },
@@ -260,17 +262,15 @@ const fetchBrands = async (url = "/api/v1/brands") => {
   try {
     const response = await axios.get(url, {
       params: {
-        per_page: 50,
+        per_page: 10,
+        ...columnFilters.value
       },
     });
     if (response.data.success) {
-      brands.value = response.data.data.data.map((brand, index) => ({
-        ...brand,
-        sn: index + (response.data.data.from || 1),
-      }));
+      brands.value = response.data.data.data;
       meta.value = {
         total: response.data.data.total,
-        from: response.data.data.from,
+        from: response.data.data.from || 1,
         to: response.data.data.to,
       };
       links.value = {
@@ -284,6 +284,11 @@ const fetchBrands = async (url = "/api/v1/brands") => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = filters;
+  fetchBrands();
 };
 
 

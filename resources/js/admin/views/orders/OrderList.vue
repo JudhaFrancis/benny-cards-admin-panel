@@ -21,10 +21,42 @@
       :status-filter="statusFilter"
       :orders="filteredOrders"
       :loading="loading"
+      :from="meta.from"
+      @filter-change="handleFilterChange"
       @view-info="handleViewInfo"
       @edit="handleEdit"
       @delete="handleConfirmDelete"
     />
+
+    <!-- Pagination Controls -->
+    <div
+      v-if="meta.total > 0"
+      class="bg-white rounded-2xl border border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm"
+    >
+      <p class="text-[11px] text-gray-500 font-medium">
+        Showing
+        <span class="text-gray-700"
+          >{{ meta.from || 0 }} to {{ (meta.from || 0) + filteredOrders.length - 1 }}</span
+        >
+        of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
+      </p>
+      <div class="flex items-center gap-2">
+        <button
+          @click="page--"
+          :disabled="page <= 1"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronLeftIcon class="h-4 w-4" />
+        </button>
+        <button
+          @click="page++"
+          :disabled="page >= meta.last_page"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronRightIcon class="h-4 w-4" />
+        </button>
+      </div>
+    </div>
 
     <!-- Dialogs -->
     <OrderInfoDialog
@@ -63,10 +95,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import {
-  Search as SearchIcon,
-  Plus as PlusIcon,
-  Activity as ActivityIcon,
   CreditCard as CreditCardIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-vue-next";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -90,25 +121,24 @@ const loading = ref(true);
 const isSaving = ref(false);
 const page = ref(1);
 const statusFilter = ref("all");
-const meta = ref({ total: 0 });
+const columnFilters = ref({});
+const meta = ref({ total: 0, from: 1 });
 
 const fetchOrders = async () => {
   loading.value = true;
   try {
     const params = {
       page: page.value,
-      per_page: 100,
+      per_page: 10,
+      ...columnFilters.value
     };
 
     const response = await axios.get("/api/v1/orders", { params });
     if (response.data.success) {
-      orders.value = response.data.data.data.map((order, index) => ({
-        ...order,
-        sn: index + (response.data.data.from || 1),
-      }));
+      orders.value = response.data.data.data;
       meta.value = {
         total: response.data.data.total,
-        from: response.data.data.from,
+        from: response.data.data.from || 1,
         current_page: response.data.data.current_page,
         last_page: response.data.data.last_page,
       };
@@ -119,6 +149,12 @@ const fetchOrders = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = filters;
+  page.value = 1;
+  fetchOrders();
 };
 
 onMounted(() => {
@@ -167,18 +203,86 @@ const handleOrderSaved = async (updatedOrderData) => {
 
   try {
     isSaving.value = true;
-    const oid = selectedOrder.value.id; // or updatedOrderData.id
+    const oid = selectedOrder.value.id;
     const payload = updatedOrderData || selectedOrder.value;
 
-    const res = await axios.put(`/api/v1/orders/${oid}`, payload);
+    const formData = new FormData();
+    formData.append("_method", "PUT");
+
+    // Helper to append nested objects/arrays to FormData
+    const appendToFormData = (key, value) => {
+      if (value === null || value === undefined) {
+        formData.append(key, "");
+      } else if (value instanceof File) {
+        formData.append(key, value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v, index) => appendToFormData(`${key}[${index}]`, v));
+      } else if (typeof value === "object") {
+        Object.keys(value).forEach((k) => appendToFormData(`${key}[${k}]`, value[k]));
+      } else {
+        formData.append(key, value);
+      }
+    };
+
+    // Construct FormData from payload
+    const fieldsToInclude = [
+      "customer_name",
+      "customer_email",
+      "customer_phone",
+      "customer_address_1",
+      "customer_address_2",
+      "discount",
+      "extra_charges",
+      "paid_amount",
+      "remarks",
+      "payment_method",
+      "status",
+      "order_date",
+      "coupon_id"
+    ];
+
+    fieldsToInclude.forEach(field => {
+      if (payload[field] !== undefined) formData.append(field, payload[field]);
+    });
+
+    // Special handling for customer_details object if it exists
+    if (payload.customer_details) {
+      Object.keys(payload.customer_details).forEach(key => {
+        formData.append(`customer[${key}]`, payload.customer_details[key] || "");
+      });
+    }
+
+    // append items
+    if (payload.items && Array.isArray(payload.items)) {
+      payload.items.forEach((item, index) => {
+        formData.append(`items[${index}][id]`, item.id || "");
+        formData.append(`items[${index}][product_id]`, item.product_id || "");
+        formData.append(`items[${index}][product_name]`, item.product_name || "");
+        formData.append(`items[${index}][quantity]`, item.quantity || 1);
+        formData.append(`items[${index}][unit_price]`, item.unit_price || 0);
+        
+        if (item.product_image instanceof File) {
+          formData.append(`items[${index}][product_image]`, item.product_image);
+        } else {
+          formData.append(`items[${index}][product_image]`, item.product_image || "");
+        }
+      });
+    }
+
+    const res = await axios.post(`/api/v1/orders/${oid}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     if (res.data.success) {
       toast.success("Order updated successfully");
       isEditModalOpen.value = false;
-      fetchOrders(); // Refresh to be sure
+      fetchOrders();
     }
   } catch (e) {
     console.error(e);
-    toast.error("Failed to save changes");
+    toast.error(e.response?.data?.message || "Failed to save changes");
   } finally {
     isSaving.value = false;
   }

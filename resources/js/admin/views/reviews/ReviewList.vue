@@ -248,7 +248,7 @@ const fetchReviews = async (url = "/api/v1/reviews") => {
   loading.value = true;
   try {
     const params = {
-      per_page: 50,
+      per_page: 10,
     };
 
     const finalUrl = url.includes("?") ? url : url;
