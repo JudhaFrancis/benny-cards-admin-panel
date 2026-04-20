@@ -1,26 +1,27 @@
 <template>
   <div class="space-y-8">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-      <div class="space-y-2">
-        <label class="text-xs font-medium text-slate-700"
-          >Assigned To <span class="text-red-500">*</span></label
-        >
-        <ContextDropdown
-          v-model="printingStatus.assigned_to"
-          :options="staffOptions"
-          placeholder="Select printer"
-          :icon="UserIcon"
-        />
-      </div>
+
 
       <div class="space-y-2">
         <label class="text-xs font-medium text-slate-700"
-          >Assigned Date <span class="text-red-500">*</span></label
+          >Confirmed Date <span class="text-red-500">*</span></label
         >
         <DatePicker
-          v-model="printingStatus.assigned_date"
-          placeholder="Select Assigned Date"
+          v-model="printingStatus.confirmed_date"
+          placeholder="Select Confirmed Date"
           custom-class="py-2.5 text-xs"
+        />
+      </div>
+      <div class="space-y-2">
+        <label class="text-xs font-medium text-slate-700"
+          >Printer Company Name</label
+        >
+        <input
+          v-model="printingStatus.company_name"
+          type="text"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          placeholder="Enter printer name"
         />
       </div>
     </div>
@@ -189,35 +190,59 @@
       <div class="space-y-3">
         <label
           class="text-xs font-black uppercase tracking-wider text-slate-400"
-          >Follow Up Status</label
+          >Follow Up Checklist</label
         >
-        <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
-          <label
-            v-for="day in days"
-            :key="day"
-            class="flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer group"
-            :class="
-              getFollowUpList(type.id).value.includes(day)
-                ? 'bg-primary/5 border-primary shadow-sm ring-2 ring-primary/5'
-                : 'bg-white border-slate-200 hover:border-slate-300'
-            "
-          >
-            <span
-              class="text-[10px] font-black uppercase tracking-tighter mb-1.5 transition-colors"
+        <div class="space-y-4">
+          <!-- Horizontal Checklist Grid -->
+          <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+            <label
+              v-for="day in days"
+              :key="day"
+              class="flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-not-allowed group"
               :class="
-                getFollowUpList(type.id).value.includes(day)
-                  ? 'text-primary'
-                  : 'text-slate-400 group-hover:text-slate-500'
+                isDayActive(day, type.id)
+                  ? 'bg-primary/5 border-primary shadow-sm ring-2 ring-primary/5'
+                  : 'bg-slate-50 border-slate-100 opacity-50'
               "
-              >{{ day }}</span
             >
-            <input
-              type="checkbox"
-              :value="day"
-              v-model="getFollowUpList(type.id).value"
-              class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition-transform group-active:scale-90"
-            />
-          </label>
+              <span
+                class="text-[10px] font-black uppercase tracking-tighter mb-1.5 transition-colors"
+                :class="
+                  isDayActive(day, type.id)
+                    ? 'text-primary'
+                    : 'text-slate-400'
+                "
+              >
+                {{ day }}
+              </span>
+              <input
+                type="checkbox"
+                :checked="isDayActive(day, type.id)"
+                disabled
+                class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition-transform opacity-70"
+              />
+            </label>
+          </div>
+
+          <!-- Dynamic Individual Notes Sections -->
+          <div class="space-y-3 mt-4">
+            <div 
+              v-for="day in days" 
+              :key="'note_' + day"
+              v-show="isDayActive(day, type.id)"
+              class="flex flex-col gap-1.5 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300"
+            >
+              <div class="flex items-center gap-2">
+                <span class="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-widest">Follow-up Status ({{ day }})</span>
+              </div>
+              <input
+                v-model="printingStatus[type.id + '_' + day.toLowerCase().replace(' ', '_') + '_notes']"
+                type="text"
+                class="w-full px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg focus:border-primary focus:bg-white focus:outline-none text-xs text-slate-700 placeholder:text-slate-300 transition-all font-medium"
+                :placeholder="'What happened on ' + day + '?'"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -251,6 +276,24 @@ import { computed, watch, onMounted, ref } from "vue";
 import { Clock as ClockIcon, User as UserIcon, Brush as BrushIcon, Edit3 as Edit3Icon, Box as BoxIcon, Smartphone as SmartphoneIcon } from "lucide-vue-next";
 import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
+
+const isDayActive = (day, typeId) => {
+  const dateStr = printingStatus.value[typeId + '_sent_to_print_date'];
+  if (!dateStr) return false;
+  
+  const dayNum = parseInt(day.replace('Day ', ''));
+  const startDate = new Date(dateStr);
+  startDate.setHours(0, 0, 0, 0);
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const diffTime = today.getTime() - startDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Same day = Day 1 logic (+1 added)
+  return (diffDays + 1) >= dayNum;
+};
 
 const props = defineProps({
   order: {
@@ -314,23 +357,21 @@ const readymadeFollowUpList = ref([]);
 const customizeFollowUpList = getFollowUpList('customize');
 
 const autoSelectDays = () => {
-  const baseDateStr = printingStatus.value.assigned_date;
-  if (!baseDateStr) return;
+  activeCardTypes.value.forEach(type => {
+    const baseDateStr = printingStatus.value[type.id + '_sent_to_print_date'];
+    if (!baseDateStr) return;
 
-  const baseDate = new Date(baseDateStr);
-  baseDate.setHours(0, 0, 0, 0);
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const diffTime = today - baseDate;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays >= 0) {
-    const maxDay = Math.min(diffDays + 1, 7);
+    const baseDate = new Date(baseDateStr);
+    baseDate.setHours(0, 0, 0, 0);
     
-    // Auto add for all active types
-    activeCardTypes.value.forEach(type => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = today - baseDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays >= 0) {
+      const maxDay = Math.min(diffDays + 1, 7);
       const followUp = getFollowUpList(type.id);
       const current = [...followUp.value];
       let changed = false;
@@ -342,13 +383,13 @@ const autoSelectDays = () => {
           }
       }
       if (changed) followUp.value = current;
-    });
-  }
+    }
+  });
 };
 
-watch(() => printingStatus.value.assigned_date, () => {
+watch(() => printingStatus.value, () => {
   autoSelectDays();
-});
+}, { deep: true });
 
 onMounted(() => {
   autoSelectDays();

@@ -52,7 +52,7 @@ class ProductController extends Controller
                 $query->whereDate('updated_at', $date);
             })
             ->latest()
-            ->paginate($request->per_page ?? 10);
+            ->paginate($request->per_page ?? 20);
 
         return response()->json([
             'success' => true,

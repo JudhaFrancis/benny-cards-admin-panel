@@ -66,7 +66,7 @@ class UserController extends Controller
             })
             ->with('role')
             ->latest()
-            ->paginate($request->per_page ?? 10);
+            ->paginate($request->per_page ?? 20);
 
         return response()->json([
             'success' => true,

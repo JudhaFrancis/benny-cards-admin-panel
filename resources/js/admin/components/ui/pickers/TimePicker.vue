@@ -1,5 +1,5 @@
 <template>
-  <Popover v-slot="{ open }" class="relative">
+  <Popover as="div" v-slot="{ open }" class="relative w-full">
     <PopoverButton
       :class="[
         'w-full bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all text-left shadow-sm min-h-[31px] flex items-center justify-between group px-3 py-1.5',
@@ -29,7 +29,8 @@
       leave-to-class="translate-y-1 opacity-0"
     >
       <PopoverPanel
-        class="absolute z-[60] mt-3 w-56 -translate-x-1/2 left-1/2 lg:left-0 lg:translate-x-0 transform rounded-[2rem] bg-white p-4 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-slate-100"
+        class="absolute z-[100] w-56 -translate-x-1/2 left-1/2 lg:left-0 lg:translate-x-0 transform rounded-[2rem] bg-white p-4 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-slate-100"
+        :class="placement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'"
       >
         <div class="flex flex-col gap-4">
           <div class="flex items-center justify-between px-2">
@@ -133,6 +134,10 @@ const props = defineProps({
   customClass: {
     type: String,
     default: "",
+  },
+  placement: {
+    type: String,
+    default: "bottom", // can be 'top' or 'bottom'
   },
 });
 

@@ -473,7 +473,7 @@ const fetchProducts = async (url = "/api/v1/products") => {
     const response = await axios.get(url, {
       params: {
         type: filters.type,
-        per_page: 10,
+        per_page: 20,
         ...columnFilters.value
       },
     });

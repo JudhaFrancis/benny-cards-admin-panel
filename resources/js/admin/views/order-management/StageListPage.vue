@@ -14,7 +14,7 @@
       <p class="text-[11px] text-gray-500 font-medium">
         Showing
         <span class="text-gray-700"
-          >{{ (page - 1) * 10 + 1 }} to {{ Math.min(page * 10, meta.total) }}</span
+          >{{ (page - 1) * 20 + 1 }} to {{ Math.min(page * 20, meta.total) }}</span
         >
         of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
       </p>
@@ -87,7 +87,7 @@ const fetchOrders = async () => {
   try {
     const params = {
       page: page.value,
-      per_page: 10,
+      per_page: 20,
       stage: props.stage,
       ...columnFilters.value
     };

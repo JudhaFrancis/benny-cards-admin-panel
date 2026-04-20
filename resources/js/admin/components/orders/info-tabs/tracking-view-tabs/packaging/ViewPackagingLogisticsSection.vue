@@ -10,30 +10,38 @@
       </h3>
       <div class="flex flex-wrap gap-4">
         <div
-          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border transition-all"
+          class="flex-1 min-w-[140px] flex flex-col gap-2 p-4 rounded-xl border transition-all"
           :class="
             logistics.card_received
               ? 'border-primary bg-white shadow-sm'
               : 'border-slate-100 bg-slate-50 opacity-50'
           "
         >
-          <div
-            class="p-2 rounded-lg"
-            :class="
-              logistics.card_received
-                ? 'bg-primary text-white'
-                : 'bg-slate-200 text-slate-400'
-            "
-          >
-            <DownloadIcon class="h-4 w-4" />
+          <div class="flex items-center gap-3">
+            <div
+              class="p-2 rounded-lg"
+              :class="
+                logistics.card_received
+                  ? 'bg-primary text-white'
+                  : 'bg-slate-200 text-slate-400'
+              "
+            >
+              <DownloadIcon class="h-4 w-4" />
+            </div>
+            <span
+              class="text-xs font-bold"
+              :class="
+                logistics.card_received ? 'text-slate-900' : 'text-slate-400'
+              "
+              >Card Received</span
+            >
           </div>
-          <span
-            class="text-xs font-bold"
-            :class="
-              logistics.card_received ? 'text-slate-900' : 'text-slate-400'
-            "
-            >Card Received</span
-          >
+          <div v-if="logistics.card_received && logistics.card_received_date" class="mt-1 pl-11">
+             <span class="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1.5 w-fit border border-emerald-100">
+               <CalendarIcon class="h-3 w-3" />
+               {{ formatDate(logistics.card_received_date) }}
+             </span>
+          </div>
         </div>
 
         <div
@@ -64,86 +72,61 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap gap-4">
-        <h3
-          class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 flex items-center gap-2"
-        >
-          <GiftIcon class="h-3.5 w-3.5" />
-          Gift Option
-        </h3>
-        <div
-          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border transition-all"
-          :class="
-            logistics.gift_type === 'with_gift'
-              ? 'border-primary bg-white shadow-sm'
-              : 'border-slate-100 bg-slate-50 opacity-50'
-          "
-        >
-          <div
-            class="p-2 rounded-lg"
-            :class="
-              logistics.gift_type === 'with_gift'
-                ? 'bg-primary text-white'
-                : 'bg-slate-200 text-slate-400'
-            "
-          >
-            <GiftIcon class="h-4 w-4" />
-          </div>
-          <span
-            class="text-xs font-bold"
-            :class="
-              logistics.gift_type === 'with_gift' ? 'text-slate-900' : 'text-slate-400'
-            "
-            >With Gift</span
-          >
-        </div>
 
-        <div
-          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border transition-all"
-          :class="
-            logistics.gift_type === 'without_gift'
-              ? 'border-primary bg-white shadow-sm'
-              : 'border-slate-100 bg-slate-50 opacity-50'
-          "
-        >
-          <div
-            class="p-2 rounded-lg"
-            :class="
-              logistics.gift_type === 'without_gift'
-                ? 'bg-primary text-white'
-                : 'bg-slate-200 text-slate-400'
-            "
-          >
-            <PackageIcon class="h-4 w-4" />
-          </div>
-          <span
-            class="text-xs font-bold"
-            :class="
-              logistics.gift_type === 'without_gift' ? 'text-slate-900' : 'text-slate-400'
-            "
-            >Without Gift</span
-          >
-        </div>
-      </div>
 
     </div>
 
-    <!-- Details Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="space-y-2">
-        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
-          >Crafted By</label
-        >
-        <div
-          class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
-        >
-          <UserIcon class="h-4 w-4 text-slate-400" />
-          <span class="text-sm font-medium text-slate-900">{{
-            logistics.crafted_by || "N/A"
-          }}</span>
+    <!-- Workflow & Assignment Section -->
+    <div class="bg-slate-50/50 rounded-2xl p-6 border border-slate-100 space-y-6">
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <UserIcon class="h-4 w-4" /> Assignment & Completion
+      </h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >Assigned By</label
+          >
+          <div
+            class="flex flex-wrap gap-2 p-3 rounded-xl bg-white border border-slate-100 min-h-[46px]"
+          >
+            <template v-if="logistics.assigned_by_multiple?.length">
+              <span 
+                v-for="staff in logistics.assigned_by_multiple" 
+                :key="staff"
+                class="bg-primary/5 text-primary text-[10px] font-bold px-2.5 py-1 rounded-lg border border-primary/10"
+              >
+                {{ staff }}
+              </span>
+            </template>
+            <span v-else class="text-sm font-medium text-slate-400">Not assigned</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >Crafted By</label
+          >
+          <div
+            class="flex flex-wrap gap-2 p-3 rounded-xl bg-white border border-slate-100 min-h-[46px]"
+          >
+            <template v-if="logistics.crafted_by_multiple?.length">
+              <span 
+                v-for="staff in logistics.crafted_by_multiple" 
+                :key="staff"
+                class="bg-primary/5 text-primary text-[10px] font-bold px-2.5 py-1 rounded-lg border border-primary/10"
+              >
+                {{ staff }}
+              </span>
+            </template>
+            <span v-else class="text-sm font-medium text-slate-400">Not assigned</span>
+          </div>
         </div>
       </div>
+    </div>
 
+    <!-- Logistics Details Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div class="space-y-2">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
           >Names on Cards</label
@@ -188,14 +171,30 @@
     </div>
 
     <div class="space-y-6">
-      <div class="space-y-2">
+      <!-- Selected Packaging Components -->
+      <div v-if="logistics.selected_items?.length" class="space-y-3">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
-          >Accessory Details</label
+          >Selected Components</label
         >
-        <div
-          class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap min-h-[80px]"
-        >
-          {{ logistics.logistics_details || "No accessory details." }}
+        <div class="flex flex-wrap gap-2">
+          <div v-if="logistics.selected_items.includes('envelope')" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold">
+            <MailIcon class="h-3 w-3" /> ENVELOPE
+          </div>
+          <div v-if="logistics.selected_items.includes('sticker')" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold">
+            <StickerIcon class="h-3 w-3" /> STICKER
+          </div>
+          <div v-if="logistics.selected_items.includes('crafting')" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold">
+            <ScissorsIcon class="h-3 w-3" /> CRAFTING
+          </div>
+          <div v-if="logistics.selected_items.includes('tag')" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold">
+            <TagIcon class="h-3 w-3" /> TAG
+          </div>
+          <div v-if="logistics.selected_items.includes('ribbon')" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold">
+            <GiftIcon class="h-3 w-3" /> RIBBON
+          </div>
+          <div v-if="logistics.selected_items.includes('others')" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold uppercase transition-all">
+            <PlusIcon class="h-3 w-3" /> {{ logistics.others_type || 'OTHERS' }}
+          </div>
         </div>
       </div>
 
@@ -209,6 +208,7 @@
           {{ logistics.card_issues || "No issues found." }}
         </div>
       </div>
+
     </div>
 
     <!-- Audit Information -->
@@ -243,6 +243,12 @@ import {
   Hash as HashIcon,
   Clock as ClockIcon,
   Gift as GiftIcon,
+  Mail as MailIcon,
+  Tag as TagIcon,
+  Smile as StickerIcon,
+  Plus as PlusIcon,
+  Image as ImageIcon,
+  UserCheck as UserCheckIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -277,5 +283,10 @@ const formatAuditDate = (dateString) => {
   }).toUpperCase();
   return `${d} at ${t}`;
 };
-</script>
 
+const getImageSource = (path) => {
+  if (!path) return "/images/placeholder.webp";
+  if (path.startsWith("blob:") || path.startsWith("data:") || path.startsWith("http")) return path;
+  return `/${path}`;
+};
+</script>

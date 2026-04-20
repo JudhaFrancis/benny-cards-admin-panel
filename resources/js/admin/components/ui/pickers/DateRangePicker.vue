@@ -1,5 +1,5 @@
 <template>
-  <Popover v-slot="{ open, close }" class="relative">
+  <Popover as="div" v-slot="{ open, close }" class="relative w-full">
     <PopoverButton
       :class="[
         'w-full bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all text-left shadow-sm min-h-[31px] flex items-center justify-between group px-3 py-1.5',
@@ -31,7 +31,7 @@
       leave-to-class="translate-y-1 opacity-0"
     >
       <PopoverPanel
-        class="absolute z-[60] mt-3 lg:right-0 transform rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-slate-100 w-auto min-w-[320px] lg:min-w-[640px]"
+        class="absolute z-[100] top-full mt-2 lg:right-0 transform rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-slate-100 w-auto min-w-[320px] lg:min-w-[640px]"
       >
         <div class="flex flex-col lg:flex-row gap-8">
           <!-- Calendar 1 -->

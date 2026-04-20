@@ -28,7 +28,7 @@ class OrderService
     /**
      * Get paginated orders with filters.
      */
-    public function listOrders(array $filters = [], int $perPage = 10): LengthAwarePaginator
+    public function listOrders(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
         $user = auth()->user();
         $userRole = strtolower($user->role?->name ?? '');
@@ -67,9 +67,9 @@ class OrderService
                 if ($stageRelation) {
                     $query->whereHas($stageRelation, function ($sub) use ($filters, $stage) {
                         // Capture the date from any possible key name
-                        $assignedDate = data_get($filters, 'computed_assigned_date') 
-                                     ?: data_get($filters, 'assigned_date')
-                                     ?: data_get($filters, 'date');
+                        $assignedDate = data_get($filters, 'computed_assigned_date')
+                            ?: data_get($filters, 'assigned_date')
+                            ?: data_get($filters, 'date');
 
                         if ($assignedDate) {
                             $time = strtotime($assignedDate);
@@ -80,7 +80,7 @@ class OrderService
                                 date('d/m/Y', $time),
                                 date('m-d-Y', $time)
                             ];
-                            
+
                             $col = match ($stage) {
                                 'designing' => 'work_assign',
                                 'printing' => 'printing_status',
@@ -88,9 +88,9 @@ class OrderService
                                 'delivery' => 'dispatch_mode',
                                 default => null
                             };
-                            
+
                             if ($col) {
-                                $sub->where(function($q) use ($col, $vals) {
+                                $sub->where(function ($q) use ($col, $vals) {
                                     foreach ($vals as $v) {
                                         $q->orWhere($col, 'LIKE', "%{$v}%");
                                     }
@@ -102,9 +102,9 @@ class OrderService
                         $printingDays = data_get($filters, 'printing_days_status');
                         if ($stage === 'printing' && $printingDays && $printingDays !== 'all') {
                             if ($printingDays === 'delayed') {
-                                $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.assigned_date')), '%d-%m-%Y'), CURDATE()) < 0");
+                                $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.confirmed_date')), '%d-%m-%Y'), CURDATE()) < 0");
                             } else {
-                                $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.assigned_date')), '%d-%m-%Y'), CURDATE()) >= 0");
+                                $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.confirmed_date')), '%d-%m-%Y'), CURDATE()) >= 0");
                             }
                         }
 
@@ -115,21 +115,21 @@ class OrderService
                             $startTime = data_get($filters, 'start_time');
                             if ($startTime) {
                                 $time = strtotime($startTime);
-                                $sub->where(function($q) use ($startTime, $time) {
+                                $sub->where(function ($q) use ($startTime, $time) {
                                     $q->orWhere('packaging_logistics', 'LIKE', '%' . date('H:i', $time) . '%')
-                                      ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i A', $time) . '%')
-                                      ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i a', $time) . '%')
-                                      ->orWhere('packaging_logistics', 'LIKE', '%' . preg_replace('/[^0-9]/', '%', $startTime) . '%');
+                                        ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i A', $time) . '%')
+                                        ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i a', $time) . '%')
+                                        ->orWhere('packaging_logistics', 'LIKE', '%' . preg_replace('/[^0-9]/', '%', $startTime) . '%');
                                 });
                             }
                             $endTime = data_get($filters, 'end_time');
                             if ($endTime) {
                                 $time = strtotime($endTime);
-                                $sub->where(function($q) use ($endTime, $time) {
+                                $sub->where(function ($q) use ($endTime, $time) {
                                     $q->orWhere('packaging_logistics', 'LIKE', '%' . date('H:i', $time) . '%')
-                                      ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i A', $time) . '%')
-                                      ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i a', $time) . '%')
-                                      ->orWhere('packaging_logistics', 'LIKE', '%' . preg_replace('/[^0-9]/', '%', $endTime) . '%');
+                                        ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i A', $time) . '%')
+                                        ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i a', $time) . '%')
+                                        ->orWhere('packaging_logistics', 'LIKE', '%' . preg_replace('/[^0-9]/', '%', $endTime) . '%');
                                 });
                             }
                         }
@@ -151,7 +151,11 @@ class OrderService
                         } elseif ($stage === 'printing') {
                             $q->orWhereHas('printing', fn($sub) => $sub->where('printing_status->assigned_to', $userName));
                         } elseif ($stage === 'packaging') {
-                            $q->orWhereHas('packaging', fn($sub) => $sub->where('packaging_logistics->crafted_by', $userName)->orWhere('packaging_status->packed_by', $userName));
+                            $q->orWhereHas('packaging', function($sub) use ($userName) {
+                                $sub->whereJsonContains('packaging_logistics->assigned_by_multiple', $userName)
+                                    ->orWhereJsonContains('packaging_logistics->crafted_by_multiple', $userName)
+                                    ->orWhere('packaging_status->packed_by', $userName);
+                            });
                         } elseif ($stage === 'delivery') {
                             $q->orWhereHas('dispatchDelivery', fn($sub) => $sub->where('dispatch_mode->signature_name', $userName));
                         }
@@ -161,53 +165,93 @@ class OrderService
             ->when(data_get($filters, 'resolved_status') ?: data_get($filters, 'status'), function (Builder $query, $value) {
                 if ($value !== 'all') {
                     $query->where(function ($q) use ($value) {
-                        // 1. Check main table status first
-                        $q->where('status', '=', $value);
-
-                        // 2. High-Precision Stage Mapping (matches the model's getResolvedStatusAttribute logic)
-                        if (stripos('Delivered', $value) !== false) {
+                        // 1. Map to stage statuses based on Model's getResolvedStatusAttribute logic
+                        $v = strtolower($value);
+                        
+                        // DELIVERED: dispatchDelivery->status === 'Completed'
+                        if ($v === 'delivered') {
                             $q->orWhereHas('dispatchDelivery', fn($sq) => $sq->where('status', 'Completed'));
                         }
                         
-                        if (stripos('Out for Delivery', $value) !== false) {
+                        // OUT FOR DELIVERY: dispatchDelivery->status === 'Process'
+                        if ($v === 'out for delivery') {
                             $q->orWhereHas('dispatchDelivery', fn($sq) => $sq->where('status', 'Process'));
                         }
-
-                        if (stripos('Packed', $value) !== false) {
+                        
+                        // PACKED: packaging->status === 'Completed' AND dispatch doesn't supersede (Completed/Process)
+                        if ($v === 'packed') {
                             $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Completed'))
-                              ->whereDoesntHave('dispatchDelivery');
+                              ->where(function($sub) {
+                                  $sub->whereDoesntHave('dispatchDelivery')
+                                      ->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
+                              });
                         }
-
-                        if (stripos('Packing in Progress', $value) !== false) {
-                            $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Process'));
+                        
+                        // PACKING IN PROGRESS: packaging->status === 'Process' AND dispatch doesn't supersede
+                        if ($v === 'packing in progress') {
+                            $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Process'))
+                              ->where(function($sub) {
+                                  $sub->whereDoesntHave('dispatchDelivery')
+                                      ->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
+                              });
                         }
-
-                        if (stripos('Printed', $value) !== false) {
+                        
+                        // PRINTED: printing->status === 'Completed' AND packaging/dispatch doesn't supersede
+                        if ($v === 'printed') {
                             $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Completed'))
-                              ->whereDoesntHave('packaging');
+                              ->where(function($sub) {
+                                  $sub->whereDoesntHave('packaging')
+                                      ->orWhereHas('packaging', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
+                              })
+                              ->where(function($sub) {
+                                  $sub->whereDoesntHave('dispatchDelivery')
+                                      ->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
+                              });
                         }
-
-                        if (stripos('Printing in Progress', $value) !== false) {
-                            $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Process'));
+                        
+                        // PRINTING IN PROGRESS: printing->status === 'Process'
+                        if ($v === 'printing in progress') {
+                            $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Process'))
+                              ->where(function($sub) {
+                                  $sub->whereDoesntHave('packaging')
+                                      ->orWhereHas('packaging', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
+                              })
+                              ->where(function($sub) {
+                                  $sub->whereDoesntHave('dispatchDelivery')
+                                      ->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
+                              });
                         }
-
-                        if (stripos('Designed', $value) !== false) {
+                        
+                        // DESIGNED: designing->status === 'Completed'
+                        if ($v === 'designed') {
                             $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Completed'))
-                              ->whereDoesntHave('printing');
+                              ->where(function($sub) { $sub->whereDoesntHave('printing')->orWhereHas('printing', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); })
+                              ->where(function($sub) { $sub->whereDoesntHave('packaging')->orWhereHas('packaging', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); })
+                              ->where(function($sub) { $sub->whereDoesntHave('dispatchDelivery')->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); });
                         }
-
-                        if (stripos('Designing in Progress', $value) !== false) {
-                            $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Process'));
+                        
+                        // DESIGNING IN PROGRESS: designing->status === 'Process'
+                        if ($v === 'designing in progress') {
+                            $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Process'))
+                              ->where(function($sub) { $sub->whereDoesntHave('printing')->orWhereHas('printing', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); })
+                              ->where(function($sub) { $sub->whereDoesntHave('packaging')->orWhereHas('packaging', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); })
+                              ->where(function($sub) { $sub->whereDoesntHave('dispatchDelivery')->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); });
                         }
-
-                        if (stripos('Confirmed', $value) !== false) {
+                        
+                        // CONFIRMED
+                        if ($v === 'confirmed') {
                             $q->orWhereHas('clientInformation', fn($sq) => $sq->where('status', 'Completed'))
-                              ->whereDoesntHave('designing');
+                              ->where(function($sub) { $sub->whereDoesntHave('designing')->orWhereHas('designing', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); });
+                        }
+                        
+                        // NEW ORDER
+                        if ($v === 'new order') {
+                            $q->orWhereDoesntHave('clientInformation')
+                              ->orWhereHas('clientInformation', fn($sq) => $sq->where('status', '!=', 'Completed'));
                         }
 
-                        if (stripos('New Order', $value) !== false) {
-                            $q->orWhereDoesntHave('clientInformation');
-                        }
+                        // Main table status fallback
+                        $q->orWhere('status', '=', $value);
                     });
                 }
             })
@@ -241,12 +285,12 @@ class OrderService
                 $query->where(function ($q) use ($value) {
                     // Check main table
                     $q->whereDate('updated_at', $value)
-                      // Check all stage tables
-                      ->orWhereHas('clientInformation', fn($sub) => $sub->whereDate('updated_at', $value))
-                      ->orWhereHas('designing', fn($sub) => $sub->whereDate('updated_at', $value))
-                      ->orWhereHas('printing', fn($sub) => $sub->whereDate('updated_at', $value))
-                      ->orWhereHas('packaging', fn($sub) => $sub->whereDate('updated_at', $value))
-                      ->orWhereHas('dispatchDelivery', fn($sub) => $sub->whereDate('updated_at', $value));
+                        // Check all stage tables
+                        ->orWhereHas('clientInformation', fn($sub) => $sub->whereDate('updated_at', $value))
+                        ->orWhereHas('designing', fn($sub) => $sub->whereDate('updated_at', $value))
+                        ->orWhereHas('printing', fn($sub) => $sub->whereDate('updated_at', $value))
+                        ->orWhereHas('packaging', fn($sub) => $sub->whereDate('updated_at', $value))
+                        ->orWhereHas('dispatchDelivery', fn($sub) => $sub->whereDate('updated_at', $value));
                 });
             })
             // Client Information Stage Filters
@@ -263,7 +307,8 @@ class OrderService
                             $sub->where('printing_status->assigned_to', 'like', "%{$value}%");
                         })
                         ->orWhereHas('packaging', function ($sub) use ($value) {
-                            $sub->where('packaging_logistics->crafted_by', 'like', "%{$value}%");
+                            $sub->where('packaging_logistics->assigned_by_multiple', 'like', "%{$value}%")
+                                ->orWhere('packaging_logistics->crafted_by_multiple', 'like', "%{$value}%");
                         })
                         ->orWhereHas('dispatchDelivery', function ($sub) use ($value) {
                             $sub->where('dispatch_mode->signature_name', 'like', "%{$value}%");
@@ -287,11 +332,11 @@ class OrderService
                 // This logic mirrors the frontend date calculation roughly
                 if ($value === 'Delayed') {
                     $query->whereHas('printing', function ($sub) {
-                        $sub->whereRaw('DATEDIFF(NOW(), json_unquote(json_extract(printing_status, "$.assigned_date"))) > 7');
+                        $sub->whereRaw('DATEDIFF(NOW(), json_unquote(json_extract(printing_status, "$.confirmed_date"))) > 7');
                     });
                 } elseif ($value === 'On Time') {
                     $query->whereHas('printing', function ($sub) {
-                        $sub->whereRaw('DATEDIFF(NOW(), json_unquote(json_extract(printing_status, "$.assigned_date"))) <= 7');
+                        $sub->whereRaw('DATEDIFF(NOW(), json_unquote(json_extract(printing_status, "$.confirmed_date"))) <= 7');
                     });
                 }
             })
@@ -300,9 +345,9 @@ class OrderService
                 $status = data_get($filters, 'printing_days_status');
                 $query->whereHas('printing', function ($sub) use ($status) {
                     if ($status === 'delayed') {
-                        $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.assigned_date')), '%d-%m-%Y'), CURDATE()) < 0");
+                        $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.confirmed_date')), '%d-%m-%Y'), CURDATE()) < 0");
                     } else {
-                        $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.assigned_date')), '%d-%m-%Y'), CURDATE()) >= 0");
+                        $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.confirmed_date')), '%d-%m-%Y'), CURDATE()) >= 0");
                     }
                 });
             })

@@ -26,6 +26,7 @@
       @view-info="handleViewInfo"
       @edit="handleEdit"
       @delete="handleConfirmDelete"
+      @update-status="handleUpdateStatus"
     />
 
     <!-- Pagination Controls -->
@@ -129,7 +130,7 @@ const fetchOrders = async () => {
   try {
     const params = {
       page: page.value,
-      per_page: 10,
+      per_page: 20,
       ...columnFilters.value
     };
 
@@ -148,6 +149,20 @@ const fetchOrders = async () => {
     toast.error("Failed to load orders");
   } finally {
     loading.value = false;
+  }
+};
+
+const handleUpdateStatus = async ({ orderId, status }) => {
+  try {
+    const response = await axios.post(`/api/v1/orders/${orderId}/status`, { status });
+    if (response.data.success) {
+      toast.success("Order status updated successfully");
+      fetchOrders();
+    }
+  } catch (error) {
+    console.error("Error updating status:", error);
+    toast.error("Failed to update status");
+    fetchOrders();
   }
 };
 
