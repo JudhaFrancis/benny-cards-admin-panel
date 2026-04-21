@@ -3,14 +3,26 @@
     <!-- Header Section -->
     <PageHeader :title="pageTitle" subtitle="Manage and track customer purchases">
       <template #actions>
-        <button
-          v-if="canCreate"
-          @click="isCreateModalOpen = true"
-          class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95"
-        >
-          <PlusIcon class="h-4 w-4" />
-          Create Order
-        </button>
+        <div class="flex items-center gap-3">
+          <div class="relative group">
+            <SearchIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+            <input 
+              v-model="searchQuery"
+              type="text" 
+              placeholder="Search orders..." 
+              class="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all w-64 shadow-sm"
+              @input="handleSearch"
+            />
+          </div>
+          <button
+            v-if="canCreate"
+            @click="isCreateModalOpen = true"
+            class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95 whitespace-nowrap"
+          >
+            <PlusIcon class="h-4 w-4" />
+            Create Order
+          </button>
+        </div>
       </template>
     </PageHeader>
 
@@ -99,6 +111,8 @@ import {
   CreditCard as CreditCardIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  Plus as PlusIcon,
+  Search as SearchIcon,
 } from "lucide-vue-next";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -122,8 +136,19 @@ const loading = ref(true);
 const isSaving = ref(false);
 const page = ref(1);
 const statusFilter = ref("all");
+const searchQuery = ref("");
 const columnFilters = ref({});
 const meta = ref({ total: 0, from: 1 });
+
+let searchDebounce = null;
+const handleSearch = () => {
+  if (searchDebounce) clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    columnFilters.value.search = searchQuery.value;
+    page.value = 1;
+    fetchOrders();
+  }, 500);
+};
 
 const fetchOrders = async () => {
   loading.value = true;
@@ -167,7 +192,7 @@ const handleUpdateStatus = async ({ orderId, status }) => {
 };
 
 const handleFilterChange = (filters) => {
-  columnFilters.value = filters;
+  columnFilters.value = { ...filters, search: searchQuery.value };
   page.value = 1;
   fetchOrders();
 };

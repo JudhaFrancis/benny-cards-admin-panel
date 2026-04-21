@@ -60,11 +60,19 @@
           >Occasion</label
         >
         <ContextDropdown
-          v-model="clientInfo.occasion"
+          :model-value="isOccasionOther ? 'other' : clientInfo.occasion"
+          @update:model-value="handleOccasionChange"
           :options="occasionOptions"
           placeholder="Select an occasion"
           :icon="PartyPopperIcon"
         />
+        <div v-if="isOccasionOther" class="mt-2 animate-in slide-in-from-top-1 duration-200">
+          <input
+            v-model="occasionOtherValue"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-semibold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all placeholder:text-slate-400 shadow-sm"
+            placeholder="Enter custom occasion (e.g. Puberty Function)..."
+          />
+        </div>
       </div>
 
     </div>
@@ -212,5 +220,42 @@ watch(
 const save = () => {
   // Pass the data up to the parent component
   emit("save", props.order.client_information);
+};
+
+const standardOccasions = [
+  "wedding",
+  "birthday",
+  "engagement",
+  "anniversary",
+  "house_warming",
+];
+
+const isOccasionOther = computed(() => {
+  const val = clientInfo.value.occasion;
+  if (!val) return false;
+  return val === "other" || !standardOccasions.includes(val);
+});
+
+const occasionOtherValue = computed({
+  get: () =>
+    isOccasionOther.value && clientInfo.value.occasion !== "other"
+      ? clientInfo.value.occasion
+      : "",
+  set: (val) => {
+    clientInfo.value.occasion = val || "other";
+  },
+});
+
+const handleOccasionChange = (val) => {
+  if (val === "other") {
+    if (
+      !clientInfo.value.occasion ||
+      standardOccasions.includes(clientInfo.value.occasion)
+    ) {
+      clientInfo.value.occasion = "other";
+    }
+  } else {
+    clientInfo.value.occasion = val;
+  }
 };
 </script>

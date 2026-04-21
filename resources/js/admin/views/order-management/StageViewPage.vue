@@ -43,18 +43,18 @@ import { ArrowLeft, Pencil, Loader2, ClipboardList, User, CreditCard, Briefcase,
 import axios from "axios";
 import PageHeader from "../../components/ui/layout/PageHeader.vue";
 
-// Section Components
-import OrderDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/OrderDetailsSection.vue";
-import ClientInfoSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/ClientInfoSection.vue";
-import CardSpecsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/client-information/CardSpecsSection.vue";
-import WorkAssignSection from "../../components/orders/edit-tabs/tracking-edit-tabs/designing/WorkAssignSection.vue";
-import DesignPrintSection from "../../components/orders/edit-tabs/tracking-edit-tabs/designing/DesignPrintSection.vue";
-import OrderPrintingSection from "../../components/orders/edit-tabs/tracking-edit-tabs/printing/OrderPrintingSection.vue";
-import PackagingLogisticsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/packaging/PackagingLogisticsSection.vue";
-import PackagingStatusSection from "../../components/orders/edit-tabs/tracking-edit-tabs/packaging/PackagingStatusSection.vue";
-import DeliveryLocationSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DeliveryLocationSection.vue";
-import DispatchModeSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DispatchModeSection.vue";
-import DispatchDetailsSection from "../../components/orders/edit-tabs/tracking-edit-tabs/dispatch-delivery/DispatchDetailsSection.vue";
+// Section Components (View only)
+import OrderDetailsSection from "../../components/orders/info-tabs/tracking-view-tabs/client-information/ViewOrderDetailsSection.vue";
+import ClientInfoSection from "../../components/orders/info-tabs/tracking-view-tabs/client-information/ViewClientInfoSection.vue";
+import CardSpecsSection from "../../components/orders/info-tabs/tracking-view-tabs/client-information/ViewCardSpecsSection.vue";
+import WorkAssignSection from "../../components/orders/info-tabs/tracking-view-tabs/designing/ViewWorkAssignSection.vue";
+import DesignPrintSection from "../../components/orders/info-tabs/tracking-view-tabs/designing/ViewDesignPrintSection.vue";
+import OrderPrintingSection from "../../components/orders/info-tabs/tracking-view-tabs/printing/ViewOrderPrintingSection.vue";
+import PackagingLogisticsSection from "../../components/orders/info-tabs/tracking-view-tabs/packaging/ViewPackagingLogisticsSection.vue";
+import PackagingStatusSection from "../../components/orders/info-tabs/tracking-view-tabs/packaging/ViewPackagingStatusSection.vue";
+import DeliveryLocationSection from "../../components/orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDeliveryLocationSection.vue";
+import DispatchModeSection from "../../components/orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDispatchModeSection.vue";
+import DispatchDetailsSection from "../../components/orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDispatchDetailsSection.vue";
 
 const route = useRoute();
 const router = useRouter();

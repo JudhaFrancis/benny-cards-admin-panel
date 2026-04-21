@@ -48,13 +48,13 @@
       </div>
     </div>
 
-    <!-- Place Name -->
+    <!-- Address -->
     <div class="space-y-4 pt-4 border-t border-slate-100">
       <label
         class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2"
       >
         <NavigationIcon class="h-4 w-4 text-primary" />
-        Place Name
+        Address
       </label>
       <div
         class="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100"

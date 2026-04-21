@@ -98,7 +98,7 @@ export function useOrderValidation() {
       case "delivery-location":
         // Only fields with * in DeliveryLocationSection.vue
         if (!delivery.shops) errors.push("Shop Location");
-        if (!delivery.place_name) errors.push("Place Name");
+        if (!delivery.place_name) errors.push("Address");
         break;
 
       case "dispatch-mode":

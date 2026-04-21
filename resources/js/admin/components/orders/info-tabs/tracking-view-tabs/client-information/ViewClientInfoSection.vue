@@ -51,9 +51,12 @@
           class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
         >
           <PartyPopperIcon class="h-4 w-4 text-slate-400" />
-          <span class="text-sm font-medium text-slate-900 capitalize">{{
-            clientInfo.occasion || "N/A"
+          <span class="text-sm font-medium text-slate-900">{{
+            isOccasionOther ? 'Other' : (clientInfo.occasion ? capitalize(clientInfo.occasion) : "N/A")
           }}</span>
+        </div>
+        <div v-if="isOccasionOther && clientInfo.occasion && clientInfo.occasion !== 'other'" class="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-100/50 text-sm font-medium text-slate-600 italic">
+          "{{ clientInfo.occasion }}"
         </div>
       </div>
 
@@ -96,6 +99,17 @@ const props = defineProps({
 });
 
 const clientInfo = computed(() => props.order.client_information?.client_info || {});
+
+const standardOccasions = ["wedding", "birthday", "engagement", "anniversary", "house_warming"];
+const isOccasionOther = computed(() => {
+  const val = clientInfo.value.occasion;
+  return val && val !== "none" && !standardOccasions.includes(val);
+});
+
+const capitalize = (str) => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).replace("_", " ");
+};
 
 const formatDate = (dateString) => {
   if (!dateString) return "";

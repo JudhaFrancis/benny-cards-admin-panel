@@ -162,9 +162,12 @@
             >Card Lamination</label
           >
           <div
-            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 capitalize"
+            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
           >
-            {{ cardSpecs.card_lamination || "None" }}
+            {{ cardLaminationDisplay }}
+          </div>
+          <div v-if="isCardLaminationOther && cardSpecs.card_lamination && cardSpecs.card_lamination !== 'others'" class="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-100/50 text-sm font-medium text-slate-600 italic">
+            "{{ cardSpecs.card_lamination }}"
           </div>
         </div>
         <div class="space-y-2">
@@ -173,9 +176,12 @@
             >Envelope Lamination</label
           >
           <div
-            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 capitalize"
+            class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900"
           >
-            {{ cardSpecs.envelope_lamination || "None" }}
+            {{ envelopeLaminationDisplay }}
+          </div>
+          <div v-if="isEnvelopeLaminationOther && cardSpecs.envelope_lamination && cardSpecs.envelope_lamination !== 'others'" class="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-100/50 text-sm font-medium text-slate-600 italic">
+            "{{ cardSpecs.envelope_lamination }}"
           </div>
         </div>
       </div>
@@ -240,6 +246,33 @@ const props = defineProps({
 });
 
 const cardSpecs = computed(() => props.order.client_information?.card_specs || {});
+const clientInfo = computed(() => props.order.client_information?.client_info || {});
+
+const standardLaminations = ["none", "matt", "glossy", "velvet"];
+const isCardLaminationOther = computed(() => {
+  const val = cardSpecs.value.card_lamination;
+  return val && !standardLaminations.includes(val);
+});
+const cardLaminationDisplay = computed(() => {
+  if (isCardLaminationOther.value) return "Others";
+  const val = cardSpecs.value.card_lamination;
+  return val === "none" ? "None" : (val ? capitalize(val) : "None");
+});
+
+const isEnvelopeLaminationOther = computed(() => {
+  const val = cardSpecs.value.envelope_lamination;
+  return val && !standardLaminations.includes(val);
+});
+const envelopeLaminationDisplay = computed(() => {
+  if (isEnvelopeLaminationOther.value) return "Others";
+  const val = cardSpecs.value.envelope_lamination;
+  return val === "none" ? "None" : (val ? capitalize(val) : "None");
+});
+
+const capitalize = (str) => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).replace("_", " ");
+};
 
 const formatAuditDate = (dateString) => {
   if (!dateString) return "N/A";

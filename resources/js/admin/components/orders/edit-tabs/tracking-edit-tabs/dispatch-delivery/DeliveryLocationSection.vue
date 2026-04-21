@@ -69,13 +69,13 @@
 
     <div class="border-t border-slate-100"></div>
 
-    <!-- Place Name Input -->
+    <!-- Address Input -->
     <div class="space-y-4">
       <label
         class="text-xs font-semibold text-slate-700 flex items-center gap-2"
       >
         <NavigationIcon class="h-4 w-4 text-primary" />
-        Place Name <span class="text-red-500">*</span>
+        Address <span class="text-red-500">*</span>
       </label>
       <div class="relative group">
         <MapPinIcon
@@ -194,15 +194,25 @@ const autoFill = () => {
 };
 
 onMounted(() => {
-  autoFill();
+  // Only auto-fill if we don't have an address yet
+  const target = props.order.dispatch_delivery?.delivery_location;
+  if (!target?.place_name) {
+    autoFill();
+  }
 });
 
+// Watch for SHOP changes to auto-populate address
+// We only do this when the shop selection actually CHANGES
 watch(
-  () => props.order,
-  () => {
-    autoFill();
-  },
-  { deep: true },
+  () => deliveryLocation.value.shops,
+  (newShop, oldShop) => {
+    if (newShop && newShop !== oldShop) {
+      const shop = shopOptions.find((s) => s.id === newShop);
+      if (shop) {
+        deliveryLocation.value.place_name = shop.label;
+      }
+    }
+  }
 );
 </script>
 
