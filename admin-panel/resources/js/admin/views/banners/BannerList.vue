@@ -302,7 +302,7 @@ const fetchBanners = async (url = "/api/v1/banners") => {
   try {
     const response = await axios.get(url, {
       params: {
-        per_page: 10,
+        per_page: 20,
       },
     });
     if (response.data.success) {

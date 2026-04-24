@@ -24,9 +24,11 @@ class OrderController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $perPage = $request->get('per_page') ?: $request->get('limit') ?: 20;
+
         $orders = $this->orderService->listOrders(
             $request->all(),
-            $request->get('limit', 10)
+            (int) $perPage
         );
 
         return response()->json([

@@ -319,7 +319,7 @@ const fetchCoupons = async (url = "/api/v1/coupons") => {
   try {
     const response = await axios.get(url, {
       params: {
-        per_page: 10,
+        per_page: 20,
         ...columnFilters.value
       },
     });

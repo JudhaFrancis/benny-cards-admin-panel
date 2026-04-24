@@ -9,6 +9,12 @@
         <h4 class="text-sm font-black text-blue-900 uppercase tracking-tight">
           Bus Details
         </h4>
+        <div
+          v-if="busDetails.shared_whatsapp"
+          class="ml-auto flex items-center gap-2 px-3 py-1 rounded-full bg-[#25D366] text-white text-[10px] font-black uppercase"
+        >
+          <MessageCircleIcon class="h-3 w-3" /> Shared in WhatsApp
+        </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="space-y-1">
@@ -92,6 +98,12 @@
         <h4 class="text-sm font-black text-amber-900 uppercase tracking-tight">
           Transport Details
         </h4>
+        <div
+          v-if="transportDetails.shared_whatsapp"
+          class="ml-auto flex items-center gap-2 px-3 py-1 rounded-full bg-[#25D366] text-white text-[10px] font-black uppercase"
+        >
+          <MessageCircleIcon class="h-3 w-3" /> Shared in WhatsApp
+        </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-1">

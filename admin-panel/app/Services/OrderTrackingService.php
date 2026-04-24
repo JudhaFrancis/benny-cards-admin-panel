@@ -65,6 +65,9 @@ class OrderTrackingService
                     // Strip audit details from the JSON data as requested
                     if (is_array($content)) {
                         unset($content['_audit']);
+                        if ($section === 'printing_status' && isset($content['assigned_to'])) {
+                            unset($content['assigned_to']);
+                        }
                     }
                     
                     $updatesByStage[$stageRelation][$section] = $content;

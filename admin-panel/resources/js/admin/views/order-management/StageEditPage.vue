@@ -188,10 +188,20 @@ const handleSave = async () => {
     };
     const relation = stageRelationMap[stage.value];
 
-    const payload = {};
+    const formData = new FormData();
+    formData.append('_method', 'PUT');
+    
+    // Add all section data as JSON strings
     relevantSections.value.forEach(s => {
-      payload[s.key] = order.value[relation]?.[s.key] || {};
+      const content = order.value[relation]?.[s.key] || {};
+      formData.append(s.key, JSON.stringify(content));
     });
+
+    // Handle sticker image if in designing or packaging stage
+    const stageData = order.value[relation] || {};
+    if ((stage.value === 'designing' || stage.value === 'packaging') && stageData.design_print_file) {
+      formData.append('sticker_image', stageData.design_print_file);
+    }
 
     if (stage.value === 'client-information') {
       const orderDetails = order.value[relation]?.order_details || {};
@@ -201,7 +211,10 @@ const handleSave = async () => {
       });
     }
 
-    const response = await axios.put(`/api/v1/orders/${order.value.id}/stages/${stage.value}`, payload);
+    const response = await axios.post(`/api/v1/orders/${order.value.id}/stages/${stage.value}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
     if (response.data.success) {
       toast.success(`${stageTitle.value} updated successfully`);
       router.push(`/order-management/${stage.value}`);

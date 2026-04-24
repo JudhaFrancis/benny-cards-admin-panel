@@ -341,7 +341,7 @@ const fetchPriceRanges = async (url = "/api/v1/price-ranges") => {
   try {
     const response = await axios.get(url, {
       params: {
-        per_page: 10,
+        per_page: 20,
       },
     });
     if (response.data.success) {

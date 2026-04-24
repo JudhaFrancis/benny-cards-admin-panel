@@ -27,7 +27,7 @@ class BannerController extends Controller
                 $query->where('status', $request->status);
             })
             ->latest()
-            ->paginate($request->per_page ?? 10);
+            ->paginate($request->per_page ?? 20);
 
         return response()->json([
             'success' => true,

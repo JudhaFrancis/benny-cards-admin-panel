@@ -363,7 +363,7 @@ const fetchCategories = async (url = "/api/v1/categories") => {
   loading.value = true;
   try {
     const params = {
-      per_page: 10,
+      per_page: 20,
       ...columnFilters.value
     };
 

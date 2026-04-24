@@ -9,6 +9,7 @@
       <Listbox
         :model-value="modelValue"
         @update:model-value="$emit('update:modelValue', $event)"
+        :multiple="multiple"
         v-slot="{ open, value }"
       >
         <div class="relative" :class="{ 'z-[100]': open }">
@@ -33,9 +34,9 @@
 
             <span
               class="block truncate text-xs font-semibold"
-              :class="value ? 'text-slate-900' : 'text-slate-400'"
+              :class="(multiple ? (value && value.length > 0) : value) ? 'text-slate-900' : 'text-slate-400'"
             >
-              {{ selectedOption?.label || props.modelValue || placeholder }}
+              {{ displayText }}
             </span>
 
             <span
@@ -164,7 +165,7 @@ import {
 } from "lucide-vue-next";
 
 const props = defineProps({
-  modelValue: [String, Number, Object],
+  modelValue: [String, Number, Array, Object],
   options: {
     type: Array, // [{ label, value, description, badge, badgeClass, metadata: [{icon, text}] }]
     default: () => [],
@@ -174,14 +175,30 @@ const props = defineProps({
     type: String,
     default: "Select an option",
   },
+  multiple: {
+    type: Boolean,
+    default: false
+  },
   icon: [Object, Function],
 });
 
 defineEmits(["update:modelValue"]);
 
 const selectedOption = computed(() => {
+  if (props.multiple) {
+    if (!Array.isArray(props.modelValue)) return null;
+    return props.options.filter(opt => props.modelValue.includes(opt.value));
+  }
   if (props.modelValue === null || props.modelValue === undefined) return null;
   return props.options.find((opt) => String(opt.value) == String(props.modelValue)) || null;
+});
+
+const displayText = computed(() => {
+  if (props.multiple) {
+    if (!Array.isArray(selectedOption.value) || selectedOption.value.length === 0) return props.placeholder;
+    return selectedOption.value.map(opt => opt.label).join(', ');
+  }
+  return selectedOption.value?.label || props.modelValue || props.placeholder;
 });
 
 function cn(...classes) {

@@ -28,7 +28,7 @@
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <label class="text-xs font-medium text-slate-700"
-          >Print & Add-ons <span class="text-red-500">*</span></label
+          >Print & Add-ons</label
         >
         <div class="flex items-center gap-2">
           <input

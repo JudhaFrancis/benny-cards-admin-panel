@@ -313,8 +313,8 @@ const handleSave = async () => {
       formData.append(s.key, JSON.stringify(content));
     });
 
-    // Handle sticker image if in designing stage
-    if (props.stage === 'designing' && stageData.design_print_file) {
+    // Handle sticker image if in designing or packaging stage
+    if ((props.stage === 'designing' || props.stage === 'packaging') && stageData.design_print_file) {
       formData.append('sticker_image', stageData.design_print_file);
     }
 

@@ -97,6 +97,10 @@
       <span class="text-sm font-medium text-slate-700">{{ order.computed_completed_by }}</span>
     </template>
 
+    <template #cell-sent_to_print_date_col="{ item: order }">
+      <span class="text-slate-500 font-medium">{{ getSentToPrintDate(order) }}</span>
+    </template>
+
     <template #cell-start_time="{ item: order }">
       <span class="text-sm font-medium text-slate-700">{{ formatTimeTo12h(order.packaging?.packaging_logistics?.start_time) }}</span>
     </template>
@@ -213,15 +217,28 @@ const columns = computed(() => {
     });
   }
 
+  const dateLabel = props.stage === 'client-information' ? "Order Date" : 
+                    (props.stage === 'printing' ? "Confirmed Date" : "Assigned Date");
+
   cols.push({
     key: "assigned_date",
-    label: props.stage === 'client-information' ? "Order Date" : "Assigned Date",
+    label: dateLabel,
     align: "left",
     width: "140px",
     class: "whitespace-nowrap",
     type: "date",
     filterKey: props.stage === 'client-information' ? "order_date" : null
   });
+
+  if (props.stage === 'printing') {
+    cols.push({
+      key: "sent_to_print_date_col",
+      label: "Sent to Print Date",
+      align: "left",
+      width: "140px",
+      class: "whitespace-nowrap"
+    });
+  }
 
   if (props.stage === 'packaging') {
     cols.push({
@@ -444,6 +461,11 @@ const getAssignedName = (order) => {
     case 'printing':
       return order.printing?.printing_status?.assigned_to || order.designing?.work_assign?.assigned_to || "N/A";
     case 'packaging':
+      // Show multiple assigned names if available
+      const assigned = order.packaging?.packaging_logistics?.assigned_by_multiple;
+      if (Array.isArray(assigned) && assigned.length > 0) {
+        return assigned.join(", ");
+      }
       return order.packaging?.packaging_logistics?.crafted_by || "N/A";
     case 'delivery':
       return order.dispatch_delivery?.dispatch_mode?.signature_name || "N/A";
@@ -462,7 +484,7 @@ const getAssignedDateRaw = (order) => {
       date = order.designing?.work_assign?.assigned_date;
       break;
     case 'printing':
-      date = order.printing?.printing_status?.assigned_date;
+      date = order.printing?.printing_status?.confirmed_date || order.printing?.printing_status?.assigned_date;
       break;
     case 'packaging':
       date = order.packaging?.packaging_logistics?.date;
@@ -474,12 +496,41 @@ const getAssignedDateRaw = (order) => {
   return date;
 };
 
+const getSentToPrintDate = (order) => {
+  if (props.stage !== 'printing') return "N/A";
+  const ps = order.printing?.printing_status;
+  const types = order.client_information?.card_specs?.type?.split(',') || [];
+  let sentDate = null;
+  for (const t of types) {
+    if (ps?.[t.trim() + '_sent_to_print_date']) {
+      sentDate = ps[t.trim() + '_sent_to_print_date'];
+      break;
+    }
+  }
+  return formatDate(sentDate);
+};
+
 const getAssignedDate = (order) => {
   return formatDate(getAssignedDateRaw(order));
 };
 
 const getDaysFromAssigned = (order) => {
-  const dateStr = getAssignedDateRaw(order);
+  let dateStr = getAssignedDateRaw(order);
+  
+  // Specific override for printing stage calculation: use Sent to Print Date priority
+  if (props.stage === 'printing') {
+    const ps = order.printing?.printing_status;
+    const types = order.client_information?.card_specs?.type?.split(',') || [];
+    let sentDate = null;
+    for (const t of types) {
+      if (ps?.[t.trim() + '_sent_to_print_date']) {
+        sentDate = ps[t.trim() + '_sent_to_print_date'];
+        break;
+      }
+    }
+    dateStr = sentDate || dateStr;
+  }
+
   if (!dateStr) return "N/A";
 
   const assigned = new Date(dateStr);

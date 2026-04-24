@@ -183,7 +183,12 @@ const processedOrders = computed(() => {
   });
 });
 
-defineEmits(["view-info", "edit", "delete"]);
+const emit = defineEmits(["view-info", "edit", "delete", "update-status"]);
+
+const handleStatusChange = (order, newStatus) => {
+  order.status = newStatus; // Optimistic update
+  emit('update-status', { orderId: order.id, status: newStatus });
+};
 
 const { getModulePermissions } = usePermissions();
 const { canView, canEdit, canDelete } = getModulePermissions("Order");
@@ -227,7 +232,7 @@ const columns = computed(() => {
       { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name" },
       { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "order_date" },
       { key: "items", label: "Items", align: "center", width: "100px", class: "whitespace-nowrap", filterKey: "items_count" },
-      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status" },
+      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status", type: "select", options: Object.keys(orderStatusStyles).map(s => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })) },
       { key: "delivery_date", label: "Delivery Date", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "delivery_date" },
       { key: "payment", label: "Payment Status", align: "left", width: "140px", class: "whitespace-nowrap", filterKey: "payment_status", type: "select", options: [ { label: "Paid", value: "paid" }, { label: "Unpaid", value: "unpaid" }, { label: "Due", value: "due" } ] },
       { key: "created_at", label: "Created", align: "left", width: "150px", type: "date", filterKey: "created_at" },

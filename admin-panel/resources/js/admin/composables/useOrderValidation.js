@@ -56,13 +56,11 @@ export function useOrderValidation() {
       case "design-print":
         // Only fields with * in DesignPrintSection.vue
         if (!designPrint.design_outputs) errors.push("Design Outputs");
-        if (!designPrint.print_addons) errors.push("Print & Add-ons");
         break;
 
       case "order-printing":
         // Only fields with * in OrderPrintingSection.vue
-        if (!printing.assigned_to) errors.push("Assigned To");
-        if (!printing.assigned_date) errors.push("Assigned Date");
+        if (!printing.confirmed_date) errors.push("Confirmed Date");
         
         // Dynamic validation based on selected card types
         const selectedTypes = order.client_information?.card_specs?.type?.split(',') || [];
@@ -85,11 +83,11 @@ export function useOrderValidation() {
 
       case "packaging-logistics":
         // Only fields with * in PackagingLogisticsSection.vue
-        if (!packLog.crafted_by) errors.push("Crafted By");
+        if (!packLog.assigned_by_multiple || packLog.assigned_by_multiple.length === 0) errors.push("Assigned By");
+        if (!packLog.crafted_by_multiple || packLog.crafted_by_multiple.length === 0) errors.push("Crafted By");
         if (!packLog.names) errors.push("Names");
         if (!packLog.date) errors.push("Date");
         if (!packLog.qty_cards) errors.push("Qty of Cards");
-        if (!packLog.logistics_details) errors.push("Envelope / Ribbon / Tag / Sticker Details");
         break;
 
       case "packaging-status":
@@ -100,7 +98,7 @@ export function useOrderValidation() {
       case "delivery-location":
         // Only fields with * in DeliveryLocationSection.vue
         if (!delivery.shops) errors.push("Shop Location");
-        if (!delivery.place_name) errors.push("Place Name");
+        if (!delivery.place_name) errors.push("Address");
         break;
 
       case "dispatch-mode":

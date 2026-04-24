@@ -125,7 +125,7 @@ const fetchPayments = async () => {
   try {
     const params = {
       page: page.value,
-      per_page: 10,
+      per_page: 20,
     };
 
     const response = await axios.get("/api/v1/payments", { params });

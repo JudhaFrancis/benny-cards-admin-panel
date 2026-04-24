@@ -290,30 +290,48 @@
             >Card Lamination</label
           >
           <ContextDropdown
-            v-model="cardSpecs.card_lamination"
+            :model-value="isCardLaminationOther ? 'others' : cardSpecs.card_lamination"
+            @update:model-value="handleCardLaminationChange"
             :options="[
               { label: 'None', value: 'none' },
               { label: 'Matt', value: 'matt' },
               { label: 'Glossy', value: 'glossy' },
               { label: 'Velvet', value: 'velvet' },
+              { label: 'Others', value: 'others' },
             ]"
             placeholder="Select Lamination"
           />
+          <div v-if="isCardLaminationOther" class="mt-2 animate-in slide-in-from-top-1 duration-200">
+            <input
+              v-model="cardLaminationOtherValue"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-semibold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all placeholder:text-slate-400 shadow-sm"
+              placeholder="e.g., Texture Paper, Board Paper, etc."
+            />
+          </div>
         </div>
         <div class="space-y-2">
           <label class="text-sm font-medium text-slate-700"
             >Envelope Lamination</label
           >
           <ContextDropdown
-            v-model="cardSpecs.envelope_lamination"
+            :model-value="isEnvelopeLaminationOther ? 'others' : cardSpecs.envelope_lamination"
+            @update:model-value="handleEnvelopeLaminationChange"
             :options="[
               { label: 'None', value: 'none' },
               { label: 'Matt', value: 'matt' },
               { label: 'Glossy', value: 'glossy' },
               { label: 'Velvet', value: 'velvet' },
+              { label: 'Others', value: 'others' },
             ]"
             placeholder="Select Lamination"
           />
+          <div v-if="isEnvelopeLaminationOther" class="mt-2 animate-in slide-in-from-top-1 duration-200">
+            <input
+              v-model="envelopeLaminationOtherValue"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-semibold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all placeholder:text-slate-400 shadow-sm"
+              placeholder="e.g., Texture Paper, Board Paper, etc."
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -535,5 +553,66 @@ const cardOptionsList = computed({
     cardSpecs.value.card_options = val.join(",");
   },
 });
+
+const standardLaminations = ["none", "matt", "glossy", "velvet"];
+
+const isCardLaminationOther = computed(() => {
+  const val = cardSpecs.value.card_lamination;
+  if (!val) return false;
+  return val === "others" || !standardLaminations.includes(val);
+});
+
+const cardLaminationOtherValue = computed({
+  get: () =>
+    isCardLaminationOther.value && cardSpecs.value.card_lamination !== "others"
+      ? cardSpecs.value.card_lamination
+      : "",
+  set: (val) => {
+    cardSpecs.value.card_lamination = val || "others";
+  },
+});
+
+const isEnvelopeLaminationOther = computed(() => {
+  const val = cardSpecs.value.envelope_lamination;
+  if (!val) return false;
+  return val === "others" || !standardLaminations.includes(val);
+});
+
+const envelopeLaminationOtherValue = computed({
+  get: () =>
+    isEnvelopeLaminationOther.value &&
+    cardSpecs.value.envelope_lamination !== "others"
+      ? cardSpecs.value.envelope_lamination
+      : "",
+  set: (val) => {
+    cardSpecs.value.envelope_lamination = val || "others";
+  },
+});
+
+const handleCardLaminationChange = (val) => {
+  if (val === "others") {
+    if (
+      !cardSpecs.value.card_lamination ||
+      standardLaminations.includes(cardSpecs.value.card_lamination)
+    ) {
+      cardSpecs.value.card_lamination = "others";
+    }
+  } else {
+    cardSpecs.value.card_lamination = val;
+  }
+};
+
+const handleEnvelopeLaminationChange = (val) => {
+  if (val === "others") {
+    if (
+      !cardSpecs.value.envelope_lamination ||
+      standardLaminations.includes(cardSpecs.value.envelope_lamination)
+    ) {
+      cardSpecs.value.envelope_lamination = "others";
+    }
+  } else {
+    cardSpecs.value.envelope_lamination = val;
+  }
+};
 </script>
 
