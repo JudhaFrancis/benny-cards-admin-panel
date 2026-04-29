@@ -8,6 +8,9 @@ use App\Enums\OrderStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
 
 
 
@@ -147,7 +150,10 @@ class OrderService
                         if ($stage === 'client-information') {
                             $q->orWhereHas('clientInformation', fn($sub) => $sub->where('order_details->order_taken_by', $userName));
                         } elseif ($stage === 'designing') {
-                            $q->orWhereHas('designing', fn($sub) => $sub->where('work_assign->assigned_to', $userName));
+                            $q->orWhereHas('designing', function($sub) use ($userName) {
+                                $sub->where('work_assign->assigned_to', $userName)
+                                    ->orWhere('work_assign->content_by', $userName);
+                            });
                         } elseif ($stage === 'printing') {
                             $q->orWhereHas('printing', fn($sub) => $sub->where('printing_status->assigned_to', $userName));
                         } elseif ($stage === 'packaging') {
@@ -397,6 +403,13 @@ class OrderService
                                 ->orWhere('phone', 'like', "%{$filters['search']}%");
                         });
                 });
+            })
+            ->when(data_get($filters, 'branch'), function (Builder $query, $value) {
+                if ($value !== 'All Branches') {
+                    $query->whereHas('clientInformation', function (Builder $sub) use ($value) {
+                        $sub->where('order_details->order_placed_in', $value);
+                    });
+                }
             })
             ->latest('created_at')
             ->paginate($perPage);

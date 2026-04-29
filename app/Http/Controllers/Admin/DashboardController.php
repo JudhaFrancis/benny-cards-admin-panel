@@ -9,16 +9,32 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $totalOrders = Order::count();
-            $completedOrders = Order::where('status', 'completed')->count();
-            $totalPayments = Payment::count();
-            $totalRevenue = Payment::where('payment_status', 'completed')->sum('amount');
+            $branch = $request->query('branch');
+
+            $orderQuery = Order::query();
+            $paymentQuery = Payment::query();
+
+            if ($branch && $branch !== 'All Branches') {
+                $orderQuery->whereHas('clientInformation', function ($q) use ($branch) {
+                    $q->where('order_details->order_placed_in', $branch);
+                });
+                
+                // For payments, we need to join with orders to filter by branch
+                $paymentQuery->whereHas('order.clientInformation', function ($q) use ($branch) {
+                    $q->where('order_details->order_placed_in', $branch);
+                });
+            }
+
+            $totalOrders = (clone $orderQuery)->count();
+            $completedOrders = (clone $orderQuery)->where('status', 'completed')->count();
+            $totalPayments = (clone $paymentQuery)->count();
+            $totalRevenue = (clone $paymentQuery)->where('payment_status', 'completed')->sum('amount');
 
             // Get monthly orders trend for the last 6 months
-            $monthlyOrders = Order::selectRaw('COUNT(*) as count, MONTHNAME(created_at) as month, MONTH(created_at) as month_num')
+            $monthlyOrders = (clone $orderQuery)->selectRaw('COUNT(*) as count, MONTHNAME(created_at) as month, MONTH(created_at) as month_num')
                 ->where('created_at', '>=', now()->subMonths(6))
                 ->groupBy('month', 'month_num')
                 ->orderBy('month_num')
@@ -31,7 +47,7 @@ class DashboardController extends Controller
                 });
 
             // Get payment status distribution
-            $paymentStatusData = Payment::selectRaw('payment_status, COUNT(*) as count')
+            $paymentStatusData = (clone $paymentQuery)->selectRaw('payment_status, COUNT(*) as count')
                 ->groupBy('payment_status')
                 ->get()
                 ->pluck('count', 'payment_status')

@@ -3,6 +3,7 @@
     :columns="columns"
     :items="payments"
     :loading="loading"
+    @row-click="$emit('view', $event)"
     empty-text="No payments found matching your criteria."
   >
     <!-- Custom Row Cells -->
@@ -70,7 +71,7 @@
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
         <button
           v-if="canView"
-          @click="$emit('view', payment)"
+          @click.stop="$emit('view', payment)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
           title="View Info"
         >
@@ -78,7 +79,7 @@
         </button>
         <button
           v-if="canEdit"
-          @click="$emit('edit', payment)"
+          @click.stop="$emit('edit', payment)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-all duration-200"
           title="Edit Payment"
         >
@@ -86,7 +87,7 @@
         </button>
         <button
           v-if="canDelete"
-          @click="$emit('delete', payment)"
+          @click.stop="$emit('delete', payment)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
           title="Delete Payment"
         >

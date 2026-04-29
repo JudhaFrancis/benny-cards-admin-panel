@@ -14,6 +14,7 @@ class ReportController extends Controller
     {
         $startDate = $request->query('startDate');
         $endDate = $request->query('endDate');
+        $perPage = $request->query('per_page', 20);
 
         $query = Order::with(['customerDetails']);
 
@@ -24,7 +25,33 @@ class ReportController extends Controller
             $query->whereDate('created_at', '<=', $endDate);
         }
 
-        $orders = $query->oldest()->get()->map(function($order) {
+        // Global Search
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhereHas('customerDetails', function($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Column Filters
+        if ($request->has('order_number') && !empty($request->order_number)) {
+            $query->where('order_number', 'like', "%{$request->order_number}%");
+        }
+        if ($request->has('customer_name') && !empty($request->customer_name)) {
+            $query->whereHas('customerDetails', function($q) use ($request) {
+                $q->where('name', 'like', "%{$request->customer_name}%");
+            });
+        }
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        $paginator = $query->oldest()->paginate($perPage);
+
+        $orders = collect($paginator->items())->map(function($order) {
             return [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
@@ -35,17 +62,27 @@ class ReportController extends Controller
             ];
         });
 
+        $statsQuery = Order::query();
+        if (!empty($startDate)) $statsQuery->whereDate('created_at', '>=', $startDate);
+        if (!empty($endDate)) $statsQuery->whereDate('created_at', '<=', $endDate);
+
         $stats = [
-            'total' => $orders->count(),
-            'completed' => $orders->where('status', 'completed')->count(),
-            'pending' => $orders->where('status', 'pending')->count(),
+            'total' => (clone $statsQuery)->count(),
+            'completed' => (clone $statsQuery)->where('status', 'completed')->count(),
+            'pending' => (clone $statsQuery)->where('status', 'pending')->count(),
         ];
 
         return response()->json([
             'success' => true,
             'data' => [
                 'orders' => $orders,
-                'stats' => $stats
+                'stats' => $stats,
+                'meta' => [
+                    'total' => $paginator->total(),
+                    'from' => $paginator->firstItem(),
+                    'last_page' => $paginator->lastPage(),
+                    'current_page' => $paginator->currentPage(),
+                ]
             ]
         ]);
     }
@@ -102,6 +139,7 @@ class ReportController extends Controller
     {
         $startDate = $request->query('startDate');
         $endDate = $request->query('endDate');
+        $perPage = $request->query('per_page', 20);
 
         $query = Order::with(['customerDetails']);
 
@@ -112,7 +150,43 @@ class ReportController extends Controller
             $query->whereDate('created_at', '<=', $endDate);
         }
 
-        $orders = $query->oldest()->get();
+        // Global Search
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhereHas('customerDetails', function($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Column Filters
+        if ($request->has('invoice_number') && !empty($request->invoice_number)) {
+            $invoiceNum = str_replace('INV-', '', $request->invoice_number);
+            $query->where('id', 'like', "%" . (int)$invoiceNum . "%");
+        }
+        if ($request->has('order_number') && !empty($request->order_number)) {
+            $query->where('order_number', 'like', "%{$request->order_number}%");
+        }
+        if ($request->has('customer_name') && !empty($request->customer_name)) {
+            $query->whereHas('customerDetails', function($q) use ($request) {
+                $q->where('name', 'like', "%{$request->customer_name}%");
+            });
+        }
+        if ($request->has('payment_status') && !empty($request->payment_status)) {
+            $pStatus = $request->payment_status;
+            if ($pStatus === 'paid') {
+                $query->where('status', 'completed');
+            } elseif ($pStatus === 'unpaid') {
+                $query->where('status', 'cancelled');
+            } elseif ($pStatus === 'outstanding') {
+                $query->whereNotIn('status', ['completed', 'cancelled']);
+            }
+        }
+
+        $paginator = $query->oldest()->paginate($perPage);
+        $orders = collect($paginator->items());
         
         $invoices = $orders->map(function($order) {
             return [
@@ -126,17 +200,31 @@ class ReportController extends Controller
             ];
         });
 
+        $allOrdersInRange = Order::whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate)->get();
+        $allInvoices = $allOrdersInRange->map(function($order) {
+            return [
+                'total_amount' => $order->total_amount,
+                'status' => $order->status === 'completed' ? 'paid' : ($order->status === 'cancelled' ? 'unpaid' : 'partial'),
+            ];
+        });
+
         $stats = [
-            'total' => number_format($invoices->sum('total_amount'), 2, '.', ''),
-            'paid' => number_format($invoices->where('status', 'paid')->sum('total_amount'), 2, '.', ''),
-            'outstanding' => number_format($invoices->where('status', '!=', 'paid')->sum('total_amount'), 2, '.', ''),
+            'total' => number_format($allInvoices->sum('total_amount'), 2, '.', ''),
+            'paid' => number_format($allInvoices->where('status', 'paid')->sum('total_amount'), 2, '.', ''),
+            'outstanding' => number_format($allInvoices->where('status', '!=', 'paid')->sum('total_amount'), 2, '.', ''),
         ];
 
         return response()->json([
             'success' => true,
             'data' => [
                 'invoices' => $invoices,
-                'stats' => $stats
+                'stats' => $stats,
+                'meta' => [
+                    'total' => $paginator->total(),
+                    'from' => $paginator->firstItem(),
+                    'last_page' => $paginator->lastPage(),
+                    'current_page' => $paginator->currentPage(),
+                ]
             ]
         ]);
     }

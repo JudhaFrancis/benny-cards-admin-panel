@@ -114,7 +114,8 @@
 
           <template v-else>
             <tr v-for="(item, index) in filteredItems" :key="item.id || index"
-              class="group hover:bg-slate-50/50 transition-colors duration-200">
+              @click="$emit('row-click', item)"
+              class="group hover:bg-slate-50/50 transition-colors duration-200 cursor-pointer">
               <slot name="row" :item="item" :index="index">
                 <td v-for="column in columns" :key="column.key" :class="[
                   'px-4 py-4 text-[13px] whitespace-nowrap text-slate-600 font-medium',
@@ -194,7 +195,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["filter-change"]);
+const emit = defineEmits(["filter-change", "row-click"]);
 
 const filters = ref({});
 let debounceTimeout = null;

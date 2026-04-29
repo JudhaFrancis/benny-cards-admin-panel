@@ -1,5 +1,33 @@
 <template>
-  <div class="space-y-8">
+  <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <!-- Packed By & Gift Option (Moved from Packaging/Dispatch) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+      <div class="space-y-2">
+        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+          <UserIcon class="h-3 w-3" /> Packed By
+        </label>
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
+          <UserIcon class="h-4 w-4 text-primary" />
+          <span class="text-sm font-bold text-slate-900">{{ packagingStatus.packed_by || "Not Assigned" }}</span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+          <GiftIcon class="h-3 w-3" /> Gift Option
+        </label>
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
+          <div class="p-1.5 rounded-lg bg-primary/10 text-primary">
+            <GiftIcon v-if="packagingLogistics.gift_type === 'with_gift'" class="h-4 w-4" />
+            <PackageIcon v-else class="h-4 w-4" />
+          </div>
+          <span class="text-sm font-bold text-slate-900">
+            {{ packagingLogistics.gift_type === 'with_gift' ? 'With Gift' : (packagingLogistics.gift_type === 'without_gift' ? 'Without Gift' : 'Not Specified') }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <!-- Shop Selection -->
     <div class="space-y-4">
       <label
@@ -96,6 +124,9 @@ import {
   Navigation as NavigationIcon,
   Check as CheckIcon,
   Clock as ClockIcon,
+  User as UserIcon,
+  Gift as GiftIcon,
+  Package as PackageIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -105,6 +136,14 @@ const props = defineProps({
 
 const deliveryLocation = computed(
   () => props.order.dispatch_delivery?.delivery_location || {},
+);
+
+const packagingStatus = computed(
+  () => props.order.packaging?.packaging_status || {},
+);
+
+const packagingLogistics = computed(
+  () => props.order.packaging?.packaging_logistics || {},
 );
 
 const shopOptions = [

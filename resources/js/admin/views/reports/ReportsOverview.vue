@@ -1,47 +1,57 @@
 <template>
-  <div class="p-6 space-y-8 animate-in fade-in duration-500">
+  <div class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 p-6">
     <!-- Header -->
-    <PageHeader
-      title="Reports Overview"
-      subtitle="Access all business reports and analytics in one place"
-    />
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
+        Reports Overview
+      </h1>
+      <p class="text-sm text-slate-500 mt-1">
+        Access all business reports and analytics in one place.
+      </p>
+    </div>
 
-    <!-- Reports Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="report in reports" :key="report.title" 
-           class="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
-        <div class="p-6 flex flex-col items-center text-center space-y-4">
-          <!-- Icon Container -->
-          <div :class="cn('w-16 h-16 rounded-2xl flex items-center justify-center transition-colors duration-300', report.bgClass)">
-            <component :is="report.icon" :class="cn('h-8 w-8', report.iconClass)" />
-          </div>
-
-          <!-- Content -->
-          <div class="space-y-1">
-            <h3 class="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">{{ report.title }}</h3>
-            <p class="text-sm text-slate-500 leading-relaxed">{{ report.description }}</p>
-          </div>
-
-          <!-- Action -->
-          <router-link :to="report.url" class="w-full">
-            <button :class="cn('w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 font-semibold', report.buttonClass)">
-              View Report
-              <ChevronRightIcon class="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </router-link>
+    <!-- Reports Grid (3 in a row) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div v-for="report in reports" :key="report.title"
+        class="group bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 flex flex-col items-center text-center relative overflow-hidden">
+        <!-- Background Decoration -->
+        <div
+          class="absolute -right-4 -top-4 w-32 h-32 bg-slate-50 rounded-full group-hover:bg-primary/5 transition-colors duration-500">
         </div>
+
+        <!-- Icon -->
+        <div :class="[
+          'w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 shadow-lg transition-transform duration-500 group-hover:scale-110',
+          report.bgClass
+        ]">
+          <component :is="report.icon" class="h-10 w-10 text-white" />
+        </div>
+
+        <!-- Content -->
+        <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-primary transition-colors">
+          {{ report.title }}
+        </h2>
+        <p class="text-slate-500 text-sm mb-8 max-w-[200px] leading-relaxed">
+          {{ report.description }}
+        </p>
+
+        <!-- Action -->
+        <router-link :to="report.url"
+          class="w-full py-3 px-4 rounded-xl bg-slate-50 text-slate-600 font-semibold text-sm transition-all duration-300 hover:bg-primary hover:text-white flex items-center justify-center gap-2 group/btn">
+          <span>View Report</span>
+          <ArrowRightIcon class="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+        </router-link>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import { 
-  ChevronRight as ChevronRightIcon,
-  ShoppingBag as OrdersIcon,
+  ArrowRight as ArrowRightIcon,
+  BarChart3 as OrdersIcon,
   FileText as InvoiceIcon,
-  TrendingUp as ProfitIcon
+  CreditCard as ProfitIcon
 } from 'lucide-vue-next';
 
 const reports = [
@@ -50,31 +60,27 @@ const reports = [
     description: 'Complete summary of all orders, statuses, and customer details',
     url: '/reports/orders',
     icon: OrdersIcon,
-    bgClass: 'bg-blue-50 group-hover:bg-blue-100',
-    iconClass: 'text-blue-600',
-    buttonClass: 'bg-white border border-slate-200 text-slate-600 group-hover:bg-primary group-hover:text-white group-hover:border-primary shadow-sm hover:shadow-lg hover:shadow-primary/20'
+    bgClass: 'bg-indigo-500 shadow-indigo-200'
   },
   {
     title: 'Invoice Report',
     description: 'Track and filter all generated invoices and payment history',
     url: '/reports/invoices',
     icon: InvoiceIcon,
-    bgClass: 'bg-purple-50 group-hover:bg-purple-100',
-    iconClass: 'text-purple-600',
-    buttonClass: 'bg-white border border-slate-200 text-slate-600 group-hover:bg-primary group-hover:text-white group-hover:border-primary shadow-sm hover:shadow-lg hover:shadow-primary/20'
+    bgClass: 'bg-emerald-500 shadow-emerald-200'
   },
   {
     title: 'Profit & Loss',
     description: 'Detailed analysis of business revenue and expenses',
     url: '/reports/profit-loss',
     icon: ProfitIcon,
-    bgClass: 'bg-emerald-50 group-hover:bg-emerald-100',
-    iconClass: 'text-emerald-600',
-    buttonClass: 'bg-white border border-slate-200 text-slate-600 group-hover:bg-primary group-hover:text-white group-hover:border-primary shadow-sm hover:shadow-lg hover:shadow-primary/20'
+    bgClass: 'bg-rose-500 shadow-rose-200'
   }
 ];
-
-function cn(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
 </script>
+
+<style scoped>
+.animate-in {
+  animation-fill-mode: forwards;
+}
+</style>

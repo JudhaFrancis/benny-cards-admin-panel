@@ -9,14 +9,14 @@
       </template>
       <template #actions>
         <div class="flex items-center gap-3">
-          <!-- <router-link
-            to="/live-operations"
+          <router-link
+            to="/monitor"
             target="_blank"
             class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-2xl hover:bg-primary/20 transition-all font-bold text-[10px] uppercase tracking-widest"
           >
             <Activity class="h-3 w-3" />
-            Live Operations
-          </router-link> -->
+            Operations Monitor
+          </router-link>
           <div
             class="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl"
           >

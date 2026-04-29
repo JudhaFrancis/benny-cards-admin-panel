@@ -1,11 +1,11 @@
 <template>
-  <DataTable :columns="columns" :items="processedOrders" :from="from" manual-filters :loading="loading" @filter-change="$emit('filter-change', $event)" empty-text="No orders found .">
+  <DataTable :columns="columns" :items="processedOrders" :from="from" manual-filters :loading="loading" @filter-change="$emit('filter-change', $event)" @row-click="$emit('view-info', $event)" empty-text="No orders found .">
     <!-- Custom Row Cells -->
     <template #cell-order_number="{ item: order }">
       <div class="flex flex-col">
         <span
           class="font-semibold text-slate-900 italic cursor-pointer hover:text-primary transition-colors duration-200"
-          @click="$emit('edit', order)"
+          @click.stop="$emit('edit', order)"
         >
           {{ order.order_number }}
         </span>
@@ -96,7 +96,7 @@
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
         <!-- Main Actions (Always show view/edit, show others if in main 'Orders' view) -->
-        <button v-if="canEdit && statusFilter === 'all'" @click="sendWhatsApp(order)"
+        <button v-if="canEdit && statusFilter === 'all'" @click.stop="sendWhatsApp(order)"
           :disabled="sendingWhatsapp === order.id"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-600 transition-all duration-200 disabled:opacity-50"
           title="Send WhatsApp">
@@ -104,19 +104,19 @@
           <MessageCircle v-else class="h-4 w-4" />
         </button>
 
-        <button v-if="canView" @click="$emit('view-info', order)"
+        <button v-if="canView" @click.stop="$emit('view-info', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
           title="View Info">
           <Eye class="h-4 w-4" />
         </button>
 
-        <button v-if="canEdit" @click="$emit('edit', order)"
+        <button v-if="canEdit" @click.stop="$emit('edit', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-all duration-200"
           title="Edit Order">
           <Pencil class="h-4 w-4" />
         </button>
 
-        <button v-if="canDelete && statusFilter === 'all'" @click="$emit('delete', order)"
+        <button v-if="canDelete && statusFilter === 'all'" @click.stop="$emit('delete', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
           title="Delete Order">
           <Trash2 class="h-4 w-4" />

@@ -27,8 +27,9 @@
 
     <div v-else-if="orderData" class="space-y-6 px-1 pb-6">
       <div v-for="section in relevantSections" :key="section.id"
-        class="bg-white rounded-3xl border border-slate-100 shadow-sm">
-        <div class="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+        class="bg-white rounded-3xl border border-slate-100 shadow-sm"
+        :class="{ 'border-none shadow-none bg-transparent': section.hideHeader }">
+        <div v-if="!section.hideHeader" class="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
           <div class="flex items-center gap-3">
             <div class="p-2 rounded-xl bg-primary/5 text-primary">
               <component :is="section.icon" class="h-5 w-5" />
@@ -84,9 +85,9 @@
             </Listbox>
           </div>
         </div>
-        <div class="p-6">
+        <div :class="section.hideHeader ? 'p-0' : 'p-6'">
           <component :is="section.component" :order="orderData" :staff-options="staffOptions" :hide-audit="true"
-            @update:order="(val) => (orderData = val)" />
+            v-bind="getExtraProps(section)" @update:order="(val) => (orderData = val)" />
         </div>
       </div>
 
@@ -205,33 +206,45 @@ const stageTitle = computed(() => {
   }
 });
 
+const getExtraProps = (section) => {
+  if (section.id === 'status' && section.key === 'packaging_status') {
+    return {
+      showPackedBy: props.stage === 'delivery',
+      showGiftOption: props.stage === 'delivery',
+      showSticker: props.stage === 'packaging'
+    };
+  }
+  return {};
+};
+
 const relevantSections = computed(() => {
   switch (props.stage) {
     case 'client-information':
       return [
-        { id: 'details', label: 'Order Details', icon: ClipboardList, component: OrderDetailsSection, key: 'order_details' },
-        { id: 'client', label: 'Client Information', icon: User, component: ClientInfoSection, key: 'client_info' },
-        { id: 'specs', label: 'Card Specifications', icon: CreditCard, component: CardSpecsSection, key: 'card_specs' }
+        { id: 'details', label: 'Order Details', icon: ClipboardList, component: OrderDetailsSection, key: 'order_details', relation: 'client_information' },
+        { id: 'client', label: 'Client Information', icon: User, component: ClientInfoSection, key: 'client_info', relation: 'client_information' },
+        { id: 'specs', label: 'Card Specifications', icon: CreditCard, component: CardSpecsSection, key: 'card_specs', relation: 'client_information' }
       ];
     case 'designing':
       return [
-        { id: 'assign', label: 'Work Assign Process', icon: Briefcase, component: WorkAssignSection, key: 'work_assign' },
-        { id: 'design', label: 'Design Details', icon: Printer, component: DesignPrintSection, key: 'design_print' }
+        { id: 'assign', label: 'Work Assign Process', icon: Briefcase, component: WorkAssignSection, key: 'work_assign', relation: 'designing' },
+        { id: 'design', label: 'Design Details', icon: Printer, component: DesignPrintSection, key: 'design_print', relation: 'designing' }
       ];
     case 'printing':
       return [
-        { id: 'printing', label: 'Order & Printing Status', icon: Package, component: OrderPrintingSection, key: 'printing_status' }
+        { id: 'printing', label: 'Order & Printing Status', icon: Package, component: OrderPrintingSection, key: 'printing_status', relation: 'printing' }
       ];
     case 'packaging':
       return [
-        { id: 'logistics', label: 'Packaging & Logistics', icon: Box, component: PackagingLogisticsSection, key: 'packaging_logistics' },
-        { id: 'status', label: 'Packaging Status', icon: Box, component: PackagingStatusSection, key: 'packaging_status' }
+        { id: 'logistics', label: 'Packaging & Logistics', icon: Box, component: PackagingLogisticsSection, key: 'packaging_logistics', relation: 'packaging' },
+        { id: 'status', label: 'Packaging Status', icon: Box, component: PackagingStatusSection, key: 'packaging_status', relation: 'packaging', hideHeader: true }
       ];
     case 'delivery':
       return [
-        { id: 'location', label: 'Delivery Location', icon: MapPin, component: DeliveryLocationSection, key: 'delivery_location' },
-        { id: 'dispatch', label: 'Mode of Dispatch', icon: Truck, component: DispatchModeSection, key: 'dispatch_mode' },
-        { id: 'details', label: 'Dispatch Details', icon: FileText, component: DispatchDetailsSection, key: 'dispatch_details' }
+        { id: 'status', label: 'Packaging Status', icon: Box, component: PackagingStatusSection, key: 'packaging_status', relation: 'packaging' },
+        { id: 'location', label: 'Delivery Location', icon: MapPin, component: DeliveryLocationSection, key: 'delivery_location', relation: 'dispatch_delivery' },
+        { id: 'dispatch', label: 'Mode of Dispatch', icon: Truck, component: DispatchModeSection, key: 'dispatch_mode', relation: 'dispatch_delivery' },
+        { id: 'details', label: 'Dispatch Details', icon: FileText, component: DispatchDetailsSection, key: 'dispatch_details', relation: 'dispatch_delivery' }
       ];
     default: return [];
   }
@@ -303,14 +316,24 @@ const handleSave = async () => {
       }
     }
 
+    const relationKey = stageRelationKey.value;
+    const stageData = orderData.value[relationKey] || {};
+
     const formData = new FormData();
     formData.append('_method', 'PUT');
     formData.append('status', stageStatus.value);
     
-    const stageData = orderData.value[stageRelationKey.value] || {};
     relevantSections.value.forEach(s => {
-      const content = stageData[s.key] || {};
+      const relation = s.relation || relationKey;
+      const sectionStageData = orderData.value[relation] || {};
+      const content = sectionStageData[s.key] || {};
       formData.append(s.key, JSON.stringify(content));
+
+      // Special case: PackagingStatusSection also updates packaging_logistics for the gift option
+      if (s.key === 'packaging_status' && (relation === 'packaging' || relation === 'OrderPackaging')) {
+        const logisticsContent = sectionStageData['packaging_logistics'] || {};
+        formData.append('packaging_logistics', JSON.stringify(logisticsContent));
+      }
     });
 
     // Handle sticker image if in designing or packaging stage

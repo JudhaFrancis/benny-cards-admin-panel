@@ -3,7 +3,7 @@ import { useToast } from "./useToast";
 export function useOrderValidation() {
   const { toastError } = useToast();
 
-  const getSectionErrors = (sectionId, order) => {
+  const getSectionErrors = (sectionId, order, stageRelation = null) => {
     const errors = [];
     if (!order) return errors;
 
@@ -92,13 +92,15 @@ export function useOrderValidation() {
 
       case "packaging-status":
         // Only fields with * in PackagingStatusSection.vue
-        if (!packStat.packed_by) errors.push("Packed By");
+        if (stageRelation === 'packaging') {
+          // Do not validate packed_by here because it's moved to the delivery stage UI
+        } else {
+          if (!packStat.packed_by) errors.push("Packed By");
+        }
         break;
 
       case "delivery-location":
-        // Only fields with * in DeliveryLocationSection.vue
-        if (!delivery.shops) errors.push("Shop Location");
-        if (!delivery.place_name) errors.push("Address");
+        // Fields made optional by user request
         break;
 
       case "dispatch-mode":
@@ -133,9 +135,16 @@ export function useOrderValidation() {
       (k) => sectionMap[k].relation === stageRelation || k === stageRelation
     );
 
+    // packaging-status contains fields (like packed_by) that are now part of the delivery stage
+    if (stageRelation === 'dispatch_delivery') {
+      if (!sectionsInStage.includes('packaging-status')) {
+        sectionsInStage.push('packaging-status');
+      }
+    }
+
     let allErrors = [];
     sectionsInStage.forEach((secId) => {
-      const errors = getSectionErrors(secId, order);
+      const errors = getSectionErrors(secId, order, stageRelation);
       if (errors.length > 0) {
         const sectionLabel = trackingSections.find(s => s.id === secId)?.shortLabel || secId;
         allErrors.push(...errors.map((e) => `${sectionLabel}: ${e}`));

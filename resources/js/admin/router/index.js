@@ -18,9 +18,9 @@ const routes = [
         meta: { guest: true }
     },
     {
-        path: '/live-operations',
-        name: 'LiveOperations',
-        component: () => import('../views/dashboard/LiveOperations.vue'),
+        path: '/monitor',
+        name: 'MonitorView',
+        component: () => import('../views/monitor/MonitorView.vue'),
         meta: { requiresAuth: true }
     },
     {

@@ -122,7 +122,7 @@
           <label class="text-xs font-medium text-slate-700"
             >Assigned By <span class="text-red-500">*</span></label
           >
-          <ContextDropdown 
+          <SearchableDropdown 
             :model-value="packagingLogistics.assigned_by_multiple || []"
             @update:model-value="(val) => updateSection('assigned_by_multiple', val)" 
             :options="staffOptions"
@@ -136,7 +136,7 @@
           <label class="text-xs font-medium text-slate-700"
             >Crafted By <span class="text-red-500">*</span></label
           >
-          <ContextDropdown 
+          <SearchableDropdown 
             :model-value="packagingLogistics.crafted_by_multiple || []"
             @update:model-value="(val) => updateSection('crafted_by_multiple', val)" 
             :options="staffOptions"
@@ -395,7 +395,7 @@ import {
   UserCheck as UserCheckIcon,
   ChevronDown as ChevronDownIcon,
 } from "lucide-vue-next";
-import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
+import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 import TimePicker from "../../../../ui/pickers/TimePicker.vue";
 

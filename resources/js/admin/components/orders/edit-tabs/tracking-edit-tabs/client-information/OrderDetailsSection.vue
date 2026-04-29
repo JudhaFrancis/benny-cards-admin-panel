@@ -39,7 +39,7 @@
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Order Taken By
           </label>
-          <ContextDropdown v-model="jobDetails.order_taken_by" :options="staffOptions" placeholder="Select staff"
+          <SearchableDropdown v-model="jobDetails.order_taken_by" :options="staffOptions" placeholder="Select staff"
             :icon="UserIcon" />
         </div>
         <div class="space-y-2">
@@ -175,7 +175,7 @@
 <script setup>
 import { computed } from "vue";
 import { User as UserIcon, Clock as ClockIcon, Calendar as CalendarIcon } from "lucide-vue-next";
-import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
+import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 
 const props = defineProps({

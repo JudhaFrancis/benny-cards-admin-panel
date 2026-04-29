@@ -180,6 +180,41 @@
             <CheckIcon v-if="workAssign.tag" class="h-3 w-3 text-white" />
           </div>
         </label>
+
+        <!-- Need Pdf -->
+        <label
+          class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
+          :class="
+            workAssign.need_pdf
+              ? 'border-primary bg-primary/5 ring-4 ring-primary/5'
+              : 'border-slate-200 hover:border-slate-300'
+          "
+        >
+          <div
+            class="p-2 rounded-lg transition-colors"
+            :class="
+              workAssign.need_pdf
+                ? 'bg-primary text-white'
+                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+            "
+          >
+            <FileTextIcon class="h-4 w-4" />
+          </div>
+          <div class="flex-1">
+            <p class="text-xs font-bold text-slate-900 leading-none">Need Pdf</p>
+            <input type="checkbox" v-model="workAssign.need_pdf" class="sr-only" />
+          </div>
+          <div
+            class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+            :class="
+              workAssign.need_pdf
+                ? 'border-primary bg-primary scale-110'
+                : 'border-slate-200'
+            "
+          >
+            <CheckIcon v-if="workAssign.need_pdf" class="h-3 w-3 text-white" />
+          </div>
+        </label>
       </div>
     </div>
 
@@ -189,7 +224,7 @@
         <label class="text-sm font-medium text-slate-700"
           >Assigned To <span class="text-red-500">*</span></label
         >
-        <ContextDropdown
+        <SearchableDropdown
           v-model="workAssign.assigned_to"
           :options="staffOptions"
           placeholder="Select designer"
@@ -241,7 +276,7 @@
         <label class="text-sm font-medium text-slate-700"
           >Content By <span class="text-red-500">*</span></label
         >
-        <ContextDropdown
+        <SearchableDropdown
           v-model="workAssign.content_by"
           :options="staffOptions"
           placeholder="Select staff"
@@ -253,12 +288,32 @@
         <label class="text-sm font-medium text-slate-700"
           >Completed By <span class="text-red-500">*</span></label
         >
-        <ContextDropdown
+        <SearchableDropdown
           v-model="workAssign.completed_by"
           :options="staffOptions"
           placeholder="Select staff"
           :icon="UserPlusIcon"
         />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700"
+          >Completed Date <span class="text-red-500">*</span></label
+        >
+        <div class="relative group">
+          <DatePicker
+            v-model="workAssign.completed_date"
+            placeholder="Select Completed Date"
+            custom-class="pl-11 py-2.5 text-xs"
+            required
+          >
+            <template #leading>
+              <CalendarIcon
+                class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+              />
+            </template>
+          </DatePicker>
+        </div>
       </div>
     </div>
 
@@ -296,8 +351,9 @@ import {
   UserPlus as UserPlusIcon,
   Clock as ClockIcon,
   Check as CheckIcon,
+  FileText as FileTextIcon,
 } from "lucide-vue-next";
-import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
+import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 
 const props = defineProps({

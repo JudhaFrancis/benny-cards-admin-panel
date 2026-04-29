@@ -1,12 +1,12 @@
 <template>
   <DataTable :columns="columns" :items="processedOrders" :loading="loading" :from="from" manual-filters
-    @filter-change="$emit('filter-change', $event)" empty-text="No records found.">
+    @filter-change="$emit('filter-change', $event)" @row-click="$emit('view', $event)" empty-text="No records found.">
 
 
     <template #cell-order_number="{ item: order }">
       <div class="flex flex-col">
         <span class="font-semibold text-slate-900 italic hover:text-primary transition-colors cursor-pointer"
-          @click="$emit('edit', order)">
+          @click.stop="$emit('edit', order)">
           {{ order.order_number }}
         </span>
         <span v-if="order.delivery_date && order.status?.toLowerCase() !== 'delivered' && getStageStatus(order).toLowerCase() !== 'completed'" class="text-[10px] mt-0.5"
@@ -111,12 +111,12 @@
 
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
-        <button @click="$emit('view', order)"
+        <button @click.stop="$emit('view', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
           title="View Info">
           <Eye class="h-4 w-4" />
         </button>
-        <button @click="$emit('edit', order)"
+        <button @click.stop="$emit('edit', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-all duration-200"
           title="Edit Order">
           <Pencil class="h-4 w-4" />

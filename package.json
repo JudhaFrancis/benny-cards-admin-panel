@@ -20,10 +20,14 @@
     "@heroicons/vue": "^2.2.0",
     "@vueup/vue-quill": "^1.2.0",
     "apexcharts": "^5.3.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "lodash": "^4.17.23",
     "lucide-vue-next": "^0.563.0",
     "quill": "^2.0.3",
+    "radix-vue": "^1.9.17",
     "sweetalert2": "^11.26.18",
+    "tailwind-merge": "^3.5.0",
     "vue-router": "^4.6.4",
     "vue3-apexcharts": "^1.10.0"
   }

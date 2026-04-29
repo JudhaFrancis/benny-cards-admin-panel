@@ -6,7 +6,7 @@
         class="text-xs font-semibold text-slate-700 flex items-center gap-2"
       >
         <StoreIcon class="h-4 w-4 text-primary" />
-        Select Shop Location <span class="text-red-500">*</span>
+        Select Shop Location
       </label>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <label
@@ -75,7 +75,7 @@
         class="text-xs font-semibold text-slate-700 flex items-center gap-2"
       >
         <NavigationIcon class="h-4 w-4 text-primary" />
-        Address <span class="text-red-500">*</span>
+        Address
       </label>
       <div class="relative group">
         <MapPinIcon
