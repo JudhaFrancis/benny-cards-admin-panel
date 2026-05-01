@@ -44,7 +44,7 @@ resources/js/admin/
 
 - PHP 8.1 or higher
 - Composer
-- Node.js & NPM
+- Node.js & pnpm
 - MySQL
 
 ### 2. Installation
@@ -58,7 +58,7 @@ cd benny_cards_admin
 composer install
 
 # Install JS dependencies
-npm install
+pnpm install
 ```
 
 ### 3. Environment Configuration
@@ -83,7 +83,7 @@ php artisan serve
 Start the frontend development server:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ## Architecture Usage

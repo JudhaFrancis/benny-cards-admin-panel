@@ -30,8 +30,8 @@ composer install --optimize-autoloader --no-dev
 ### 4. Build Frontend Assets
 Build assets locally and upload, or build directly on the server.
 ```bash
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 ### 5. Configuration

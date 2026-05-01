@@ -7,7 +7,7 @@ This guide will help you set up the Scan Center Management Admin Panel on your l
 Before you begin, ensure you have the following installed:
 - **PHP** (>= 8.1)
 - **Composer** (Latest Version)
-- **Node.js & NPM** (Latest LTS Version)
+- **Node.js & pnpm** (Latest LTS Version)
 - **MySQL** (>= 5.7)
 - **XAMPP / Laragon / Homebrew** (Local server environment)
 
@@ -26,7 +26,7 @@ composer install
 
 ### 3. Install Frontend Dependencies
 ```bash
-npm install
+pnpm install
 ```
 
 ### 4. Environment Configuration
@@ -71,7 +71,7 @@ php artisan serve
 
 #### Start Frontend Dev Server (Vite)
 ```bash
-npm run dev
+pnpm dev
 ```
 
 The application will be accessible at `http://localhost:8000`.
@@ -79,7 +79,7 @@ The application will be accessible at `http://localhost:8000`.
 ## Common Installation Issues
 
 - **Database Connection Refused:** Ensure MySQL is running and credentials in `.env` are correct.
-- **Vite Build Errors:** Try deleting `node_modules` and `package-lock.json`, then run `npm install` again.
+- **Vite Build Errors:** Try deleting `node_modules` and `pnpm-lock.yaml`, then run `pnpm install` again.
 - **Permission Denied (Storage):** Ensure the `storage` and `bootstrap/cache` directories are writable.
   ```bash
   chmod -R 775 storage bootstrap/cache
