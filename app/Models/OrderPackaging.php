@@ -18,12 +18,14 @@ class OrderPackaging extends Model
         'status',
         'packaging_logistics',
         'packaging_status',
+        'assigned_user_ids',
         'modified_by'
     ];
 
     protected $casts = [
         'packaging_logistics' => 'array',
-        'packaging_status' => 'array'
+        'packaging_status' => 'array',
+        'assigned_user_ids' => 'array'
     ];
 
     public function order(): BelongsTo

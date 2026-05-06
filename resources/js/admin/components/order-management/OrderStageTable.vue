@@ -462,11 +462,14 @@ const getAssignedName = (order) => {
       return order.printing?.printing_status?.assigned_to || order.designing?.work_assign?.assigned_to || "N/A";
     case 'packaging':
       // Show multiple assigned names if available
-      const assigned = order.packaging?.packaging_logistics?.assigned_by_multiple;
-      if (Array.isArray(assigned) && assigned.length > 0) {
-        return assigned.join(", ");
+      const log = order.packaging?.packaging_logistics;
+      if (Array.isArray(log?.assigned_by_multiple) && log.assigned_by_multiple.length > 0) {
+        return log.assigned_by_multiple.join(", ");
       }
-      return order.packaging?.packaging_logistics?.crafted_by || "N/A";
+      if (Array.isArray(log?.crafted_by_multiple) && log.crafted_by_multiple.length > 0) {
+        return log.crafted_by_multiple.join(", ");
+      }
+      return log?.crafted_by || "N/A";
     case 'delivery':
       return order.dispatch_delivery?.dispatch_mode?.signature_name || "N/A";
     default:

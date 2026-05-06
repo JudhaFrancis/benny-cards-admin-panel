@@ -19,12 +19,14 @@ class OrderDesigning extends Model
         'work_assign',
         'design_print',
         'sticker_image',
+        'assigned_user_ids',
         'modified_by'
     ];
 
     protected $casts = [
         'work_assign' => 'array',
-        'design_print' => 'array'
+        'design_print' => 'array',
+        'assigned_user_ids' => 'array'
     ];
 
     public function order(): BelongsTo

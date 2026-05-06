@@ -19,13 +19,15 @@ class OrderClientInformation extends Model
         'order_details',
         'client_info',
         'card_specs',
+        'assigned_user_ids',
         'modified_by'
     ];
 
     protected $casts = [
         'order_details' => 'array',
         'client_info' => 'array',
-        'card_specs' => 'array'
+        'card_specs' => 'array',
+        'assigned_user_ids' => 'array'
     ];
 
     public function order(): BelongsTo

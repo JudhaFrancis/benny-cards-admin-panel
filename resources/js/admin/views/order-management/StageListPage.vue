@@ -118,17 +118,6 @@ const handleFilterChange = (filters) => {
 const filteredOrders = computed(() => {
   let items = orders.value;
 
-  // Role based filtering: If not super-admin or admin, only show orders assigned to this user
-  const userRole = user.value?.role?.name?.toLowerCase();
-  const userName = user.value?.name;
-
-  if (userRole && userRole !== 'super-admin') {
-    items = items.filter((o) => {
-      const assignedName = getAssignedNameHelper(o, props.stage);
-      return assignedName === userName;
-    });
-  }
-
   return items;
 });
 

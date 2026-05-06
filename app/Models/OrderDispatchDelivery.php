@@ -19,13 +19,15 @@ class OrderDispatchDelivery extends Model
         'delivery_location',
         'dispatch_mode',
         'dispatch_details',
+        'assigned_user_ids',
         'modified_by'
     ];
 
     protected $casts = [
         'delivery_location' => 'array',
         'dispatch_mode' => 'array',
-        'dispatch_details' => 'array'
+        'dispatch_details' => 'array',
+        'assigned_user_ids' => 'array'
     ];
 
     public function order(): BelongsTo

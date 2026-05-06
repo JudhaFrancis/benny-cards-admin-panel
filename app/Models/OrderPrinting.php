@@ -17,11 +17,13 @@ class OrderPrinting extends Model
         'order_id',
         'status',
         'printing_status',
+        'assigned_user_ids',
         'modified_by'
     ];
 
     protected $casts = [
-        'printing_status' => 'array'
+        'printing_status' => 'array',
+        'assigned_user_ids' => 'array'
     ];
 
     public function order(): BelongsTo

@@ -16,11 +16,11 @@ export function useOrderValidation() {
     const printing = Array.isArray(order.printing?.printing_status) ? {} : (order.printing?.printing_status || {});
     const packaging = Array.isArray(order.packaging) ? {} : (order.packaging || {});
     const packLog = Array.isArray(packaging.packaging_logistics) ? {} : (packaging.packaging_logistics || {});
-    const packStat = Array.isArray(packaging.packaging_status) ? {} : (packaging.packaging_status || {});
     const dispatch = Array.isArray(order.dispatch_delivery) ? {} : (order.dispatch_delivery || {});
     const delivery = Array.isArray(dispatch.delivery_location) ? {} : (dispatch.delivery_location || {});
     const dispMode = Array.isArray(dispatch.dispatch_mode) ? {} : (dispatch.dispatch_mode || {});
     const dispDetails = Array.isArray(dispatch.dispatch_details) ? {} : (dispatch.dispatch_details || {});
+    const packStat = dispMode; // Moved packed_by and gift_type to dispatch_mode
 
     switch (sectionId) {
       case "order-details":
@@ -177,7 +177,7 @@ export function useOrderValidation() {
     "design-print": { relation: "designing", key: "design_print" },
     "order-printing": { relation: "printing", key: "printing_status" },
     "packaging-logistics": { relation: "packaging", key: "packaging_logistics" },
-    "packaging-status": { relation: "packaging", key: "packaging_status" },
+    "packaging-status": { relation: "dispatch_delivery", key: "dispatch_mode" },
     "delivery-location": { relation: "dispatch_delivery", key: "delivery_location" },
     "dispatch-mode": { relation: "dispatch_delivery", key: "dispatch_mode" },
     "dispatch-details": { relation: "dispatch_delivery", key: "dispatch_details" },

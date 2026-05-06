@@ -15,38 +15,38 @@
       </h3>
       <div class="flex flex-wrap gap-4">
         <!-- With Gift Option -->
-        <div @click="updateLogisticsSection('gift_type', packagingLogistics.gift_type === 'with_gift' ? null : 'with_gift')"
+        <div @click="updateSection('gift_type', packagingStatus.gift_type === 'with_gift' ? null : 'with_gift')"
           class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
-          :class="packagingLogistics.gift_type === 'with_gift' ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-slate-200 hover:border-slate-300'">
+          :class="packagingStatus.gift_type === 'with_gift' ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-slate-200 hover:border-slate-300'">
           <div class="p-2 rounded-lg transition-colors"
-            :class="packagingLogistics.gift_type === 'with_gift' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'">
+            :class="packagingStatus.gift_type === 'with_gift' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'">
             <GiftIcon class="h-4 w-4" />
           </div>
           <div class="flex-1 pointer-events-none">
             <p class="text-xs font-bold text-slate-900 leading-none">With Gift</p>
-            <input type="radio" value="with_gift" :checked="packagingLogistics.gift_type === 'with_gift'" class="sr-only" readonly />
+            <input type="radio" value="with_gift" :checked="packagingStatus.gift_type === 'with_gift'" class="sr-only" readonly />
           </div>
           <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all pointer-events-none"
-            :class="packagingLogistics.gift_type === 'with_gift' ? 'border-primary bg-primary scale-110' : 'border-slate-200'">
-            <CheckIcon v-show="packagingLogistics.gift_type === 'with_gift'" class="h-3 w-3 text-white" />
+            :class="packagingStatus.gift_type === 'with_gift' ? 'border-primary bg-primary scale-110' : 'border-slate-200'">
+            <CheckIcon v-show="packagingStatus.gift_type === 'with_gift'" class="h-3 w-3 text-white" />
           </div>
         </div>
 
         <!-- Without Gift Option -->
-        <div @click="updateLogisticsSection('gift_type', packagingLogistics.gift_type === 'without_gift' ? null : 'without_gift')"
+        <div @click="updateSection('gift_type', packagingStatus.gift_type === 'without_gift' ? null : 'without_gift')"
           class="flex-1 min-w-[140px] flex items-center gap-3 p-4 rounded-xl border bg-white transition-all cursor-pointer group"
-          :class="packagingLogistics.gift_type === 'without_gift' ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-slate-200 hover:border-slate-300'">
+          :class="packagingStatus.gift_type === 'without_gift' ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-slate-200 hover:border-slate-300'">
           <div class="p-2 rounded-lg transition-colors"
-            :class="packagingLogistics.gift_type === 'without_gift' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'">
+            :class="packagingStatus.gift_type === 'without_gift' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'">
             <PackageIcon class="h-4 w-4" />
           </div>
           <div class="flex-1 pointer-events-none">
             <p class="text-xs font-bold text-slate-900 leading-none">Without Gift</p>
-            <input type="radio" value="without_gift" :checked="packagingLogistics.gift_type === 'without_gift'" class="sr-only" readonly />
+            <input type="radio" value="without_gift" :checked="packagingStatus.gift_type === 'without_gift'" class="sr-only" readonly />
           </div>
           <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all pointer-events-none"
-            :class="packagingLogistics.gift_type === 'without_gift' ? 'border-primary bg-primary scale-110' : 'border-slate-200'">
-            <CheckIcon v-show="packagingLogistics.gift_type === 'without_gift'" class="h-3 w-3 text-white" />
+            :class="packagingStatus.gift_type === 'without_gift' ? 'border-primary bg-primary scale-110' : 'border-slate-200'">
+            <CheckIcon v-show="packagingStatus.gift_type === 'without_gift'" class="h-3 w-3 text-white" />
           </div>
         </div>
       </div>
@@ -156,11 +156,13 @@ const props = defineProps({
 const emit = defineEmits(["update:order"]);
 
 const packagingStatus = computed(() => {
-  return props.order.packaging?.packaging_status || {};
-});
-
-const packagingLogistics = computed(() => {
-  return props.order.packaging?.packaging_logistics || {};
+  if (!props.order.dispatch_delivery) {
+    props.order.dispatch_delivery = { dispatch_mode: {} };
+  }
+  if (!props.order.dispatch_delivery.dispatch_mode || Array.isArray(props.order.dispatch_delivery.dispatch_mode)) {
+    props.order.dispatch_delivery.dispatch_mode = {};
+  }
+  return props.order.dispatch_delivery.dispatch_mode;
 });
 
 const imagePreview = ref(null);
@@ -206,30 +208,15 @@ const getImageSource = (path) => {
 const updateSection = (key, value) => {
   const newOrder = { 
     ...props.order,
-    packaging: {
-      ...(props.order.packaging || {}),
-      packaging_status: {
-        ...(props.order.packaging?.packaging_status || {})
+    dispatch_delivery: {
+      ...(props.order.dispatch_delivery || {}),
+      dispatch_mode: {
+        ...(props.order.dispatch_delivery?.dispatch_mode || {})
       }
     }
   };
 
-  newOrder.packaging.packaging_status[key] = value;
-  emit("update:order", newOrder);
-};
-
-const updateLogisticsSection = (key, value) => {
-  const newOrder = { 
-    ...props.order,
-    packaging: {
-      ...(props.order.packaging || {}),
-      packaging_logistics: {
-        ...(props.order.packaging?.packaging_logistics || {})
-      }
-    }
-  };
-
-  newOrder.packaging.packaging_logistics[key] = value;
+  newOrder.dispatch_delivery.dispatch_mode[key] = value;
   emit("update:order", newOrder);
 };
 

@@ -126,12 +126,15 @@ class OrderTrackingService
             }
 
             foreach ($updatesByStage as $relation => $sectionData) {
-                $order->{$relation}()->updateOrCreate(
+                $instance = $order->{$relation}()->updateOrCreate(
                     ['order_id' => $order->id],
                     array_merge($sectionData, [
                         'modified_by' => auth()->id()
                     ])
                 );
+
+                // Multi-User Assignment Sync Logic
+                $this->syncAssignedIds($instance, $relation, $sectionData);
             }
 
             if (isset($data['payment_info'])) {
@@ -207,5 +210,54 @@ class OrderTrackingService
             'dispatchDelivery.modifiedBy',
             'payments.addedBy', 'payments.modifiedBy'
         ]);
+    }
+
+    /**
+     * Sync user IDs to the assigned_user_ids column based on names in the sections.
+     */
+    private function syncAssignedIds($instance, $relation, $sectionData)
+    {
+        // 1. Get default Admin/Super Admin IDs
+        $adminIds = DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.id')
+            ->whereIn('roles.name', ['Admin', 'super-admin', 'admin'])
+            ->pluck('users.id')
+            ->toArray();
+
+        $foundUserIds = [];
+
+        // 2. Recursively find any values in $sectionData that match a user name
+        $this->scanForUserIds($sectionData, $foundUserIds);
+
+        // 3. Merge admins + found users
+        $finalIds = array_unique(array_merge($adminIds, $foundUserIds));
+        
+        // Ensure IDs are integers and unique
+        $finalIds = array_values(array_unique(array_map('intval', $finalIds)));
+
+        // 4. Update the JSON column
+        $instance->update([
+            'assigned_user_ids' => $finalIds
+        ]);
+    }
+
+    /**
+     * Helper to scan any array for values that match a user's name
+     */
+    private function scanForUserIds($data, &$foundIds)
+    {
+        if (!is_array($data)) return;
+
+        foreach ($data as $value) {
+            if (is_array($value)) {
+                $this->scanForUserIds($value, $foundIds);
+            } elseif (is_string($value) && !empty($value)) {
+                // Check if this string matches a user name exactly
+                $userId = DB::table('users')->where('name', $value)->value('id');
+                if ($userId) {
+                    $foundIds[] = $userId;
+                }
+            }
+        }
     }
 }
