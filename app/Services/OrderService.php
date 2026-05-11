@@ -150,103 +150,98 @@ class OrderService
                     });
                 }
             })
-            ->when(data_get($filters, 'resolved_status') ?: data_get($filters, 'status'), function (Builder $query, $value) {
+            ->when(data_get($filters, 'resolved_status') ?: data_get($filters, 'status'), function (Builder $query, $value) use ($filters) {
                 if ($value !== 'all') {
-                    $query->where(function ($q) use ($value) {
-                        // 1. Map to stage statuses based on Model's getResolvedStatusAttribute logic
+                    $query->where(function ($q) use ($value, $filters) {
+                        // Map to stage statuses based on Model's getResolvedStatusAttribute logic
                         $v = strtolower($value);
+                        $stage = data_get($filters, 'stage');
+
+                        // Stage-aware status check for Management page
+                        if ($stage && in_array($v, ['pending', 'process', 'completed'])) {
+                            $relationMapping = [
+                                'client-information' => 'clientInformation',
+                                'designing' => 'designing',
+                                'printing' => 'printing',
+                                'packaging' => 'packaging',
+                                'delivery' => 'dispatchDelivery'
+                            ];
+                            $relation = $relationMapping[$stage] ?? null;
+                            if ($relation) {
+                                $q->orWhereHas($relation, fn($sub) => $sub->where('status', 'like', "%{$value}%"));
+                                return;
+                            }
+                        }
 
                         // DELIVERED: dispatchDelivery->status === 'Completed'
                         if ($v === 'delivered') {
                             $q->orWhereHas('dispatchDelivery', fn($sq) => $sq->where('status', 'Completed'));
                         }
-
                         // OUT FOR DELIVERY: dispatchDelivery->status === 'Process'
-                        if ($v === 'out for delivery') {
+                        elseif ($v === 'out for delivery') {
                             $q->orWhereHas('dispatchDelivery', fn($sq) => $sq->where('status', 'Process'));
                         }
-
                         // PACKED: packaging->status === 'Completed' AND dispatch doesn't supersede (Completed/Process)
-                        if ($v === 'packed') {
+                        elseif ($v === 'packed') {
                             $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Completed'))
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('dispatchDelivery')
-                                        ->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
-                                });
+                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
                         }
-
                         // PACKING IN PROGRESS: packaging->status === 'Process' AND dispatch doesn't supersede
-                        if ($v === 'packing in progress') {
+                        elseif ($v === 'packing in progress') {
                             $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Process'))
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('dispatchDelivery')
-                                        ->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
-                                });
+                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
                         }
-
                         // PRINTED: printing->status === 'Completed' AND packaging/dispatch doesn't supersede
-                        if ($v === 'printed') {
+                        elseif ($v === 'printed') {
                             $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Completed'))
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('packaging')
-                                        ->orWhereHas('packaging', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
-                                })
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('dispatchDelivery')
-                                        ->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
-                                });
+                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
                         }
-
                         // PRINTING IN PROGRESS: printing->status === 'Process'
-                        if ($v === 'printing in progress') {
+                        elseif ($v === 'printing in progress') {
                             $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Process'))
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('packaging')
-                                        ->orWhereHas('packaging', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
-                                })
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('dispatchDelivery')
-                                        ->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process']));
-                                });
+                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
                         }
-
                         // DESIGNED: designing->status === 'Completed'
-                        if ($v === 'designed') {
+                        elseif ($v === 'designed') {
                             $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Completed'))
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('printing')->orWhereHas('printing', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); })
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('packaging')->orWhereHas('packaging', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); })
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('dispatchDelivery')->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); });
+                                ->whereDoesntHave('printing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
                         }
-
                         // DESIGNING IN PROGRESS: designing->status === 'Process'
-                        if ($v === 'designing in progress') {
+                        elseif ($v === 'designing in progress') {
                             $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Process'))
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('printing')->orWhereHas('printing', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); })
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('packaging')->orWhereHas('packaging', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); })
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('dispatchDelivery')->orWhereHas('dispatchDelivery', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); });
+                                ->whereDoesntHave('printing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
                         }
-
                         // CONFIRMED
-                        if ($v === 'confirmed') {
+                        elseif ($v === 'confirmed') {
                             $q->orWhereHas('clientInformation', fn($sq) => $sq->where('status', 'Completed'))
-                                ->where(function ($sub) {
-                                    $sub->whereDoesntHave('designing')->orWhereHas('designing', fn($sqq) => $sqq->whereNotIn('status', ['Completed', 'Process'])); });
+                                ->whereDoesntHave('designing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('printing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
                         }
-
                         // NEW ORDER
-                        if ($v === 'new order') {
-                            $q->orWhereDoesntHave('clientInformation')
-                                ->orWhereHas('clientInformation', fn($sq) => $sq->where('status', '!=', 'Completed'));
+                        elseif ($v === 'new order') {
+                            $q->orWhere(function ($sub) {
+                                $sub->where(function ($sq) {
+                                    $sq->whereDoesntHave('clientInformation')
+                                        ->orWhereHas('clientInformation', fn($ssq) => $ssq->where('status', '!=', 'Completed'));
+                                })
+                                ->whereDoesntHave('designing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('printing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
+                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
+                            });
+                        } else {
+                            // Main table status fallback for any other status
+                            $q->orWhere('status', '=', $value);
                         }
 
-                        // Main table status fallback
-                        $q->orWhere('status', '=', $value);
                     });
                 }
             })
@@ -399,6 +394,12 @@ class OrderService
                         $sub->where('order_details->order_placed_in', $value);
                     });
                 }
+            })
+            ->when(data_get($filters, 'start_date'), function (Builder $query, $value) {
+                $query->whereDate('order_date', '>=', $value);
+            })
+            ->when(data_get($filters, 'end_date'), function (Builder $query, $value) {
+                $query->whereDate('order_date', '<=', $value);
             })
             ->latest('created_at')
             ->paginate($perPage);
