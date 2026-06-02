@@ -28,6 +28,13 @@
           }}</span>
         </div>
       </div>
+
+      <div v-if="printingStatus.is_reprint" class="flex flex-col justify-center">
+        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-widest w-fit">
+          <div class="w-1 h-1 rounded-full bg-rose-500"></div>
+          Reprint
+        </div>
+      </div>
     </div>
 
     <!-- Printing Status Indicators -->
@@ -141,7 +148,7 @@
         <div class="space-y-2">
           <label
             class="text-[10px] font-black uppercase tracking-widest text-slate-400"
-            >Delivery Date</label
+            >Received Date</label
           >
           <div
             class="p-3 rounded-xl bg-white border border-slate-100 text-sm font-medium text-slate-900"

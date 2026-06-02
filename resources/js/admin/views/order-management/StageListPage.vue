@@ -2,7 +2,10 @@
   <div class="space-y-6 animate-in fade-in duration-500">
     <PageHeader :title="title" :subtitle="subtitle" />
 
-    <!-- Filters & Search (REMOVED) -->
+    <!-- Filters & Search -->
+    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+      <AdvancedDateFilter v-model="dateFilters" @change="fetchOrders" />
+    </div>
 
     <OrderStageTable :orders="filteredOrders" :loading="loading" :stage="stage" :from="meta.from" @view="handleView" @edit="handleEdit" @filter-change="handleFilterChange" />
 
@@ -53,6 +56,7 @@ import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import OrderStageTable from "../../components/order-management/OrderStageTable.vue";
 import StageViewDialog from "../../components/order-management/StageViewDialog.vue";
 import StageEditDialog from "../../components/order-management/StageEditDialog.vue";
+import AdvancedDateFilter from "../../components/reports/AdvancedDateFilter.vue";
 import { useAuth } from "../../composables/useAuth";
 import { usePermissions } from "../../composables/usePermissions";
 import { Plus as PlusIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from "lucide-vue-next";
@@ -74,6 +78,12 @@ const loading = ref(true);
 const page = ref(1);
 const meta = ref({ total: 0, from: 1 });
 const columnFilters = ref({});
+const dateFilters = ref({
+  filter_type: "month",
+  filter_option: "this_month",
+  from_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
+  to_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split("T")[0],
+});
 
 // Modals State
 const isViewModalOpen = ref(false);
@@ -89,6 +99,8 @@ const fetchOrders = async () => {
       page: page.value,
       per_page: 20,
       stage: props.stage,
+      start_date: dateFilters.value.from_date,
+      end_date: dateFilters.value.to_date,
       ...columnFilters.value
     };
 
@@ -175,3 +187,4 @@ watch(() => props.stage, () => {
 });
 watch(page, fetchOrders);
 </script>
+

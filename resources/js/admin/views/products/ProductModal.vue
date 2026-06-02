@@ -289,62 +289,38 @@
                             >Category
                             <span class="text-rose-500">*</span></label
                           >
-                          <select
+                          <ContextDropdown
                             v-model="form.cat_id"
-                            class="w-full px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-600 focus:outline-none focus:border-primary transition-all font-semibold appearance-none shadow-sm"
-                            required
-                            @change="handleCategoryChange"
-                          >
-                            <option value="">Select Category</option>
-                            <option
-                              v-for="cat in options.categories"
-                              :key="cat.id"
-                              :value="cat.id"
-                            >
-                              {{ cat.title }}
-                            </option>
-                          </select>
+                            :options="categoryOptions"
+                            :icon="FolderIcon"
+                            placeholder="Select Category"
+                            @update:modelValue="handleCategoryChange"
+                          />
                         </div>
                         <div>
                           <label
                             class="block text-xs font-bold text-gray-700 mb-2.5 ml-1 text-gray-400"
                             >Sub-Category</label
                           >
-                          <select
+                          <ContextDropdown
                             v-model="form.child_cat_id"
-                            class="w-full px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-400 focus:outline-none focus:border-primary transition-all font-semibold appearance-none disabled:opacity-50 shadow-sm"
-                            :disabled="
-                              !form.cat_id || !filteredSubCategories.length
-                            "
-                          >
-                            <option value="">No sub-category</option>
-                            <option
-                              v-for="sub in filteredSubCategories"
-                              :key="sub.id"
-                              :value="sub.id"
-                            >
-                              {{ sub.title }}
-                            </option>
-                          </select>
+                            :options="subCategoryOptions"
+                            :icon="FolderIcon"
+                            placeholder="No sub-category"
+                            :class="{ 'opacity-50 pointer-events-none': !form.cat_id || !filteredSubCategories.length }"
+                          />
                         </div>
                         <div class="md:col-span-2">
                           <label
                             class="block text-xs font-bold text-gray-700 mb-2.5 ml-1"
                             >Brand</label
                           >
-                          <select
+                          <ContextDropdown
                             v-model="form.brand_id"
-                            class="w-full px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-600 focus:outline-none focus:border-primary transition-all font-semibold appearance-none shadow-sm"
-                          >
-                            <option value="">Select Brand (Optional)</option>
-                            <option
-                              v-for="brand in options.brands"
-                              :key="brand.id"
-                              :value="brand.id"
-                            >
-                              {{ brand.title }}
-                            </option>
-                          </select>
+                            :options="brandOptions"
+                            :icon="TagIcon"
+                            placeholder="Select Brand (Optional)"
+                          />
                         </div>
                       </div>
 
@@ -512,6 +488,8 @@ import {
   Plus as PlusIcon,
   FileText as FileIcon,
   AlignLeft as AlignLeftIcon,
+  Folder as FolderIcon,
+  Tag as TagIcon,
 } from "lucide-vue-next";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
@@ -610,6 +588,27 @@ const filteredSubCategories = computed(() => {
   if (!form.cat_id) return [];
   const parent = props.options.categories.find((c) => c.id === form.cat_id);
   return parent ? parent.children : [];
+});
+
+const categoryOptions = computed(() => {
+  return props.options?.categories?.map((c) => ({
+    label: c.title,
+    value: c.id,
+  })) || [];
+});
+
+const subCategoryOptions = computed(() => {
+  return filteredSubCategories.value.map((c) => ({
+    label: c.title,
+    value: c.id,
+  }));
+});
+
+const brandOptions = computed(() => {
+  return props.options?.brands?.map((b) => ({
+    label: b.title,
+    value: b.id,
+  })) || [];
 });
 
 const combinedGallery = computed(() => {

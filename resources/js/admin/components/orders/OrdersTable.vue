@@ -69,13 +69,13 @@
 
     <template #cell-assigned_name="{ item: order }">
       <span class="text-sm font-medium text-slate-700">
-        {{ order.designing?.work_assign?.assigned_to || "Not Assigned" }}
+        {{ getAssignedName(order) }}
       </span>
     </template>
 
     <template #cell-assigned_date="{ item: order }">
       <span class="text-xs font-mono text-slate-500">
-        {{ formatDate(order.designing?.work_assign?.assigned_date) }}
+        {{ formatDate(getAssignedDate(order)) }}
       </span>
     </template>
 
@@ -172,6 +172,45 @@ const getStageData = (order) => {
     })[0]?.data || null;
 };
 
+const getAssignedName = (order) => {
+  switch (props.statusFilter) {
+    case 'client_info':
+      return order.client_information?.order_details?.order_taken_by || "Not Assigned";
+    case 'designing':
+      return order.designing?.work_assign?.assigned_to || "Not Assigned";
+    case 'printing':
+      return order.printing?.printing_status?.assigned_to || order.designing?.work_assign?.assigned_to || "Not Assigned";
+    case 'packaging':
+      const log = order.packaging?.packaging_logistics;
+      let names = [];
+      if (Array.isArray(log?.assigned_by_multiple)) names.push(...log.assigned_by_multiple);
+      if (Array.isArray(log?.crafted_by_multiple)) names.push(...log.crafted_by_multiple);
+      if (log?.crafted_by && !names.includes(log.crafted_by)) names.push(log.crafted_by);
+      return names.length > 0 ? [...new Set(names)].join(", ") : "Not Assigned";
+    case 'delivered':
+      return order.dispatch_delivery?.dispatch_mode?.packed_by || "Not Assigned";
+    default:
+      return order.designing?.work_assign?.assigned_to || "Not Assigned";
+  }
+};
+
+const getAssignedDate = (order) => {
+  switch (props.statusFilter) {
+    case 'client_info':
+      return order.order_date;
+    case 'designing':
+      return order.designing?.work_assign?.assigned_date;
+    case 'printing':
+      return order.printing?.printing_status?.confirmed_date || order.printing?.printing_status?.assigned_date;
+    case 'packaging':
+      return order.packaging?.packaging_logistics?.date;
+    case 'delivered':
+      return order.dispatch_delivery?.dispatch_mode?.date;
+    default:
+      return order.designing?.work_assign?.assigned_date;
+  }
+};
+
 const processedOrders = computed(() => {
   return props.orders.map(order => {
     const latestStage = getStageData(order);
@@ -231,7 +270,7 @@ const columns = computed(() => {
       { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
       { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name" },
       { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "order_date" },
-      { key: "items", label: "Items", align: "center", width: "100px", class: "whitespace-nowrap", filterKey: "items_count" },
+      { key: "items", label: "Quantity", align: "center", width: "100px", class: "whitespace-nowrap", filterKey: "items_count" },
       { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status", type: "select", options: Object.keys(orderStatusStyles).map(s => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })) },
       { key: "delivery_date", label: "Delivery Date", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "delivery_date" },
       { key: "payment", label: "Payment Status", align: "left", width: "140px", class: "whitespace-nowrap", filterKey: "payment_status", type: "select", options: [ { label: "Paid", value: "paid" }, { label: "Unpaid", value: "unpaid" }, { label: "Due", value: "due" } ] },
@@ -242,11 +281,29 @@ const columns = computed(() => {
   }
 
   // Workflow Columns for Tracking Tabs
+  
+  let assignedNameKey = "designing.work_assign.assigned_to";
+  let assignedDateKey = "designing.work_assign.assigned_date";
+  
+  if (props.statusFilter === 'client_info') {
+    assignedNameKey = "client_information.order_details.order_taken_by";
+    assignedDateKey = "order_date";
+  } else if (props.statusFilter === 'printing') {
+    assignedNameKey = "printing.printing_status.assigned_to";
+    assignedDateKey = "printing.printing_status.assigned_date";
+  } else if (props.statusFilter === 'packaging') {
+    assignedNameKey = "packaging.packaging_logistics.crafted_by";
+    assignedDateKey = "packaging.packaging_logistics.date";
+  } else if (props.statusFilter === 'delivered') {
+    assignedNameKey = "dispatch_delivery.dispatch_mode.packed_by";
+    assignedDateKey = "dispatch_delivery.dispatch_mode.date";
+  }
+
   return [
     { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
     { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
-    { key: "assigned_name", label: "Assigned Name", align: "left", width: "200px", filterKey: "designing.work_assign.assigned_to" },
-    { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "designing.work_assign.assigned_date" },
+    { key: "assigned_name", label: "Assigned Name", align: "left", width: "200px", filterKey: assignedNameKey },
+    { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: assignedDateKey },
     { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },
     { key: "created_at", label: "Created At", align: "left", width: "150px", type: "date" },
     { key: "modified_by", label: "Modified By", align: "left", width: "150px" },

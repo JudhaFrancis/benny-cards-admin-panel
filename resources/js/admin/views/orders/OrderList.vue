@@ -4,16 +4,6 @@
     <PageHeader :title="pageTitle" subtitle="Manage and track customer purchases">
       <template #actions>
         <div class="flex items-center gap-3">
-          <div class="relative group">
-            <SearchIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-            <input 
-              v-model="searchQuery"
-              type="text" 
-              placeholder="Search orders..." 
-              class="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all w-64 shadow-sm"
-              @input="handleSearch"
-            />
-          </div>
           <button
             v-if="canCreate"
             @click="isCreateModalOpen = true"
@@ -26,7 +16,10 @@
       </template>
     </PageHeader>
 
-    <!-- Filters & Search (REMOVED) -->
+    <!-- Filters & Search -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+      <AdvancedDateFilter v-model="dateFilters" @change="handleDateFilterChange" />
+    </div>
 
     <!-- Table Section -->
     <OrdersTable
@@ -124,6 +117,7 @@ import OrderCreateDialog from "../../components/orders/OrderCreateDialog.vue";
 import OrderEditDialog from "../../components/orders/OrderEditDialog.vue";
 import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import ConfirmationModal from "../../components/ui/modals/ConfirmationModal.vue";
+import AdvancedDateFilter from "../../components/reports/AdvancedDateFilter.vue";
 
 const { getModulePermissions } = usePermissions();
 const { canAdd: canCreate, canEdit, canDelete } = getModulePermissions("Order");
@@ -139,6 +133,18 @@ const statusFilter = ref("all");
 const searchQuery = ref("");
 const columnFilters = ref({});
 const meta = ref({ total: 0, from: 1 });
+
+const dateFilters = ref({
+  filter_type: "month",
+  filter_option: "this_month",
+  from_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
+  to_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split("T")[0],
+});
+
+const handleDateFilterChange = () => {
+  page.value = 1;
+  fetchOrders();
+};
 
 let searchDebounce = null;
 const handleSearch = () => {
@@ -156,6 +162,8 @@ const fetchOrders = async () => {
     const params = {
       page: page.value,
       per_page: 20,
+      start_date: dateFilters.value.from_date,
+      end_date: dateFilters.value.to_date,
       ...columnFilters.value
     };
 

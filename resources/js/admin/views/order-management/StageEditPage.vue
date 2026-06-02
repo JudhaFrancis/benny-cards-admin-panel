@@ -20,7 +20,18 @@
       </div>
     </div>
 
-    <PageHeader :title="`Edit Order #${order?.order_number || ''}`" :subtitle="stageTitle" />
+    <PageHeader :title="`Edit Order #${order?.order_number || ''}`">
+      <template #subtitle>
+        <div class="flex items-center gap-2">
+          <span>{{ stageTitle }}</span>
+          <span v-if="customerName" class="h-1 w-1 rounded-full bg-slate-300"></span>
+          <div v-if="customerName" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200">
+            <User class="h-3 w-3" />
+            {{ customerName }}
+          </div>
+        </div>
+      </template>
+    </PageHeader>
 
     <div v-if="loading" class="flex items-center justify-center p-20">
       <Loader2 class="h-10 w-10 animate-spin text-primary" />
@@ -98,6 +109,10 @@ const stageTitle = computed(() => {
     case 'delivery': return 'Dispatch & Delivery';
     default: return 'Order Section';
   }
+});
+
+const customerName = computed(() => {
+  return order.value?.client_information?.client_info?.name || order.value?.customer_details?.name || '';
 });
 
 const relevantSections = computed(() => {
@@ -195,6 +210,12 @@ const handleSave = async () => {
     relevantSections.value.forEach(s => {
       const content = order.value[relation]?.[s.key] || {};
       formData.append(s.key, JSON.stringify(content));
+
+      // Special case: PackagingStatusSection actually edits dispatch_mode (packed_by and gift_type)
+      if (s.key === 'packaging_status' && relation === 'packaging') {
+        const dispatchMode = order.value.dispatch_delivery?.dispatch_mode || {};
+        formData.append('dispatch_mode', JSON.stringify(dispatchMode));
+      }
     });
 
     // Handle sticker image if in designing or packaging stage

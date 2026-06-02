@@ -33,16 +33,16 @@
               <div v-if="shouldShowFilter(column)" class="relative group min-w-[120px]">
                 <DatePicker v-if="column.type === 'date'" v-model="filters[column.filterKey || column.key]" placeholder="Select Date" />
                 <div v-else-if="column.type === 'select'" class="relative">
-                  <Listbox v-model="filters[column.filterKey || column.key]">
+                  <Listbox v-model="filters[column.filterKey || column.key]" :multiple="column.multiple">
                     <div class="relative">
                       <ListboxButton :class="[
                         'w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all pr-8 text-left shadow-sm min-h-[31px] flex items-center',
-                        !filters[column.filterKey || column.key] ? 'text-slate-400/50' : 'text-slate-700'
+                        isFilterEmpty(column) ? 'text-slate-400/50' : 'text-slate-700'
                       ]">
                         <span class="block truncate">
                           {{ getSelectedLabel(column) }}
                         </span>
-                        <span v-if="!filters[column.filterKey || column.key]" class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <span v-if="isFilterEmpty(column)" class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                           <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                         </span>
                       </ListboxButton>
@@ -50,24 +50,28 @@
                       <transition leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100"
                         leave-to-class="opacity-0">
                         <ListboxOptions
-                          class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-xs shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none custom-scrollbar min-w-[140px] text-left">
-                          <ListboxOption v-slot="{ active, selected }" value="" as="template">
+                          class="absolute z-50 mt-1 max-h-60 min-w-full w-max left-0 overflow-auto rounded-xl bg-white py-1 text-[11px] shadow-2xl ring-1 ring-black/5 focus:outline-none scrollbar-hide">
+                          <ListboxOption v-if="!column.hideAllOption" v-slot="{ active, selected }" :value="column.multiple ? '__all__' : ''" as="template">
                             <li :class="[
-                              active ? 'bg-primary/5 text-primary' : 'text-slate-600',
+                              active || selected ? 'bg-primary/5 text-primary' : 'text-slate-600',
                               'relative cursor-pointer select-none py-2 pl-4 pr-4 transition-colors font-semibold',
                             ]">
-                              <span :class="[selected ? 'text-primary' : '', 'block truncate']">{{ column.placeholder ||
-                                "All Status" }}</span>
+                              <span :class="[selected ? 'font-bold' : '', 'block truncate']">
+                                {{ column.placeholder || (column.multiple ? "All Status" : "All Status") }}
+                              </span>
                             </li>
                           </ListboxOption>
 
                           <ListboxOption v-slot="{ active, selected }" v-for="opt in column.options" :key="opt.value"
                             :value="opt.value" as="template">
                             <li :class="[
-                              active ? 'bg-primary/5 text-primary' : 'text-slate-600',
+                              active || selected ? 'bg-primary/5 text-primary' : 'text-slate-600',
                               'relative cursor-pointer select-none py-2 pl-4 pr-4 transition-colors font-semibold',
                             ]">
-                              <span :class="[selected ? 'text-primary' : '', 'block truncate']">{{ opt.label }}</span>
+                              <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-1 text-primary">
+                                <CheckIcon class="h-3 w-3" aria-hidden="true" />
+                              </span>
+                              <span :class="[selected ? 'font-bold pl-3' : '', 'block truncate']">{{ opt.label }}</span>
                             </li>
                           </ListboxOption>
                         </ListboxOptions>
@@ -77,7 +81,7 @@
                 </div>
                 <input v-else type="text" v-model="filters[column.filterKey || column.key]" :placeholder="`Filter ${column.label}...`"
                   class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-400/50 pr-8 shadow-sm" />
-                <button v-if="filters[column.filterKey || column.key]" @click="filters[column.filterKey || column.key] = ''"
+                <button v-if="!isFilterEmpty(column)" @click="resetColumnFilter(column)"
                   class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-md hover:bg-slate-100">
                   <XIcon class="h-3 w-3" />
                 </button>
@@ -181,10 +185,6 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  skeletonRows: {
-    type: Number,
-    default: 5,
-  },
   emptyText: {
     type: String,
     default: "No matching results found.",
@@ -198,23 +198,97 @@ const props = defineProps({
 const emit = defineEmits(["filter-change", "row-click"]);
 
 const filters = ref({});
+
+const isFilterEmpty = (column) => {
+  const value = filters.value[column.filterKey || column.key];
+  if (Array.isArray(value)) return value.length === 0;
+  return value === "" || value === undefined || value === null;
+};
+
+const getSelectedLabel = (column) => {
+  const value = filters.value[column.filterKey || column.key];
+  if (isFilterEmpty(column)) return column.placeholder || "All Status";
+
+  if (Array.isArray(value)) {
+    // Check if special "All" value is selected
+    if (value.includes("__all__")) return column.placeholder || "All Status";
+
+    // If it matches default filter, show placeholder
+    if (column.defaultFilter && Array.isArray(column.defaultFilter)) {
+      const sortedVal = [...value].sort();
+      const sortedDef = [...column.defaultFilter].sort();
+      if (JSON.stringify(sortedVal) === JSON.stringify(sortedDef)) {
+        return column.placeholder || "All Status";
+      }
+    }
+
+    if (value.length > 0) {
+      const labels = value.map(v => {
+        const option = column.options?.find(opt => opt.value === v);
+        return option ? option.label : v;
+      });
+      return labels.join(", ");
+    }
+    return `${value.length} Selected`;
+  }
+
+  const option = column.options?.find(opt => opt.value === value);
+  return option ? option.label : value;
+};
+
+// Initialize filters immediately
+props.columns.forEach(col => {
+  const key = col.filterKey || col.key;
+  if (col.defaultFilter !== undefined) {
+    filters.value[key] = JSON.parse(JSON.stringify(col.defaultFilter));
+  } else if (col.multiple) {
+    filters.value[key] = [];
+  } else {
+    filters.value[key] = "";
+  }
+});
+
 let debounceTimeout = null;
 
 const hasActiveFilters = computed(() => {
-  return Object.values(filters.value).some(val => val !== "" && val !== null);
+  return props.columns.some(col => !isFilterEmpty(col));
 });
 
 const resetFilters = () => {
-  filters.value = {};
+  const newFilters = {};
+  props.columns.forEach(col => {
+    if (col.multiple) newFilters[col.filterKey || col.key] = [];
+    else newFilters[col.filterKey || col.key] = "";
+  });
+  filters.value = newFilters;
 };
 
 // Watch filters and emit for server-side search
 watch(filters, (newFilters) => {
   if (debounceTimeout) clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
-    emit("filter-change", { ...newFilters });
+    const emittedFilters = JSON.parse(JSON.stringify(newFilters));
+
+    // Handle the special "__all__" value for multiple select
+    Object.keys(filters.value).forEach(key => {
+      const col = props.columns.find(c => (c.filterKey || c.key) === key);
+      if (col?.multiple && Array.isArray(filters.value[key])) {
+        if (filters.value[key].includes('__all__')) {
+          filters.value[key] = []; // Clear local state too
+          emittedFilters[key] = []; // Clear for backend
+        }
+      }
+    });
+
+    emit("filter-change", emittedFilters);
   }, 500);
-}, { deep: true });
+}, { deep: true, immediate: true });
+
+const resetColumnFilter = (column) => {
+  const key = column.filterKey || column.key;
+  if (column.multiple) filters.value[key] = [];
+  else filters.value[key] = "";
+};
 
 const shouldShowFilter = (column) => {
   const skip = ['sn', 'actions', 'action'];
@@ -228,40 +302,22 @@ const resolveValue = (obj, path) => {
   return path.split('.').reduce((acc, part) => acc && acc[part], obj);
 };
 
-const getSelectedLabel = (column) => {
-  const value = filters.value[column.filterKey || column.key];
-  if (value === "" || value === undefined || value === null) return column.placeholder || "All Status";
-  const option = column.options?.find(opt => opt.value === value);
-  return option ? option.label : value;
-};
+
 
 const filteredItems = computed(() => {
+  // Always return props.items if manualFilters is enabled (server-side filtering)
   if (props.manualFilters) return props.items;
+
   if (!hasActiveFilters.value) return props.items;
 
   return props.items.filter((item) => {
     return props.columns.every((column) => {
-      const filterValue = filters.value[column.key];
+      const key = column.filterKey || column.key;
+      const filterValue = filters.value[key];
       if (filterValue === undefined || filterValue === "" || filterValue === null) return true;
 
-      // Use resolveValue to handle nested keys if needed
-      const dataField = column.filterKey || column.key;
-      let val = resolveValue(item, dataField);
-
+      const val = resolveValue(item, column.key);
       if (val === undefined || val === null) return false;
-
-      if (column.type === "date") {
-        try {
-          const itemDate = new Date(val).toISOString().split("T")[0];
-          return itemDate === filterValue;
-        } catch (e) {
-          return false;
-        }
-      }
-
-      if (column.type === "select") {
-        return String(val).toLowerCase() === String(filterValue).toLowerCase();
-      }
 
       return String(val).toLowerCase().includes(String(filterValue).toLowerCase());
     });

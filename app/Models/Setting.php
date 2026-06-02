@@ -18,7 +18,13 @@ class Setting extends Model
         'address',
         'phone',
         'email',
+        'app_version',
         'facebook_url',
         'instagram_url',
+        'branches',
+    ];
+
+    protected $casts = [
+        'branches' => 'array',
     ];
 }

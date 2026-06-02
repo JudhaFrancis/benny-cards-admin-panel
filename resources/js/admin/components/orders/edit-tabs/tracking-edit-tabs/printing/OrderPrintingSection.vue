@@ -1,8 +1,6 @@
 <template>
   <div class="space-y-8">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-
-
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-6">
       <div class="space-y-2">
         <label class="text-xs font-medium text-slate-700"
           >Confirmed Date <span class="text-red-500">*</span></label
@@ -23,6 +21,21 @@
           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Enter printer name"
         />
+      </div>
+      <div v-if="printingStatus" class="flex items-center h-full pt-6 pl-2">
+        <label class="flex items-center gap-2 cursor-pointer group">
+          <input
+            v-model="printingStatus.is_reprint"
+            type="checkbox"
+            class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition-all"
+          />
+          <span 
+            class="text-xs font-bold transition-colors"
+            :class="printingStatus.is_reprint ? 'text-primary' : 'text-slate-600 group-hover:text-primary'"
+          >
+            Reprint
+          </span>
+        </label>
       </div>
     </div>
 
@@ -178,7 +191,7 @@
         </div>
         <div class="space-y-2">
           <label class="text-xs font-medium text-slate-700"
-            >Delivery Date <span class="text-red-500">*</span></label
+            >Received Date <span class="text-red-500">*</span></label
           >
           <DatePicker
             v-model="printingStatus[type.id + '_delivery_date']"

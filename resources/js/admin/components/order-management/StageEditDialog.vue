@@ -7,6 +7,11 @@
         <Calendar class="h-3.5 w-3.5" />
         {{ formatDate(orderData?.order_date) }}
       </span>
+      <span v-if="customerName"
+        class="text-xs text-amber-50 font-bold flex items-center gap-1.5 bg-amber-500/20 px-2.5 py-1.5 rounded-lg border border-amber-400/20 backdrop-blur-sm shadow-sm">
+        <User class="h-3.5 w-3.5" />
+        {{ customerName }}
+      </span>
     </template>
     <div v-if="loading" class="space-y-6 px-1 py-6">
       <div v-for="i in 2" :key="i"
@@ -44,14 +49,14 @@
             <Listbox v-model="stageStatus">
               <div class="relative">
                 <ListboxButton
-                  class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all active:scale-95 group">
-                  <Activity class="h-3.5 w-3.5 text-slate-400 group-hover:text-primary transition-colors" />
+                  class="flex items-center gap-2.5 px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all active:scale-95 group">
+                  <Activity class="h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
                   <span
-                    class="text-[10px] font-bold text-slate-500 uppercase tracking-wider border-r border-slate-100 pr-2 mr-1">Status</span>
+                    class="text-xs font-bold text-slate-500 uppercase tracking-wider border-r border-slate-100 pr-3 mr-1">Status</span>
 
-                  <div class="flex items-center gap-1.5">
+                  <div class="flex items-center gap-2">
                     <span :class="[
-                      'text-xs font-bold transition-colors',
+                      'text-sm font-bold transition-colors',
                       stageStatus === 'Completed' ? 'text-emerald-600' :
                         stageStatus === 'Process' ? 'text-blue-600' :
                           'text-amber-600'
@@ -59,7 +64,7 @@
                       {{ stageStatus === 'Process' ? 'Processing' : stageStatus }}
                     </span>
                     <ChevronDown
-                      class="h-3 w-3 text-slate-400 group-hover:text-slate-600 transition-transform duration-300" />
+                      class="h-4 w-4 text-slate-400 group-hover:text-slate-600 transition-transform duration-300" />
                   </div>
                 </ListboxButton>
 
@@ -206,6 +211,10 @@ const stageTitle = computed(() => {
   }
 });
 
+const customerName = computed(() => {
+  return orderData.value?.client_information?.client_info?.name || orderData.value?.customer_details?.name || '';
+});
+
 const getExtraProps = (section) => {
   if (section.id === 'status' && section.key === 'packaging_status') {
     return {
@@ -329,10 +338,13 @@ const handleSave = async () => {
       const content = sectionStageData[s.key] || {};
       formData.append(s.key, JSON.stringify(content));
 
-      // Special case: PackagingStatusSection also updates packaging_logistics for the gift option
+      // Special case: PackagingStatusSection also updates packaging_logistics for the gift option and dispatch_mode for packed_by
       if (s.key === 'packaging_status' && (relation === 'packaging' || relation === 'OrderPackaging')) {
         const logisticsContent = sectionStageData['packaging_logistics'] || {};
         formData.append('packaging_logistics', JSON.stringify(logisticsContent));
+
+        const dispatchMode = orderData.value.dispatch_delivery?.dispatch_mode || {};
+        formData.append('dispatch_mode', JSON.stringify(dispatchMode));
       }
     });
 

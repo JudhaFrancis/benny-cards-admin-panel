@@ -147,7 +147,7 @@
     </div>
 
     <!-- Footer / User Area -->
-    <div class="p-4 border-t border-white/10 bg-white/5 backdrop-blur-md">
+    <div class="p-4 border-t border-white/10 bg-white/5 backdrop-blur-md space-y-3">
       <div class="flex gap-3 px-1">
         <button @click="isLogoutModalOpen = true" :class="cn(
           'flex-1 flex items-center justify-center h-12 rounded-xl transition-all duration-300 border bg-white/10 active:scale-95 group shadow-sm',
@@ -169,6 +169,10 @@
           <ChevronRightIcon v-if="isCollapsed" class="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
           <ChevronLeftIcon v-else class="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />
         </button>
+      </div>
+      <div v-if="!isCollapsed" class="text-center text-[10px] text-white/30 tracking-wider">
+        <p>© Benny Cards 2026</p>
+        <span>v{{ settings.app_version || '1.0.4' }}</span>
       </div>
     </div>
   </aside>

@@ -64,6 +64,7 @@
                           <CalendarIcon class="h-3.5 w-3.5" />
                           {{ formatDate(editedOrder?.order_date) }}
                         </span>
+
                       </div>
                     </div>
                   </div>
@@ -770,6 +771,8 @@ const total = computed(() => {
     const extra = parseFloat(editedOrder.value?.extra_charges) || 0;
     return Math.max(0, subtotal.value - discount + extra);
 });
+
+
 
 const addItem = () => {
     if (!editedOrder.value.items) editedOrder.value.items = [];

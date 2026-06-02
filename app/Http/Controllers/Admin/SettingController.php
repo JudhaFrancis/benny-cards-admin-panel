@@ -40,6 +40,7 @@ class SettingController extends Controller
             'photo' => 'nullable|string',
             'facebook_url' => 'nullable|url|max:255',
             'instagram_url' => 'nullable|url|max:255',
+            'branches' => 'nullable|array',
         ]);
 
         $setting = Setting::first();

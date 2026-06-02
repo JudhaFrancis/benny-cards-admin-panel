@@ -11,6 +11,11 @@
         <Calendar class="h-3.5 w-3.5" />
         {{ formatDate(orderData?.order_date) }}
       </span>
+      <span v-if="customerName"
+        class="text-xs text-amber-50 font-bold flex items-center gap-1.5 bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-400/20 backdrop-blur-sm shadow-sm">
+        <UserIcon class="h-3.5 w-3.5" />
+        {{ customerName }}
+      </span>
     </template>
 
     <div v-if="loading" class="space-y-6 px-1">
@@ -119,7 +124,6 @@ import ViewWorkAssignSection from "../orders/info-tabs/tracking-view-tabs/design
 import ViewDesignPrintSection from "../orders/info-tabs/tracking-view-tabs/designing/ViewDesignPrintSection.vue";
 import ViewOrderPrintingSection from "../orders/info-tabs/tracking-view-tabs/printing/ViewOrderPrintingSection.vue";
 import ViewPackagingLogisticsSection from "../orders/info-tabs/tracking-view-tabs/packaging/ViewPackagingLogisticsSection.vue";
-import ViewPackagingStatusSection from "../orders/info-tabs/tracking-view-tabs/packaging/ViewPackagingStatusSection.vue";
 import ViewDeliveryLocationSection from "../orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDeliveryLocationSection.vue";
 import ViewDispatchModeSection from "../orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDispatchModeSection.vue";
 import ViewDispatchDetailsSection from "../orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDispatchDetailsSection.vue";
@@ -145,6 +149,10 @@ const stageStatus = computed(() => {
   };
   const key = stageMap[props.stage];
   return orderData.value?.[key]?.status || "Pending";
+});
+
+const customerName = computed(() => {
+  return orderData.value?.client_information?.client_info?.name || orderData.value?.customer_details?.name || '';
 });
 
 const stageRelationKey = computed(() => {
@@ -192,8 +200,7 @@ const relevantSections = computed(() => {
       ];
     case 'packaging':
       return [
-        { id: 'logistics', label: 'Packaging & Logistics', icon: Box, component: ViewPackagingLogisticsSection },
-        { id: 'status', label: 'Packaging Status', icon: Box, component: ViewPackagingStatusSection }
+        { id: 'logistics', label: 'Packaging & Logistics', icon: Box, component: ViewPackagingLogisticsSection }
       ];
     case 'delivery':
       return [

@@ -137,9 +137,22 @@ const currentTime = ref("");
 const currentDate = ref("");
 const recentOrders = ref([]);
 const currentPage = ref(0);
+import { useSettings } from "../../composables/useSettings";
+
 const itemsPerPage = 4;
 
-const branches = ["All Branches", "NGL", "MTM", "TVL", "Chennai", "Online"];
+const { settings, fetchSettings } = useSettings();
+fetchSettings();
+
+const branches = computed(() => {
+    let list = ["All Branches"];
+    if (settings.value.branches) {
+        list.push(...settings.value.branches.filter(b => b.active).map(b => b.name));
+    } else {
+        list.push("NGL", "MTM", "TVL", "Chennai", "Online");
+    }
+    return list;
+});
 const selectedBranch = ref("All Branches");
 const showBranchDropdown = ref(false);
 

@@ -21,6 +21,21 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        // App version check for mobile app login
+        if ($request->has('app_version')) {
+            $appVersion = $request->input('app_version');
+            $setting = \App\Models\Setting::first();
+            $latestVersion = $setting ? $setting->app_version : '1.0.4';
+
+            if ($appVersion !== $latestVersion) {
+                return response()->json([
+                    'success' => false,
+                    'update_required' => true,
+                    'message' => 'App update required. Please update your app to continue.',
+                ], 426);
+            }
+        }
+
         $credentials['status'] = 'active';
         // Remove hardcoded admin check to allow staff/moderators
         // $credentials['role'] = 'admin';

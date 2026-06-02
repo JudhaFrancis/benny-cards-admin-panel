@@ -33,68 +33,9 @@
 
         <!-- Custom Date/Month/Year Pickers -->
         <template v-if="localFilters.filter_option === 'custom'">
-            <div v-if="localFilters.filter_type === 'day'" class="w-full sm:w-40">
+            <div class="w-full sm:w-44">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 block">Date</span>
-                <input v-model="localFilters.from_date" type="date" :max="todayDate" @change="emitChange"
-                    class="h-9 w-full px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-            </div>
-
-            <div v-if="localFilters.filter_type === 'week'" class="flex gap-2 w-full sm:w-auto">
-                <div class="w-32">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 block">Start</span>
-                    <input v-model="localFilters.from_date" type="date" :max="todayDate" @change="emitChange"
-                        class="h-9 w-full px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-                </div>
-                <div class="w-32">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 block">End</span>
-                    <input v-model="localFilters.to_date" type="date" :max="todayDate" :min="localFilters.from_date"
-                        @change="emitChange"
-                        class="h-9 w-full px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-                </div>
-            </div>
-
-            <div v-if="localFilters.filter_type === 'month'" class="flex gap-2 w-full sm:w-auto">
-                <div class="w-32">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 block">Start</span>
-                    <input v-model="localFilters.from_date" type="month" :max="todayMonth" @change="emitChange"
-                        class="h-9 w-full px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-                </div>
-                <div class="w-32">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 block">End</span>
-                    <input v-model="localFilters.to_date" type="month" :max="todayMonth"
-                        :min="localFilters.from_date" @change="emitChange"
-                        class="h-9 w-full px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-                </div>
-            </div>
-
-            <div v-if="localFilters.filter_type === 'year'" class="flex gap-2 w-full sm:w-auto">
-                <div class="w-28">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 block">Start</span>
-                    <Select v-model="localFilters.from_date" @update:modelValue="emitChange">
-                        <SelectTrigger class="h-9 bg-slate-50">
-                            <SelectValue placeholder="Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem v-for="year in yearOptions" :key="year" :value="year">
-                                {{ year }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div class="w-28">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 block">End</span>
-                    <Select v-model="localFilters.to_date" @update:modelValue="emitChange">
-                        <SelectTrigger class="h-9 bg-slate-50">
-                            <SelectValue placeholder="Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem v-for="year in yearOptions.filter(y => y >= localFilters.from_date)"
-                                :key="year" :value="year">
-                                {{ year }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
+                <DatePicker v-model="localFilters.from_date" @update:modelValue="handleCustomSingleDate" customClass="h-9" placeholder="Select Date" />
             </div>
         </template>
 
@@ -117,6 +58,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../ui/select";
+import DatePicker from "../ui/pickers/DatePicker.vue";
 
 const props = defineProps({
     modelValue: {
@@ -186,7 +128,12 @@ const updateDateRange = () => {
     const type = localFilters.filter_type;
     const option = localFilters.filter_option;
 
-    if (option === 'custom') return emitChange();
+    if (option === 'custom') {
+        // Default to today when custom is selected
+        localFilters.from_date = today.toISOString().split('T')[0];
+        localFilters.to_date = today.toISOString().split('T')[0];
+        return emitChange();
+    }
 
     if (type === 'day') {
         if (option === 'today') {
@@ -241,6 +188,48 @@ const updateDateRange = () => {
     emitChange();
 };
 
+const handleCustomSingleDate = (val) => {
+    localFilters.from_date = val;
+    localFilters.to_date = val;
+    emitChange();
+};
+
+const handleCustomWeek = (val) => {
+    if(!val) return;
+    const date = new Date(val);
+    const day = date.getDay();
+    const start = new Date(date);
+    start.setDate(date.getDate() - day);
+    const end = new Date(date);
+    end.setDate(date.getDate() + (6 - day));
+    
+    localFilters.from_date = start.toISOString().split('T')[0];
+    localFilters.to_date = end.toISOString().split('T')[0];
+    emitChange();
+};
+
+const handleCustomMonth = (e) => {
+    const val = e.target.value; // "YYYY-MM"
+    if(!val) return;
+    const [year, month] = val.split('-');
+    const start = new Date(year, parseInt(month) - 1, 1);
+    const end = new Date(year, parseInt(month), 0);
+    
+    localFilters.from_date = start.toISOString().split('T')[0];
+    localFilters.to_date = end.toISOString().split('T')[0];
+    emitChange();
+};
+
+const handleCustomYear = (val) => {
+    if(!val) return;
+    const start = new Date(val, 0, 1);
+    const end = new Date(val, 11, 31);
+    
+    localFilters.from_date = start.toISOString().split('T')[0];
+    localFilters.to_date = end.toISOString().split('T')[0];
+    emitChange();
+};
+
 const activeRangeLabel = computed(() => {
     const type = localFilters.filter_type;
     const option = localFilters.filter_option;
@@ -253,22 +242,9 @@ const activeRangeLabel = computed(() => {
         return `${periodStr}: ${optLabel}`;
     }
 
+    // For custom option, we always use a single date picker now
     const opt = { day: 'numeric', month: 'short', year: 'numeric' };
-    if (type === 'day') {
-        return `Date: ${new Date(start).toLocaleDateString('en-GB', opt)}`;
-    } else if (type === 'week') {
-        return `Range: ${new Date(start).toLocaleDateString('en-GB', opt)} — ${new Date(end).toLocaleDateString('en-GB', opt)}`;
-    } else if (type === 'month') {
-        // For type="month" input, "start" might be "YYYY-MM"
-        const startObj = new Date(start + "-01");
-        const endObj = new Date(end + "-01");
-        const startLabel = startObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
-        const endLabel = endObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
-        return `Months: ${startLabel} — ${endLabel}`;
-    } else if (type === 'year') {
-        return `Years: ${start} — ${end}`;
-    }
-    return "";
+    return `Date: ${new Date(start).toLocaleDateString('en-GB', opt)}`;
 });
 
 const emitChange = () => {

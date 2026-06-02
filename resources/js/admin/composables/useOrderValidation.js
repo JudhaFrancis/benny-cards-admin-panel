@@ -85,9 +85,10 @@ export function useOrderValidation() {
         // Only fields with * in PackagingLogisticsSection.vue
         if (!packLog.assigned_by_multiple || packLog.assigned_by_multiple.length === 0) errors.push("Assigned By");
         if (!packLog.crafted_by_multiple || packLog.crafted_by_multiple.length === 0) errors.push("Crafted By");
-        if (!packLog.names) errors.push("Names");
-        if (!packLog.date) errors.push("Date");
-        if (!packLog.qty_cards) errors.push("Qty of Cards");
+        // Made optional by user request
+        // if (!packLog.names) errors.push("Names");
+        // if (!packLog.date) errors.push("Date");
+        // if (!packLog.qty_cards) errors.push("Qty of Cards");
         break;
 
       case "packaging-status":

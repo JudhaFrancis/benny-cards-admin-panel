@@ -76,7 +76,7 @@
             Order Placed In <span class="text-red-500">*</span>
           </label>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <label v-for="place in ['NGL', 'MTM', 'TVL', 'Chennai', 'Online']" :key="place"
+            <label v-for="place in activeBranches" :key="place"
               class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 group hover:shadow-md"
               :class="jobDetails.order_placed_in === place
                 ? 'bg-primary/5 border-primary shadow-sm'
@@ -177,6 +177,15 @@ import { computed } from "vue";
 import { User as UserIcon, Clock as ClockIcon, Calendar as CalendarIcon } from "lucide-vue-next";
 import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
+import { useSettings } from "../../../../../composables/useSettings";
+
+const { settings, fetchSettings } = useSettings();
+fetchSettings();
+
+const activeBranches = computed(() => {
+    if (!settings.value.branches) return ['NGL', 'MTM', 'TVL', 'Chennai', 'Online'];
+    return settings.value.branches.filter(b => b.active).map(b => b.name);
+});
 
 const props = defineProps({
   order: {

@@ -4,6 +4,13 @@ import axios from "axios";
 const settings = ref({
     company_name: "Agoo Order",
     logo: null,
+    branches: [
+        { id: 1, name: "NGL", active: true },
+        { id: 2, name: "MTM", active: true },
+        { id: 3, name: "TVL", active: true },
+        { id: 4, name: "Chennai", active: true },
+        { id: 5, name: "Online", active: true }
+    ],
 });
 
 const loaded = ref(false);

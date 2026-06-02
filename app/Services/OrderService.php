@@ -41,19 +41,10 @@ class OrderService
 
         return Order::query()
             ->with([
-                'user',
-                'items.product',
-                'addedBy',
-                'modifiedBy',
-                'customerDetails',
-                'coupon',
-                'clientInformation.modifiedBy',
-                'designing.modifiedBy',
-                'printing.modifiedBy',
-                'packaging.modifiedBy',
-                'dispatchDelivery.modifiedBy',
-                'payments.addedBy',
-                'payments.modifiedBy'
+                'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails',
+                'coupon', 'clientInformation.modifiedBy', 'designing.modifiedBy',
+                'printing.modifiedBy', 'packaging.modifiedBy', 'dispatchDelivery.modifiedBy',
+                'payments.addedBy', 'payments.modifiedBy'
             ])
             ->when(isset($filters['stage']), function (Builder $query) use ($filters, $isSuperAdmin, $isAdmin, $user) {
                 $stage = $filters['stage'];
@@ -66,367 +57,438 @@ class OrderService
                     default => null
                 };
 
-                // Critical: Always filter by stage existence to fix pagination bugs for everyone.
+                $stageTable = match ($stage) {
+                    'client-information' => 'order_client_information',
+                    'designing' => 'order_designing',
+                    'printing' => 'order_printing',
+                    'packaging' => 'order_packaging',
+                    'delivery' => 'order_dispatch_delivery',
+                    default => null
+                };
+
+                if ($stageTable) {
+                    $query->leftJoin($stageTable, 'orders.id', '=', $stageTable . '.order_id')
+                          ->select('orders.*')
+                          ->orderByRaw("CASE 
+                                WHEN {$stageTable}.status = 'Pending' OR {$stageTable}.status IS NULL THEN 1 
+                                WHEN {$stageTable}.status = 'Process' THEN 2 
+                                ELSE 3 END");
+                }
+
                 if ($stageRelation) {
-                    $query->whereHas($stageRelation, function ($sub) use ($filters, $stage) {
-                        // Capture the date from any possible key name
-                        $assignedDate = data_get($filters, 'computed_assigned_date')
-                            ?: data_get($filters, 'assigned_date')
-                            ?: data_get($filters, 'date');
-
-                        if ($assignedDate) {
-                            $time = strtotime($assignedDate);
-                            // Try every possible formatting of the date
-                            $vals = [
-                                date('d-m-Y', $time),
-                                date('Y-m-d', $time),
-                                date('d/m/Y', $time),
-                                date('m-d-Y', $time)
-                            ];
-
-                            $col = match ($stage) {
-                                'designing' => 'work_assign',
-                                'printing' => 'printing_status',
-                                'packaging' => 'packaging_logistics',
-                                'delivery' => 'dispatch_mode',
-                                default => null
-                            };
-
-                            if ($col) {
-                                $sub->where(function ($q) use ($col, $vals) {
-                                    foreach ($vals as $v) {
-                                        $q->orWhere($col, 'LIKE', "%{$v}%");
-                                    }
-                                });
-                            }
-                        }
-
-                        // Printing Days Status Filter (Delayed / On Time)
-                        $printingDays = data_get($filters, 'printing_days_status');
-                        if ($stage === 'printing' && $printingDays && $printingDays !== 'all') {
-                            if ($printingDays === 'delayed') {
-                                $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.confirmed_date')), '%d-%m-%Y'), CURDATE()) < 0");
+                    $query->where(function($q) use ($stageRelation, $filters, $stage) {
+                        // 1. Existing records in the stage
+                        $q->whereHas($stageRelation, function ($sub) use ($filters, $stage) {
+                            // Status Filter (Multi-select)
+                            $statusValue = data_get($filters, 'computed_stage_status') ?: (data_get($filters, 'status') ?: data_get($filters, 'resolved_status'));
+                            $statusValues = array_filter(is_array($statusValue) ? $statusValue : ($statusValue ? [$statusValue] : []));
+                            
+                            if (!empty($statusValues) && !in_array('all', $statusValues)) {
+                                $sub->whereIn('status', $statusValues);
                             } else {
-                                $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.confirmed_date')), '%d-%m-%Y'), CURDATE()) >= 0");
+                                // Default: Exclude Completed if no specific filter is selected
+                                $sub->where('status', '!=', 'Completed');
                             }
-                        }
 
-                        // Packaging Start/End Time Filters
-                        // Packaging Start/End Time Filters (Hyper-Robust)
-                        // Packaging Start/End Time Filters (Hybrid Format Match)
-                        if ($stage === 'packaging') {
-                            $startTime = data_get($filters, 'start_time');
-                            if ($startTime) {
-                                $time = strtotime($startTime);
-                                $sub->where(function ($q) use ($startTime, $time) {
-                                    $q->orWhere('packaging_logistics', 'LIKE', '%' . date('H:i', $time) . '%')
-                                        ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i A', $time) . '%')
-                                        ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i a', $time) . '%')
-                                        ->orWhere('packaging_logistics', 'LIKE', '%' . preg_replace('/[^0-9]/', '%', $startTime) . '%');
-                                });
+                            // Date Filter (Stage-specific)
+                            $assignedDate = data_get($filters, 'computed_assigned_date') ?: data_get($filters, 'assigned_date') ?: data_get($filters, 'date');
+                            if ($assignedDate) {
+                                if ($stage === 'designing') {
+                                    $sub->where('work_assign->assigned_date', $assignedDate);
+                                } elseif ($stage === 'printing') {
+                                    $sub->where(function($q) use ($assignedDate) {
+                                        $q->where('printing_status->confirmed_date', $assignedDate)
+                                          ->orWhere('printing_status->assigned_date', $assignedDate);
+                                    });
+                                } elseif ($stage === 'packaging') {
+                                    $sub->where('packaging_logistics->date', $assignedDate);
+                                } elseif ($stage === 'delivery') {
+                                    $sub->where('dispatch_mode->date', $assignedDate);
+                                } else {
+                                    $sub->whereDate('updated_at', $assignedDate);
+                                }
                             }
-                            $endTime = data_get($filters, 'end_time');
-                            if ($endTime) {
-                                $time = strtotime($endTime);
-                                $sub->where(function ($q) use ($endTime, $time) {
-                                    $q->orWhere('packaging_logistics', 'LIKE', '%' . date('H:i', $time) . '%')
-                                        ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i A', $time) . '%')
-                                        ->orWhere('packaging_logistics', 'LIKE', '%' . date('h:i a', $time) . '%')
-                                        ->orWhere('packaging_logistics', 'LIKE', '%' . preg_replace('/[^0-9]/', '%', $endTime) . '%');
-                                });
+                        });
+
+                        // 2. Client Info Special: Include "New Orders"
+                        if ($stage === 'client-information') {
+                            $statusValue = data_get($filters, 'computed_stage_status') ?: (data_get($filters, 'resolved_status') ?: data_get($filters, 'status'));
+                            $statusValues = array_filter(is_array($statusValue) ? $statusValue : ($statusValue ? [$statusValue] : []));
+                            
+                            $includeNew = empty($statusValues) || in_array('all', $statusValues) || 
+                                         in_array('Pending', $statusValues) || in_array('New Order', $statusValues);
+                            
+                            if ($includeNew) {
+                                $q->orWhereDoesntHave($stageRelation);
                             }
                         }
                     });
                 }
-                // If NOT Super Admin or Admin, further restrict to assigned records.
+
+                // Restriction for Staff
                 if (!$isSuperAdmin && !$isAdmin) {
                     $userId = $user->id;
-
-                    $query->where(function ($q) use ($userId, $stage, $stageRelation) {
+                    $query->where(function ($q) use ($userId, $stageRelation) {
                         $q->where('added_by', $userId);
-
-                        // Check the new common assignment column
-                        $q->orWhereHas($stageRelation, fn($sub) => $sub->whereJsonContains('assigned_user_ids', (int) $userId));
+                        if ($stageRelation) {
+                            $q->orWhereHas($stageRelation, fn($sub) => $sub->whereJsonContains('assigned_user_ids', (int) $userId));
+                        }
                     });
                 }
             })
-            ->when(data_get($filters, 'resolved_status') ?: data_get($filters, 'status'), function (Builder $query, $value) use ($filters) {
-                if ($value !== 'all') {
-                    $query->where(function ($q) use ($value, $filters) {
-                        // Map to stage statuses based on Model's getResolvedStatusAttribute logic
-                        $v = strtolower($value);
-                        $stage = data_get($filters, 'stage');
-
-                        // Stage-aware status check for Management page
-                        if ($stage && in_array($v, ['pending', 'process', 'completed'])) {
-                            $relationMapping = [
-                                'client-information' => 'clientInformation',
-                                'designing' => 'designing',
-                                'printing' => 'printing',
-                                'packaging' => 'packaging',
-                                'delivery' => 'dispatchDelivery'
-                            ];
-                            $relation = $relationMapping[$stage] ?? null;
-                            if ($relation) {
-                                $q->orWhereHas($relation, fn($sub) => $sub->where('status', 'like', "%{$value}%"));
-                                return;
-                            }
-                        }
-
-                        // DELIVERED: dispatchDelivery->status === 'Completed'
-                        if ($v === 'delivered') {
-                            $q->orWhereHas('dispatchDelivery', fn($sq) => $sq->where('status', 'Completed'));
-                        }
-                        // OUT FOR DELIVERY: dispatchDelivery->status === 'Process'
-                        elseif ($v === 'out for delivery') {
-                            $q->orWhereHas('dispatchDelivery', fn($sq) => $sq->where('status', 'Process'));
-                        }
-                        // PACKED: packaging->status === 'Completed' AND dispatch doesn't supersede (Completed/Process)
-                        elseif ($v === 'packed') {
-                            $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Completed'))
-                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
-                        }
-                        // PACKING IN PROGRESS: packaging->status === 'Process' AND dispatch doesn't supersede
-                        elseif ($v === 'packing in progress') {
-                            $q->orWhereHas('packaging', fn($sq) => $sq->where('status', 'Process'))
-                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
-                        }
-                        // PRINTED: printing->status === 'Completed' AND packaging/dispatch doesn't supersede
-                        elseif ($v === 'printed') {
-                            $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Completed'))
-                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
-                        }
-                        // PRINTING IN PROGRESS: printing->status === 'Process'
-                        elseif ($v === 'printing in progress') {
-                            $q->orWhereHas('printing', fn($sq) => $sq->where('status', 'Process'))
-                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
-                        }
-                        // DESIGNED: designing->status === 'Completed'
-                        elseif ($v === 'designed') {
-                            $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Completed'))
-                                ->whereDoesntHave('printing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
-                        }
-                        // DESIGNING IN PROGRESS: designing->status === 'Process'
-                        elseif ($v === 'designing in progress') {
-                            $q->orWhereHas('designing', fn($sq) => $sq->where('status', 'Process'))
-                                ->whereDoesntHave('printing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
-                        }
-                        // CONFIRMED
-                        elseif ($v === 'confirmed') {
-                            $q->orWhereHas('clientInformation', fn($sq) => $sq->where('status', 'Completed'))
-                                ->whereDoesntHave('designing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('printing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
-                        }
-                        // NEW ORDER
-                        elseif ($v === 'new order') {
-                            $q->orWhere(function ($sub) {
-                                $sub->where(function ($sq) {
-                                    $sq->whereDoesntHave('clientInformation')
-                                        ->orWhereHas('clientInformation', fn($ssq) => $ssq->where('status', '!=', 'Completed'));
-                                })
-                                ->whereDoesntHave('designing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('printing', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('packaging', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']))
-                                ->whereDoesntHave('dispatchDelivery', fn($sq) => $sq->whereIn('status', ['Completed', 'Process']));
-                            });
+            ->when(!isset($filters['stage']), function (Builder $query) use ($filters) {
+                $statusValue = data_get($filters, 'resolved_status') ?: data_get($filters, 'status');
+                if ($statusValue && $statusValue !== 'all') {
+                    $statusLower = strtolower($statusValue);
+                    
+                    match ($statusLower) {
+                        'delivered' => $query->whereHas('dispatchDelivery', fn($q) => $q->where('status', 'Completed')),
+                        'out for delivery' => $query->whereHas('dispatchDelivery', fn($q) => $q->where('status', 'Process')),
+                        
+                        'packed' => $query->whereHas('packaging', fn($q) => $q->where('status', 'Completed'))
+                                          ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process'])),
+                        
+                        'packing in progress' => $query->whereHas('packaging', fn($q) => $q->where('status', 'Process'))
+                                                       ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process'])),
+                        
+                        'printed' => $query->whereHas('printing', fn($q) => $q->where('status', 'Completed'))
+                                           ->whereDoesntHave('packaging', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                           ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process'])),
+                        
+                        'printing in progress' => $query->whereHas('printing', fn($q) => $q->where('status', 'Process'))
+                                                        ->whereDoesntHave('packaging', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                                        ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process'])),
+                                                        
+                        'designed' => $query->whereHas('designing', fn($q) => $q->where('status', 'Completed'))
+                                            ->whereDoesntHave('printing', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                            ->whereDoesntHave('packaging', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                            ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process'])),
+                                            
+                        'designing in progress' => $query->whereHas('designing', fn($q) => $q->where('status', 'Process'))
+                                                         ->whereDoesntHave('printing', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                                         ->whereDoesntHave('packaging', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                                         ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process'])),
+                                                         
+                        'confirmed' => $query->whereHas('clientInformation', fn($q) => $q->where('status', 'Completed'))
+                                             ->whereDoesntHave('designing', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                             ->whereDoesntHave('printing', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                             ->whereDoesntHave('packaging', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                                             ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process'])),
+                                             
+                        'new order' => $query->where(function($q) {
+                            $q->where(function($sub) {
+                                $sub->whereDoesntHave('clientInformation')
+                                    ->orWhereHas('clientInformation', fn($ss) => $ss->where('status', '!=', 'Completed'));
+                            })
+                            ->whereDoesntHave('designing', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                            ->whereDoesntHave('printing', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                            ->whereDoesntHave('packaging', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
+                            ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process']));
+                        }),
+                        default => $query->where('status', $statusValue)
+                    };
+                }
+            })
+            ->when(data_get($filters, 'payment_status'), function (Builder $query, $value) {
+                if ($value !== 'all') $query->where('payment_status', $value);
+            })
+            ->when(data_get($filters, 'branch') ?: data_get($filters, 'client_information_order_details_order_placed_in'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                if ($isNa) {
+                    $query->whereHas('clientInformation', fn($sub) => $sub->whereNull('order_details->order_placed_in')->orWhere('order_details->order_placed_in', ''));
+                } elseif ($value !== 'All Branches' && $value !== 'all') {
+                    $query->whereHas('clientInformation', fn($sub) => $sub->where('order_details->order_placed_in', $value));
+                }
+            })
+            ->when(data_get($filters, 'customer_details_phone') ?: data_get($filters, 'customer_details.phone'), function (Builder $query, $value) {
+                $query->whereHas('customerDetails', fn($sub) => $sub->where('phone', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'search'), function (Builder $query, $value) {
+                $query->where(function ($q) use ($value) {
+                    $q->where('order_number', 'like', "%{$value}%")
+                        ->orWhereHas('customerDetails', fn($sub) => $sub->where('name', 'like', "%{$value}%")->orWhere('phone', 'like', "%{$value}%"));
+                });
+            })
+            ->when(data_get($filters, 'start_date'), fn($q, $v) => $q->whereDate('order_date', '>=', $v))
+            ->when(data_get($filters, 'end_date'), fn($q, $v) => $q->whereDate('order_date', '<=', $v))
+            ->when(data_get($filters, 'order_number'), fn($q, $v) => $q->where('order_number', 'like', "%{$v}%"))
+            ->when(data_get($filters, 'customer_details_name') ?: data_get($filters, 'customer_details.name'), function (Builder $query, $value) {
+                $query->whereHas('customerDetails', fn($q) => $q->where('name', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'order_date'), fn($q, $v) => $q->whereDate('order_date', $v))
+            ->when(data_get($filters, 'items_count'), fn($q, $v) => $q->where('items_count', $v))
+            ->when(data_get($filters, 'client_information_card_specs_quantity') ?: data_get($filters, 'client_information.card_specs.quantity'), function (Builder $query, $value) {
+                $query->whereHas('clientInformation', fn($sub) => $sub->where('card_specs->quantity', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'client_information_card_specs_type') ?: data_get($filters, 'client_information.card_specs.type'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                if ($isNa) {
+                    $query->whereHas('clientInformation', fn($sub) => $sub->whereNull('card_specs->type')->orWhere('card_specs->type', ''));
+                } elseif ($value !== 'all' && $value !== 'All Types') {
+                    $query->whereHas('clientInformation', function($sub) use ($value) {
+                        $sub->where(function($q) use ($value) {
+                            $q->where('card_specs->type', $value)
+                              ->orWhere('card_specs->type', 'like', "{$value},%")
+                              ->orWhere('card_specs->type', 'like', "%,{$value}")
+                              ->orWhere('card_specs->type', 'like', "%,{$value},%");
+                        });
+                    });
+                }
+            })
+            ->when(data_get($filters, 'client_information_card_specs_card_options') ?: data_get($filters, 'client_information.card_specs.card_options'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('clientInformation', fn($sub) => $isNa ? $sub->whereNull('card_specs->card_options')->orWhere('card_specs->card_options', '') : $sub->where('card_specs->card_options', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'designing_work_assign_deadline_hours'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('work_assign->deadline_hours')->orWhere('work_assign->deadline_hours', '') : $sub->where('work_assign->deadline_hours', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'designing_work_assign_assigned_to') ?: data_get($filters, 'designing.work_assign.assigned_to'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('work_assign->assigned_to')->orWhere('work_assign->assigned_to', '') : $sub->where('work_assign->assigned_to', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'designing_work_assign_assigned_date') ?: data_get($filters, 'designing.work_assign.assigned_date'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('work_assign->assigned_date')->orWhere('work_assign->assigned_date', '') : $sub->where('work_assign->assigned_date', $value));
+            })
+            ->when(data_get($filters, 'designing_work_assign_completed_date') ?: data_get($filters, 'designing.work_assign.completed_date'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('work_assign->completed_date')->orWhere('work_assign->completed_date', '') : $sub->where('work_assign->completed_date', $value));
+            })
+            ->when(data_get($filters, 'client_information_order_details_order_taken_by') ?: data_get($filters, 'client_information.order_details.order_taken_by'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('clientInformation', fn($sub) => $isNa ? $sub->whereNull('order_details->order_taken_by')->orWhere('order_details->order_taken_by', '') : $sub->where('order_details->order_taken_by', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'printing_printing_status_assigned_to') ?: data_get($filters, 'printing.printing_status.assigned_to'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->where(function($q) use ($value, $isNa) {
+                    if ($isNa) {
+                        $q->whereHas('printing', fn($sub) => $sub->whereNull('printing_status->assigned_to')->orWhere('printing_status->assigned_to', ''))
+                          ->orWhereHas('designing', fn($sub) => $sub->whereNull('work_assign->assigned_to')->orWhere('work_assign->assigned_to', ''));
+                    } else {
+                        $q->whereHas('printing', fn($sub) => $sub->where('printing_status->assigned_to', 'like', "%{$value}%"))
+                          ->orWhereHas('designing', fn($sub) => $sub->where('work_assign->assigned_to', 'like', "%{$value}%"));
+                    }
+                });
+            })
+            ->when(data_get($filters, 'printing_printing_status_assigned_date') ?: data_get($filters, 'printing.printing_status.assigned_date'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->where(function($q) use ($value, $isNa) {
+                    $q->whereHas('printing', fn($sub) => $sub->where(function($subQ) use ($value, $isNa) {
+                        if ($isNa) {
+                            $subQ->whereNull('printing_status->confirmed_date')->orWhere('printing_status->confirmed_date', '')
+                                 ->orWhereNull('printing_status->assigned_date')->orWhere('printing_status->assigned_date', '');
                         } else {
-                            // Main table status fallback for any other status
-                            $q->orWhere('status', '=', $value);
+                            $subQ->where('printing_status->confirmed_date', $value)->orWhere('printing_status->assigned_date', $value);
                         }
-
+                    }));
+                });
+            })
+            ->when(data_get($filters, 'computed_printing_days_status'), function (Builder $query, $value) {
+                $query->whereHas('printing', function ($q) use ($value) {
+                    $operator = $value === 'On Time' ? '<=' : '>';
+                    $q->whereRaw("DATEDIFF(CURDATE(), COALESCE(JSON_UNQUOTE(JSON_EXTRACT(printing_status, '$.confirmed_date')), JSON_UNQUOTE(JSON_EXTRACT(printing_status, '$.assigned_date')))) {$operator} 7");
+                });
+            })
+            ->when(data_get($filters, 'computed_sent_to_print_date'), function (Builder $query, $value) {
+                $query->whereHas('printing', function ($q) use ($value) {
+                    $q->where(function ($sub) use ($value) {
+                        $sub->where('printing_status->customize_sent_to_print_date', $value)
+                            ->orWhere('printing_status->semi_customize_sent_to_print_date', $value)
+                            ->orWhere('printing_status->ready_made_sent_to_print_date', $value)
+                            ->orWhere('printing_status->digital_local_sent_to_print_date', $value);
+                    });
+                });
+            })
+            ->when(data_get($filters, 'packaging_packaging_logistics_crafted_by') ?: data_get($filters, 'packaging.packaging_logistics.crafted_by'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                if ($isNa) {
+                    $query->where(function($q) {
+                        $q->whereDoesntHave('packaging')
+                          ->orWhereHas('packaging', function($sub) {
+                              $sub->where(function($subQ) {
+                                  $subQ->whereNull('packaging_logistics->crafted_by')
+                                       ->orWhere('packaging_logistics->crafted_by', '');
+                              })->where(function($subQ) {
+                                  $subQ->whereNull('packaging_logistics->assigned_by_multiple')
+                                       ->orWhere('packaging_logistics->assigned_by_multiple', '[]')
+                                       ->orWhere('packaging_logistics->assigned_by_multiple', '""');
+                              })->where(function($subQ) {
+                                  $subQ->whereNull('packaging_logistics->crafted_by_multiple')
+                                       ->orWhere('packaging_logistics->crafted_by_multiple', '[]')
+                                       ->orWhere('packaging_logistics->crafted_by_multiple', '""');
+                              });
+                          });
+                    });
+                } else {
+                    $query->whereHas('packaging', function($sub) use ($value) {
+                        $sub->where('packaging_logistics->crafted_by', 'like', "%{$value}%")
+                            ->orWhere('packaging_logistics->assigned_by_multiple', 'like', "%{$value}%")
+                            ->orWhere('packaging_logistics->crafted_by_multiple', 'like', "%{$value}%");
                     });
                 }
             })
-
-            ->when(data_get($filters, 'order_date'), function (Builder $query, $value) {
-                $query->whereDate('order_date', $value);
+            ->when(data_get($filters, 'packaging_packaging_logistics_date') ?: data_get($filters, 'packaging.packaging_logistics.date'), function (Builder $query, $value) {
+                $query->whereHas('packaging', fn($sub) => $sub->where('packaging_logistics->date', $value));
+            })
+            ->when(data_get($filters, 'dispatch_delivery_dispatch_mode_signature_name') ?: data_get($filters, 'dispatch_delivery.dispatch_mode.signature_name'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('dispatchDelivery', fn($sub) => $isNa ? $sub->whereNull('dispatch_mode->signature_name')->orWhere('dispatch_mode->signature_name', '') : $sub->where('dispatch_mode->signature_name', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'dispatch_delivery_dispatch_mode_packed_by') ?: data_get($filters, 'dispatch_delivery.dispatch_mode.packed_by'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('dispatchDelivery', fn($sub) => $isNa ? $sub->whereNull('dispatch_mode->packed_by')->orWhere('dispatch_mode->packed_by', '') : $sub->where('dispatch_mode->packed_by', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'dispatch_delivery_dispatch_mode_date') ?: data_get($filters, 'dispatch_delivery.dispatch_mode.date'), function (Builder $query, $value) {
+                $query->whereHas('dispatchDelivery', fn($sub) => $sub->where('dispatch_mode->date', $value));
+            })
+            ->when(data_get($filters, 'designing_design_print_design_outputs'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('design_print->design_outputs')->orWhere('design_print->design_outputs', '') : $sub->where('design_print->design_outputs', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'printing_printing_status_company_name'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('printing', fn($sub) => $isNa ? $sub->whereNull('printing_status->company_name')->orWhere('printing_status->company_name', '') : $sub->where('printing_status->company_name', 'like', "%{$value}%"));
             })
             ->when(data_get($filters, 'delivery_date'), function (Builder $query, $value) {
                 $query->whereDate('delivery_date', $value);
             })
-            ->when(data_get($filters, 'items_count'), function (Builder $query, $value) {
-                $query->where('items_count', $value);
+            ->when(data_get($filters, 'packaging_packaging_logistics_qty_cards'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('packaging', fn($sub) => $isNa ? $sub->whereNull('packaging_logistics->qty_cards')->orWhere('packaging_logistics->qty_cards', '') : $sub->where('packaging_logistics->qty_cards', 'like', "%{$value}%"));
             })
-            ->when(data_get($filters, 'order_number'), function (Builder $query, $value) {
-                $query->where('order_number', 'like', "%{$value}%");
+            ->when(data_get($filters, 'dispatch_delivery_dispatch_mode_gift_type'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('dispatchDelivery', fn($sub) => $isNa ? $sub->whereNull('dispatch_mode->gift_type')->orWhere('dispatch_mode->gift_type', '') : $sub->where('dispatch_mode->gift_type', 'like', "%{$value}%"));
             })
-            ->when(data_get($filters, 'customer_details_name') ?: data_get($filters, 'customer_details.name'), function (Builder $query, $value) {
-                $query->whereHas('customerDetails', function (Builder $sub) use ($value) {
-                    $sub->where('name', 'like', "%{$value}%");
+            ->when(data_get($filters, 'dispatch_delivery_delivery_location_place_name'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->where(function($q) use ($value, $isNa) {
+                    if ($isNa) {
+                        $q->whereHas('dispatchDelivery', fn($sub) => $sub->whereNull('delivery_location->place_name')->orWhere('delivery_location->place_name', ''))
+                          ->orWhereHas('clientInformation', fn($sub) => $sub->whereNull('client_info->address')->orWhere('client_info->address', ''));
+                    } else {
+                        $q->whereHas('dispatchDelivery', fn($sub) => $sub->where('delivery_location->place_name', 'like', "%{$value}%"))
+                          ->orWhereHas('clientInformation', fn($sub) => $sub->where('client_info->address', 'like', "%{$value}%"));
+                    }
                 });
             })
-            ->when(data_get($filters, 'customer_details_phone') ?: data_get($filters, 'customer_details.phone'), function (Builder $query, $value) {
-                $query->whereHas('customerDetails', function (Builder $sub) use ($value) {
-                    $sub->where('phone', 'like', "%{$value}%");
-                });
+            ->when(data_get($filters, 'dispatch_delivery_dispatch_mode_modes'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('dispatchDelivery', fn($sub) => $isNa ? $sub->whereNull('dispatch_mode->modes')->orWhere('dispatch_mode->modes', '') : $sub->where('dispatch_mode->modes', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'computed_assigned_name'), function (Builder $query, $value) use ($filters) {
+                $stage = $filters['stage'] ?? null;
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                
+                if ($stage === 'client-information') {
+                    $query->whereHas('clientInformation', fn($sub) => $isNa ? $sub->whereNull('order_details->order_taken_by')->orWhere('order_details->order_taken_by', '') : $sub->where('order_details->order_taken_by', 'like', "%{$value}%"));
+                } elseif ($stage === 'designing') {
+                    $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('work_assign->assigned_to')->orWhere('work_assign->assigned_to', '') : $sub->where('work_assign->assigned_to', 'like', "%{$value}%"));
+                } elseif ($stage === 'printing') {
+                    $query->where(function($q) use ($value, $isNa) {
+                        if ($isNa) {
+                            $q->whereHas('printing', fn($sub) => $sub->whereNull('printing_status->assigned_to')->orWhere('printing_status->assigned_to', ''))
+                              ->orWhereHas('designing', fn($sub) => $sub->whereNull('work_assign->assigned_to')->orWhere('work_assign->assigned_to', ''));
+                        } else {
+                            $q->whereHas('printing', fn($sub) => $sub->where('printing_status->assigned_to', 'like', "%{$value}%"))
+                              ->orWhereHas('designing', fn($sub) => $sub->where('work_assign->assigned_to', 'like', "%{$value}%"));
+                        }
+                    });
+                } elseif ($stage === 'packaging') {
+                    if ($isNa) {
+                        $query->where(function($q) {
+                            $q->whereDoesntHave('packaging')
+                              ->orWhereHas('packaging', function($sub) {
+                                  $sub->where(function($subQ) {
+                                      $subQ->whereNull('packaging_logistics->crafted_by')
+                                           ->orWhere('packaging_logistics->crafted_by', '');
+                                  })->where(function($subQ) {
+                                      $subQ->whereNull('packaging_logistics->assigned_by_multiple')
+                                           ->orWhere('packaging_logistics->assigned_by_multiple', '[]')
+                                           ->orWhere('packaging_logistics->assigned_by_multiple', '""');
+                                  })->where(function($subQ) {
+                                      $subQ->whereNull('packaging_logistics->crafted_by_multiple')
+                                           ->orWhere('packaging_logistics->crafted_by_multiple', '[]')
+                                           ->orWhere('packaging_logistics->crafted_by_multiple', '""');
+                                  });
+                              });
+                        });
+                    } else {
+                        $query->whereHas('packaging', function($sub) use ($value) {
+                            $sub->where('packaging_logistics->crafted_by', 'like', "%{$value}%")
+                                ->orWhere('packaging_logistics->assigned_by_multiple', 'like', "%{$value}%")
+                                ->orWhere('packaging_logistics->crafted_by_multiple', 'like', "%{$value}%");
+                        });
+                    }
+                } elseif ($stage === 'delivery') {
+                    $query->whereHas('dispatchDelivery', fn($sub) => $isNa ? $sub->whereNull('dispatch_mode->packed_by')->orWhere('dispatch_mode->packed_by', '') : $sub->where('dispatch_mode->packed_by', 'like', "%{$value}%"));
+                }
+            })
+            ->when(data_get($filters, 'computed_completed_by'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('work_assign->completed_by')->orWhere('work_assign->completed_by', '') : $sub->where('work_assign->completed_by', 'like', "%{$value}%"));
+            })
+            ->when(data_get($filters, 'computed_process_status'), function (Builder $query, $value) {
+                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+                if ($isNa) {
+                    $query->whereHas('designing', function($sub) {
+                        $sub->where(function($q) {
+                            $q->whereNull('work_assign->content_received')
+                              ->orWhere('work_assign->content_received', false)
+                              ->orWhere('work_assign->content_received', '0');
+                        })->where(function($q) {
+                            $q->whereNull('work_assign->content_not_received')
+                              ->orWhere('work_assign->content_not_received', false)
+                              ->orWhere('work_assign->content_not_received', '0');
+                        });
+                    });
+                } elseif ($value === 'Content Received') {
+                    $query->whereHas('designing', fn($sub) => $sub->where('work_assign->content_received', true)->orWhere('work_assign->content_received', '1'));
+                } elseif ($value === 'Content Not Received') {
+                    $query->whereHas('designing', fn($sub) => $sub->where('work_assign->content_not_received', true)->orWhere('work_assign->content_not_received', '1'));
+                }
             })
             ->when(data_get($filters, 'created_at'), function (Builder $query, $value) {
                 $query->whereDate('created_at', $value);
             })
-            ->when(data_get($filters, 'computed_modified_at') ?: data_get($filters, 'updated_at'), function (Builder $query, $value) {
-                $query->where(function ($q) use ($value) {
-                    // Check main table
-                    $q->whereDate('updated_at', $value)
-                        // Check all stage tables
-                        ->orWhereHas('clientInformation', fn($sub) => $sub->whereDate('updated_at', $value))
-                        ->orWhereHas('designing', fn($sub) => $sub->whereDate('updated_at', $value))
-                        ->orWhereHas('printing', fn($sub) => $sub->whereDate('updated_at', $value))
-                        ->orWhereHas('packaging', fn($sub) => $sub->whereDate('updated_at', $value))
-                        ->orWhereHas('dispatchDelivery', fn($sub) => $sub->whereDate('updated_at', $value));
-                });
+            ->when(data_get($filters, 'computed_modified_at'), function (Builder $query, $value) {
+                $query->whereDate('updated_at', $value);
             })
-            // Client Information Stage Filters
-            // Stage-Aware Assignment Filters (Assigned Name)
-            ->when(data_get($filters, 'computed_assigned_name'), function (Builder $query, $value) {
-                $query->where(function ($q) use ($value) {
-                    $q->whereHas('clientInformation', function ($sub) use ($value) {
-                        $sub->where('order_details->order_taken_by', 'like', "%{$value}%");
-                    })
-                        ->orWhereHas('designing', function ($sub) use ($value) {
-                            $sub->where('work_assign->assigned_to', 'like', "%{$value}%");
-                        })
-                        ->orWhereHas('printing', function ($sub) use ($value) {
-                            $sub->where('printing_status->assigned_to', 'like', "%{$value}%");
-                        })
-                        ->orWhereHas('packaging', function ($sub) use ($value) {
-                            $sub->where('packaging_logistics->assigned_by_multiple', 'like', "%{$value}%")
-                                ->orWhere('packaging_logistics->crafted_by_multiple', 'like', "%{$value}%");
-                        })
-                        ->orWhereHas('dispatchDelivery', function ($sub) use ($value) {
-                            $sub->where('dispatch_mode->signature_name', 'like', "%{$value}%");
-                        });
-                });
+            ->when(data_get($filters, 'client_information_updated_at') ?: data_get($filters, 'client_information.updated_at'), function (Builder $query, $value) {
+                $query->whereHas('clientInformation', fn($sub) => $sub->whereDate('updated_at', $value));
             })
-            // Process Status (Designing)
-            ->when(data_get($filters, 'computed_process_status'), function (Builder $query, $value) {
-                if ($value === 'Content Received') {
-                    $query->whereHas('designing', fn($sub) => $sub->where('work_assign->content_received', true));
-                } elseif ($value === 'Content Not Received') {
-                    $query->whereHas('designing', fn($sub) => $sub->where('work_assign->content_received', false));
-                }
+            ->when(data_get($filters, 'designing_updated_at') ?: data_get($filters, 'designing.updated_at'), function (Builder $query, $value) {
+                $query->whereHas('designing', fn($sub) => $sub->whereDate('updated_at', $value));
             })
-            // Completed By (Designing)
-            ->when(data_get($filters, 'computed_completed_by'), function (Builder $query, $value) {
-                $query->whereHas('designing', fn($sub) => $sub->where('work_assign->completed_by', 'like', "%{$value}%"));
+            ->when(data_get($filters, 'printing_updated_at') ?: data_get($filters, 'printing.updated_at'), function (Builder $query, $value) {
+                $query->whereHas('printing', fn($sub) => $sub->whereDate('updated_at', $value));
             })
-            // Printing Days Status (Printing)
-            ->when(data_get($filters, 'computed_printing_days_status'), function (Builder $query, $value) {
-                // This logic mirrors the frontend date calculation roughly
-                if ($value === 'Delayed') {
-                    $query->whereHas('printing', function ($sub) {
-                        $sub->whereRaw('DATEDIFF(NOW(), json_unquote(json_extract(printing_status, "$.confirmed_date"))) > 7');
-                    });
-                } elseif ($value === 'On Time') {
-                    $query->whereHas('printing', function ($sub) {
-                        $sub->whereRaw('DATEDIFF(NOW(), json_unquote(json_extract(printing_status, "$.confirmed_date"))) <= 7');
-                    });
-                }
+            ->when(data_get($filters, 'packaging_updated_at') ?: data_get($filters, 'packaging.updated_at'), function (Builder $query, $value) {
+                $query->whereHas('packaging', fn($sub) => $sub->whereDate('updated_at', $value));
             })
-
-            ->when(data_get($filters, 'printing_days_status') && data_get($filters, 'printing_days_status') !== 'all', function (Builder $query) use ($filters) {
-                $status = data_get($filters, 'printing_days_status');
-                $query->whereHas('printing', function ($sub) use ($status) {
-                    if ($status === 'delayed') {
-                        $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.confirmed_date')), '%d-%m-%Y'), CURDATE()) < 0");
-                    } else {
-                        $sub->whereRaw("DATEDIFF(STR_TO_DATE(json_unquote(json_extract(printing_status, '$.confirmed_date')), '%d-%m-%Y'), CURDATE()) >= 0");
-                    }
-                });
+            ->when(data_get($filters, 'dispatch_delivery_updated_at') ?: data_get($filters, 'dispatch_delivery.updated_at'), function (Builder $query, $value) {
+                $query->whereHas('dispatchDelivery', fn($sub) => $sub->whereDate('updated_at', $value));
             })
-            ->when(data_get($filters, 'client_information.order_details.order_placed_in') ?: data_get($filters, 'client_information_order_details_order_placed_in'), function (Builder $query, $value) {
-                $query->whereHas('clientInformation', function (Builder $sub) use ($value) {
-                    $sub->where('order_details->order_placed_in', $value);
-                });
-            })
-            // Stage-Aware Status Filter (Strict to current stage if provided)
-            ->when(data_get($filters, 'computed_stage_status'), function (Builder $query, $value) use ($filters) {
-                $stage = data_get($filters, 'stage');
-
-                $query->where(function ($q) use ($value, $stage) {
-                    if ($stage) {
-                        $relationMapping = [
-                            'client-information' => 'clientInformation',
-                            'designing' => 'designing',
-                            'printing' => 'printing',
-                            'packaging' => 'packaging',
-                            'delivery' => 'dispatchDelivery'
-                        ];
-
-                        $relation = $relationMapping[$stage] ?? null;
-                        if ($relation) {
-                            $q->whereHas($relation, fn($sub) => $sub->where('status', 'like', "%{$value}%"));
-                            return;
-                        }
-                    }
-
-                    // Fallback for global search or unknown stage
-                    $q->whereHas('clientInformation', fn($sub) => $sub->where('status', 'like', "%{$value}%"))
-                        ->orWhereHas('designing', fn($sub) => $sub->where('status', 'like', "%{$value}%"))
-                        ->orWhereHas('printing', fn($sub) => $sub->where('status', 'like', "%{$value}%"))
-                        ->orWhereHas('packaging', fn($sub) => $sub->where('status', 'like', "%{$value}%"))
-                        ->orWhereHas('dispatchDelivery', fn($sub) => $sub->where('status', 'like', "%{$value}%"));
-                });
-            })
-            ->when(isset($filters['payment_status']) && $filters['payment_status'] !== '', function (Builder $query) use ($filters) {
-                $query->where('payment_status', $filters['payment_status']);
-            })
-            ->when(isset($filters['search']), function (Builder $query) use ($filters) {
-                $query->where(function ($q) use ($filters) {
-                    $q->where('order_number', 'like', "%{$filters['search']}%")
-                        ->orWhereHas('customerDetails', function (Builder $sub) use ($filters) {
-                            $sub->where('name', 'like', "%{$filters['search']}%")
-                                ->orWhere('email', 'like', "%{$filters['search']}%")
-                                ->orWhere('phone', 'like', "%{$filters['search']}%");
-                        });
-                });
-            })
-            ->when(data_get($filters, 'branch'), function (Builder $query, $value) {
-                if ($value !== 'All Branches') {
-                    $query->whereHas('clientInformation', function (Builder $sub) use ($value) {
-                        $sub->where('order_details->order_placed_in', $value);
-                    });
-                }
-            })
-            ->when(data_get($filters, 'start_date'), function (Builder $query, $value) {
-                $query->whereDate('order_date', '>=', $value);
-            })
-            ->when(data_get($filters, 'end_date'), function (Builder $query, $value) {
-                $query->whereDate('order_date', '<=', $value);
-            })
-            ->latest('created_at')
+            ->when(!isset($filters['stage']), fn($q) => $q->latest())
+            ->when(isset($filters['stage']), fn($q) => $q->orderBy('orders.created_at', 'desc'))
             ->paginate($perPage);
     }
 
     /**
-     * Get a single order by ID.
+     * Get a single order with its relations.
      */
     public function getOrder(int $id): Order
     {
         return Order::with([
-            'user',
-            'items.product',
-            'addedBy',
-            'modifiedBy',
-            'customerDetails',
-            'coupon',
-            'clientInformation.modifiedBy',
-            'designing.modifiedBy',
-            'printing.modifiedBy',
-            'packaging.modifiedBy',
-            'dispatchDelivery.modifiedBy',
-            'payments.addedBy',
-            'payments.modifiedBy'
-        ])
-            ->findOrFail($id);
+            'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails',
+            'coupon', 'clientInformation.modifiedBy', 'designing.modifiedBy',
+            'printing.modifiedBy', 'packaging.modifiedBy', 'dispatchDelivery.modifiedBy',
+            'payments.addedBy', 'payments.modifiedBy'
+        ])->findOrFail($id);
     }
+
+
 
     /**
      * Create a new order with items and customer details.

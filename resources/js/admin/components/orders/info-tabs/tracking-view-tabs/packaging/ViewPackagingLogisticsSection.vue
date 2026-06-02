@@ -157,7 +157,7 @@
 
       <div class="space-y-2">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
-          >Qty of Cards</label
+          >Packed Qty</label
         >
         <div
           class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"

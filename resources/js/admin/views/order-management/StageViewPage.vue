@@ -9,7 +9,18 @@
       </button>
     </div>
 
-    <PageHeader :title="`Order #${order?.order_number || ''}`" :subtitle="stageTitle" />
+    <PageHeader :title="`Order #${order?.order_number || ''}`">
+      <template #subtitle>
+        <div class="flex items-center gap-2 text-slate-500">
+          <span>{{ stageTitle }}</span>
+          <span v-if="customerName" class="h-1 w-1 rounded-full bg-slate-300"></span>
+          <div v-if="customerName" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200">
+            <UserIcon class="h-3 w-3" />
+            {{ customerName }}
+          </div>
+        </div>
+      </template>
+    </PageHeader>
 
     <div v-if="loading" class="flex items-center justify-center p-20">
       <Loader2 class="h-10 w-10 animate-spin text-primary" />
@@ -51,7 +62,7 @@ import WorkAssignSection from "../../components/orders/info-tabs/tracking-view-t
 import DesignPrintSection from "../../components/orders/info-tabs/tracking-view-tabs/designing/ViewDesignPrintSection.vue";
 import OrderPrintingSection from "../../components/orders/info-tabs/tracking-view-tabs/printing/ViewOrderPrintingSection.vue";
 import PackagingLogisticsSection from "../../components/orders/info-tabs/tracking-view-tabs/packaging/ViewPackagingLogisticsSection.vue";
-import PackagingStatusSection from "../../components/orders/info-tabs/tracking-view-tabs/packaging/ViewPackagingStatusSection.vue";
+
 import DeliveryLocationSection from "../../components/orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDeliveryLocationSection.vue";
 import DispatchModeSection from "../../components/orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDispatchModeSection.vue";
 import DispatchDetailsSection from "../../components/orders/info-tabs/tracking-view-tabs/dispatch-delivery/ViewDispatchDetailsSection.vue";
@@ -74,6 +85,10 @@ const stageTitle = computed(() => {
   }
 });
 
+const customerName = computed(() => {
+  return order.value?.client_information?.client_info?.name || order.value?.customer_details?.name || '';
+});
+
 const relevantSections = computed(() => {
   switch (stage.value) {
     case 'client-information':
@@ -93,8 +108,7 @@ const relevantSections = computed(() => {
       ];
     case 'packaging':
       return [
-        { id: 'logistics', label: 'Packaging & Logistics', icon: Box, component: PackagingLogisticsSection },
-        { id: 'status', label: 'Packaging Status', icon: Box, component: PackagingStatusSection }
+        { id: 'logistics', label: 'Packaging & Logistics', icon: Box, component: PackagingLogisticsSection }
       ];
     case 'delivery':
       return [

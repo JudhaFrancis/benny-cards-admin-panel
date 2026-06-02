@@ -154,7 +154,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="space-y-2">
           <label class="text-xs font-medium text-slate-700"
-            >Names <span class="text-red-500">*</span></label
+            >Names</label
           >
           <div class="relative group">
             <TypeIcon
@@ -168,7 +168,7 @@
 
         <div class="space-y-2">
           <label class="text-xs font-medium text-slate-700"
-            >Date <span class="text-red-500">*</span></label
+            >Date</label
           >
           <div class="relative group">
             <DatePicker :model-value="packagingLogistics.date" @update:model-value="(val) => updateSection('date', val)"
@@ -184,7 +184,7 @@
 
         <div class="space-y-2">
           <label class="text-xs font-medium text-slate-700"
-            >Qty of Cards <span class="text-red-500">*</span></label
+            >Packed Qty</label
           >
           <div class="relative group">
             <HashIcon

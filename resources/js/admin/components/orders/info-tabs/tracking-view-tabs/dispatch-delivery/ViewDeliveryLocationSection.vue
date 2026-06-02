@@ -139,7 +139,7 @@ const deliveryLocation = computed(
 );
 
 const packagingStatus = computed(
-  () => props.order.packaging?.packaging_status || {},
+  () => props.order.dispatch_delivery?.dispatch_mode || {},
 );
 
 const packagingLogistics = computed(

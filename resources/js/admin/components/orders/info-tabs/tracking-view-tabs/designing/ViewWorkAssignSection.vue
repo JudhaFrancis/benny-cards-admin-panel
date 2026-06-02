@@ -153,9 +153,23 @@
           class="flex items-center gap-3 p-3 rounded-xl bg-rose-50 border border-rose-100"
         >
           <CalendarIcon class="h-4 w-4 text-rose-500" />
-          <span class="text-sm font-bold text-rose-700">{{
-            formatDate(workAssign.deadline) || "N/A"
-          }}</span>
+          <span class="text-sm font-bold text-rose-700">
+            {{ formatDate(workAssign.deadline) || "N/A" }}
+          </span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+          >Deadline Hours</label
+        >
+        <div
+          class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
+        >
+          <ClockIcon class="h-4 w-4 text-slate-400" />
+          <span class="text-sm font-bold text-slate-900">
+            {{ workAssign.deadline_hours ? (workAssign.deadline_hours === 24 ? '11-24 Hours' : workAssign.deadline_hours + ' Hours') : 'N/A' }}
+          </span>
         </div>
       </div>
 
