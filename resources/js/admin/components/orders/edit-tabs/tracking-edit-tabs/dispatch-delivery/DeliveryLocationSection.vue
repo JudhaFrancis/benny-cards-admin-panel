@@ -167,6 +167,7 @@ const shopOptions = [
   { id: "Marthandam Shop", label: "Marthandam Shop", icon: MapPinIcon },
   { id: "TVL Shop", label: "TVL Shop", icon: ShoppingBagIcon },
   { id: "Chennai Shop", label: "Chennai Shop", icon: Building2Icon },
+  { id: "Madurai Shop", label: "Madurai Shop", icon: StoreIcon },
 ];
 
 const autoFill = () => {

@@ -179,7 +179,7 @@ const staffOptions = ref([]);
 const fetchStaff = async () => {
   try {
     const response = await axios.get("/api/v1/users", {
-      params: { per_page: 100 }, // No role_id filter here, we'll filter in JS
+      params: { per_page: 1000 }, // No role_id filter here, we'll filter in JS
     });
     if (response.data.success) {
       staffOptions.value = response.data.data.data

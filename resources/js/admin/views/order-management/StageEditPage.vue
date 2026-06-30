@@ -180,7 +180,7 @@ const fetchOrder = async () => {
 
 const fetchStaff = async () => {
   try {
-    const response = await axios.get("/api/v1/users", { params: { per_page: 100 } });
+    const response = await axios.get("/api/v1/users", { params: { per_page: 1000 } });
     if (response.data.success) {
       staffOptions.value = response.data.data.data
         .filter(u => u.role?.name?.toLowerCase() !== 'user')
