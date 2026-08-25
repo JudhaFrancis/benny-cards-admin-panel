@@ -100,8 +100,17 @@ const subOptions = {
 
 const currentSubOptions = computed(() => subOptions[localFilters.filter_type] || []);
 
-const todayDate = new Date().toISOString().split("T")[0];
-const todayMonth = new Date().toISOString().slice(0, 7);
+const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const todayDate = formatDate(new Date());
+const todayMonth = todayDate.slice(0, 7);
 const yearOptions = computed(() => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -130,8 +139,8 @@ const updateDateRange = () => {
 
     if (option === 'custom') {
         // Default to today when custom is selected
-        localFilters.from_date = today.toISOString().split('T')[0];
-        localFilters.to_date = today.toISOString().split('T')[0];
+        localFilters.from_date = formatDate(today);
+        localFilters.to_date = formatDate(today);
         return emitChange();
     }
 
@@ -183,8 +192,8 @@ const updateDateRange = () => {
         }
     }
 
-    localFilters.from_date = start.toISOString().split('T')[0];
-    localFilters.to_date = end.toISOString().split('T')[0];
+    localFilters.from_date = formatDate(start);
+    localFilters.to_date = formatDate(end);
     emitChange();
 };
 
@@ -203,8 +212,8 @@ const handleCustomWeek = (val) => {
     const end = new Date(date);
     end.setDate(date.getDate() + (6 - day));
     
-    localFilters.from_date = start.toISOString().split('T')[0];
-    localFilters.to_date = end.toISOString().split('T')[0];
+    localFilters.from_date = formatDate(start);
+    localFilters.to_date = formatDate(end);
     emitChange();
 };
 
@@ -215,8 +224,8 @@ const handleCustomMonth = (e) => {
     const start = new Date(year, parseInt(month) - 1, 1);
     const end = new Date(year, parseInt(month), 0);
     
-    localFilters.from_date = start.toISOString().split('T')[0];
-    localFilters.to_date = end.toISOString().split('T')[0];
+    localFilters.from_date = formatDate(start);
+    localFilters.to_date = formatDate(end);
     emitChange();
 };
 
@@ -225,8 +234,8 @@ const handleCustomYear = (val) => {
     const start = new Date(val, 0, 1);
     const end = new Date(val, 11, 31);
     
-    localFilters.from_date = start.toISOString().split('T')[0];
-    localFilters.to_date = end.toISOString().split('T')[0];
+    localFilters.from_date = formatDate(start);
+    localFilters.to_date = formatDate(end);
     emitChange();
 };
 

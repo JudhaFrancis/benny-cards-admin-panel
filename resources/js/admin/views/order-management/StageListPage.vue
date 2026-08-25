@@ -78,11 +78,20 @@ const loading = ref(true);
 const page = ref(1);
 const meta = ref({ total: 0, from: 1 });
 const columnFilters = ref({});
+const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const dateFilters = ref({
   filter_type: "month",
   filter_option: "this_month",
-  from_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
-  to_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split("T")[0],
+  from_date: formatDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1)),
+  to_date: formatDate(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)),
 });
 
 // Modals State

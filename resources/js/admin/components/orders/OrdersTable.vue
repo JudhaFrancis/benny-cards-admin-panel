@@ -33,9 +33,7 @@
       </span>
     </template>
 
-    <template #cell-items="{ item: order }">
-      <span class="font-medium text-slate-900">{{ order.items_count }}</span>
-    </template>
+
 
     <template #cell-status="{ item: order }">
       <span :class="cn(
@@ -270,10 +268,10 @@ const columns = computed(() => {
       { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
       { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name" },
       { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "order_date" },
-      { key: "items", label: "Quantity", align: "center", width: "100px", class: "whitespace-nowrap", filterKey: "items_count" },
-      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status", type: "select", options: Object.keys(orderStatusStyles).map(s => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })) },
       { key: "delivery_date", label: "Delivery Date", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "delivery_date" },
-      { key: "payment", label: "Payment Status", align: "left", width: "140px", class: "whitespace-nowrap", filterKey: "payment_status", type: "select", options: [ { label: "Paid", value: "paid" }, { label: "Unpaid", value: "unpaid" }, { label: "Due", value: "due" } ] },
+
+      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status", type: "select", options: Object.keys(orderStatusStyles).map(s => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })) },
+      { key: "payment", label: "Payment Status", align: "left", width: "140px", class: "whitespace-nowrap", filterKey: "payment_status", type: "select", options: [ { label: "Paid", value: "paid" }, { label: "Unpaid", value: "unpaid" }, { label: "Partial", value: "partial" } ] },
       { key: "created_at", label: "Created", align: "left", width: "150px", type: "date", filterKey: "created_at" },
       { key: "modified_by", label: "Modified", align: "left", width: "150px", type: "date", filterKey: "computed_modified_at" },
       { key: "actions", label: "Actions", align: "right", width: "130px", class: "whitespace-nowrap" },
@@ -372,7 +370,7 @@ const orderStatusStyles = {
 
 const paymentStatusStyles = {
   paid: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  due: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  partial: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   unpaid: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 

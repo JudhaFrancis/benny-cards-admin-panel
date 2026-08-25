@@ -100,7 +100,20 @@ const props = defineProps({
 
 const clientInfo = computed(() => props.order.client_information?.client_info || {});
 
-const standardOccasions = ["wedding", "birthday", "engagement", "anniversary", "house_warming"];
+const standardOccasions = [
+  "wedding", 
+  "birthday", 
+  "engagement", 
+  "anniversary", 
+  "house_warming",
+  "half_saree_ceremony",
+  "reception",
+  "corporate",
+  "grand_opening",
+  "ear_piercing",
+  "holy_communion",
+  "baptism"
+];
 const isOccasionOther = computed(() => {
   const val = clientInfo.value.occasion;
   return val && val !== "none" && !standardOccasions.includes(val);
@@ -108,7 +121,7 @@ const isOccasionOther = computed(() => {
 
 const capitalize = (str) => {
   if (!str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1).replace("_", " ");
+  return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
 
 const formatDate = (dateString) => {

@@ -161,14 +161,14 @@
 
       <div class="space-y-2">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
-          >Deadline Hours</label
+          >Assign Timings</label
         >
         <div
           class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
         >
           <ClockIcon class="h-4 w-4 text-slate-400" />
           <span class="text-sm font-bold text-slate-900">
-            {{ workAssign.deadline_hours ? (workAssign.deadline_hours === 24 ? '11-24 Hours' : workAssign.deadline_hours + ' Hours') : 'N/A' }}
+            {{ workAssign.assign_timings || 'N/A' }}
           </span>
         </div>
       </div>

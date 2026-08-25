@@ -140,6 +140,13 @@ const occasionOptions = [
   { label: "Engagement", value: "engagement" },
   { label: "Anniversary", value: "anniversary" },
   { label: "House Warming", value: "house_warming" },
+  { label: "Half Saree Ceremony", value: "half_saree_ceremony" },
+  { label: "Reception", value: "reception" },
+  { label: "Corporate", value: "corporate" },
+  { label: "Grand Opening", value: "grand_opening" },
+  { label: "Ear-Piercing", value: "ear_piercing" },
+  { label: "Holy Communion", value: "holy_communion" },
+  { label: "Baptism", value: "baptism" },
   { label: "Other", value: "other" },
 ];
 
@@ -228,6 +235,13 @@ const standardOccasions = [
   "engagement",
   "anniversary",
   "house_warming",
+  "half_saree_ceremony",
+  "reception",
+  "corporate",
+  "grand_opening",
+  "ear_piercing",
+  "holy_communion",
+  "baptism",
 ];
 
 const isOccasionOther = computed(() => {

@@ -55,12 +55,12 @@
       <span class="text-slate-500 font-medium">{{ order.computed_completed_date && order.computed_completed_date !== 'N/A' ? formatDate(order.computed_completed_date) : 'N/A' }}</span>
     </template>
 
-    <template #cell-deadline_hours_col="{ item: order }">
-      <span v-if="order.computed_deadline_hours" 
+    <template #cell-assign_timings_col="{ item: order }">
+      <span v-if="order.computed_assign_timings" 
         class="text-slate-600 text-xs font-bold flex items-center justify-center gap-1.5"
       >
         <Clock class="h-3.5 w-3.5 text-slate-400" />
-        {{ order.computed_deadline_hours === 24 ? '11-24 Hours' : order.computed_deadline_hours + ' Hours' }}
+        {{ order.computed_assign_timings }}
       </span>
       <span v-else class="text-slate-400 font-medium">N/A</span>
     </template>
@@ -154,9 +154,7 @@
       <span class="text-sm font-medium text-slate-700">{{ formatTimeTo12h(order.packaging?.packaging_logistics?.end_time) }}</span>
     </template>
 
-    <template #cell-card_quantity="{ item: order }">
-      <span class="font-medium text-slate-900">{{ order.client_information?.card_specs?.quantity || "N/A" }}</span>
-    </template>
+
 
     <template #cell-card_type="{ item: order }">
       <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -291,7 +289,7 @@ const processedOrders = computed(() => {
       computed_process_status: getProcessStatus(order),
       computed_completed_by: order.designing?.work_assign?.completed_by || "N/A",
       computed_completed_date: order.designing?.work_assign?.completed_date || "N/A",
-      computed_deadline_hours: order.designing?.work_assign?.deadline_hours || null,
+      computed_assign_timings: order.designing?.work_assign?.assign_timings || null,
       computed_design_outputs: (order.designing?.design_print?.design_outputs || "").split(",").filter(Boolean).map(val => {
         if (val === "Invitation in Draft") return "In Draft";
         if (val === "Gift Frame") return "Gift";
@@ -302,12 +300,14 @@ const processedOrders = computed(() => {
     };
   });
 
-  // Sort by deadline hours if it's the designing stage
+  // Sort by assign timings if it's the designing stage
   if (props.stage === 'designing') {
+    const timeValue = (t) => {
+      const map = { '10am': 10, '12pm': 12, '2pm': 14, '4pm': 16, '6pm': 18 };
+      return map[t] || 999;
+    };
     return processed.sort((a, b) => {
-      const hrA = a.computed_deadline_hours || 999;
-      const hrB = b.computed_deadline_hours || 999;
-      return hrA - hrB;
+      return timeValue(a.computed_assign_timings) - timeValue(b.computed_assign_timings);
     });
   }
 
@@ -345,15 +345,7 @@ const columns = computed(() => {
       filterKey: "client_information.order_details.order_placed_in",
       options: activeBranches.value
     });
-    cols.push({
-      key: "card_quantity",
-      label: "Quantity",
-      align: "center",
-      width: "100px",
-      class: "whitespace-nowrap",
-      type: "text",
-      filterKey: "client_information.card_specs.quantity"
-    });
+
     cols.push({
       key: "card_type",
       label: "Card Type",
@@ -405,13 +397,13 @@ const columns = computed(() => {
       filterKey: "designing.work_assign.completed_date"
     });
     cols.push({
-      key: "deadline_hours_col",
-      label: "Deadline Hours",
+      key: "assign_timings_col",
+      label: "Assign Timings",
       align: "center",
       width: "120px",
       class: "whitespace-nowrap",
       type: "text",
-      filterKey: "designing_work_assign_deadline_hours"
+      filterKey: "designing_work_assign_assign_timings"
     });
   }
 
@@ -455,15 +447,7 @@ const columns = computed(() => {
         { label: "Not Assigned", value: "n/a" }
       ]
     });
-    cols.push({
-      key: "card_quantity",
-      label: "Quantity",
-      align: "left",
-      width: "100px",
-      class: "whitespace-nowrap",
-      type: "text",
-      filterKey: "client_information_card_specs_quantity"
-    });
+
     cols.push({
       key: "card_options",
       label: "Add On",

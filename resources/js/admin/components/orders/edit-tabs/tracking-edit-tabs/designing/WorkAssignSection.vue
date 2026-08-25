@@ -273,14 +273,14 @@
       </div>
 
       <div class="space-y-3">
-        <label class="text-sm font-medium text-slate-700">Deadline Hours</label>
-        <div class="grid grid-cols-6 gap-1">
-          <label v-for="hr in [2, 4, 6, 8, 10, 24]" :key="hr" 
+        <label class="text-sm font-medium text-slate-700">Assign Timings</label>
+        <div class="grid grid-cols-5 gap-1">
+          <label v-for="timing in ['10am', '12pm', '2pm', '4pm', '6pm']" :key="timing" 
             class="flex items-center justify-center py-2 px-1 rounded-xl border text-[9px] font-black transition-all cursor-pointer whitespace-nowrap"
-            :class="workAssign.deadline_hours === hr ? 'bg-primary border-primary text-white shadow-md' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'"
+            :class="workAssign.assign_timings === timing ? 'bg-primary border-primary text-white shadow-md' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'"
           >
-            <input type="radio" v-model="workAssign.deadline_hours" :value="hr" class="sr-only" />
-            {{ hr === 24 ? '11-24 Hr' : hr + ' Hr' }}
+            <input type="radio" v-model="workAssign.assign_timings" :value="timing" class="sr-only" />
+            {{ timing }}
           </label>
         </div>
       </div>

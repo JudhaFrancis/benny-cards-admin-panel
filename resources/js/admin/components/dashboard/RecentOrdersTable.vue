@@ -114,7 +114,7 @@ const orderStatusStyles = {
 
 const paymentStatusStyles = {
   paid: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  due: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  partial: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   unpaid: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 };
 

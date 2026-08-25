@@ -210,7 +210,6 @@ const columns = [
       { label: 'Unpaid', value: 'unpaid' },
       { label: 'Partial', value: 'partial' },
       { label: 'Paid', value: 'paid' },
-      { label: 'Due', value: 'due' },
     ]
   },
   { key: 'created_at', label: 'Date', align: 'left', type: 'date' },
@@ -328,7 +327,7 @@ const handleExport = () => {
 
 const paymentStatusStyles = {
   unpaid: "bg-slate-50 text-slate-500 border-slate-200",
-  due: "bg-amber-50 text-amber-500 border-amber-100",
+  partial: 'bg-amber-50 text-amber-500 border-amber-100',
   paid: "bg-emerald-50 text-emerald-500 border-emerald-100",
   completed: "bg-emerald-50 text-emerald-500 border-emerald-100",
 };

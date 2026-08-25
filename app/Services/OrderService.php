@@ -239,9 +239,9 @@ class OrderService
                 $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
                 $query->whereHas('clientInformation', fn($sub) => $isNa ? $sub->whereNull('card_specs->card_options')->orWhere('card_specs->card_options', '') : $sub->where('card_specs->card_options', 'like', "%{$value}%"));
             })
-            ->when(data_get($filters, 'designing_work_assign_deadline_hours'), function (Builder $query, $value) {
+            ->when(data_get($filters, 'designing_work_assign_assign_timings'), function (Builder $query, $value) {
                 $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
-                $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('work_assign->deadline_hours')->orWhere('work_assign->deadline_hours', '') : $sub->where('work_assign->deadline_hours', 'like', "%{$value}%"));
+                $query->whereHas('designing', fn($sub) => $isNa ? $sub->whereNull('work_assign->assign_timings')->orWhere('work_assign->assign_timings', '') : $sub->where('work_assign->assign_timings', 'like', "%{$value}%"));
             })
             ->when(data_get($filters, 'designing_work_assign_assigned_to') ?: data_get($filters, 'designing.work_assign.assigned_to'), function (Builder $query, $value) {
                 $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
