@@ -7,15 +7,20 @@
       <div class="flex flex-col">
         <span class="font-semibold text-slate-900 italic hover:text-primary transition-colors cursor-pointer"
           @click.stop="$emit('edit', order)">
-          {{ order.order_number }}
+          {{ order.order_number?.split('-')[0] }}
         </span>
-        <span v-if="order.delivery_date && order.status?.toLowerCase() !== 'delivered' && getStageStatus(order).toLowerCase() !== 'completed'" class="text-[10px] mt-0.5"
-          :class="getCountdownColor(order.delivery_date)">
-          {{ getCountdownText(order.delivery_date) }}
-        </span>
-        <span v-else class="text-[10px] mt-0.5 text-slate-400 font-medium">
-          -
-        </span>
+        <div class="flex items-center gap-2 mt-0.5">
+          <span v-if="order.delivery_date && order.status?.toLowerCase() !== 'delivered' && getStageStatus(order).toLowerCase() !== 'completed'" class="text-[10px]"
+            :class="getCountdownColor(order.delivery_date)">
+            {{ getCountdownText(order.delivery_date) }}
+          </span>
+          <span v-else class="text-[10px] text-slate-400 font-medium">
+            -
+          </span>
+          <span v-if="order.priority" :class="['text-[10px] px-1.5 py-0.5 rounded-full font-bold border', getPriorityClass(order.priority)]">
+            {{ getPriorityLabel(order.priority) }}
+          </span>
+        </div>
       </div>
     </template>
 
@@ -28,11 +33,7 @@
     </template>
 
     <template #cell-customer="{ item: order }">
-      <div class="flex flex-col">
-        <span class="text-sm font-medium text-slate-900">{{
-          order.customer_details?.name || "N/A"
-        }}</span>
-      </div>
+      <OrderCustomerCell :order="order" />
     </template>
 
     <template #cell-assigned_name="{ item: order }">
@@ -141,9 +142,19 @@
     </template>
 
     <template #cell-printer_name="{ item: order }">
-      <span class="text-sm font-medium text-slate-700">
-        {{ order.printing?.printing_status?.company_name || "N/A" }}
-      </span>
+      <div v-if="order.printing?.printing_status?.company_names?.length" class="flex items-center">
+        <AppTooltip :content="order.printing.printing_status.company_names.join(', ')">
+          <template #trigger>
+            <span class="text-sm font-medium text-slate-700 cursor-help border-b border-dashed border-slate-300">
+              {{ order.printing.printing_status.company_names.join(', ').length > 20 
+                 ? order.printing.printing_status.company_names.join(', ').substring(0, 20) + '...' 
+                 : order.printing.printing_status.company_names.join(', ') 
+              }}
+            </span>
+          </template>
+        </AppTooltip>
+      </div>
+      <span v-else class="text-sm font-medium text-slate-400">N/A</span>
     </template>
 
     <template #cell-start_time="{ item: order }">
@@ -219,7 +230,10 @@
 import { computed } from "vue";
 import { Eye, Pencil, Check, X, Clock } from "lucide-vue-next";
 import DataTable from "../ui/data-table/DataTable.vue";
+import AppTooltip from "../ui/display/AppTooltip.vue";
+import OrderCustomerCell from "../orders/cells/OrderCustomerCell.vue";
 import { useSettings } from "../../composables/useSettings";
+import { getPriorityLabel, getPriorityClass } from "../../constants/orderPriorities";
 
 const { settings, fetchSettings } = useSettings();
 fetchSettings();
@@ -320,7 +334,7 @@ const columns = computed(() => {
   const cols = [
     { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
     { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap", filterKey: "order_number" },
-    { key: "customer", label: "Customer Name", align: "left", width: "200px", filterKey: "customer_details.name" },
+    { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name", tooltip: "Customer Name\nProduct Name\nTotal Quantity" },
   ];
 
   if (props.stage !== 'printing') {
@@ -504,6 +518,7 @@ const columns = computed(() => {
       filterKey: "dispatch_delivery_dispatch_mode_modes",
       options: [
         { label: "Shop Pickup", value: "Shop Pickup" },
+        { label: "Direct to Client", value: "Direct to Client" },
         { label: "Bus", value: "Bus" },
         { label: "Transport", value: "Transport" },
         { label: "Courier", value: "Courier" },

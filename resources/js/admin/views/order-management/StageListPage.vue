@@ -1,6 +1,35 @@
 <template>
   <div class="space-y-6 animate-in fade-in duration-500">
-    <PageHeader :title="title" :subtitle="subtitle" />
+    <PageHeader :title="title" :subtitle="subtitle">
+      <template #actions>
+        <div class="flex items-center gap-3" v-if="statusCounts">
+          <!-- Pending Badge -->
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider">Pending</span>
+            <span class="text-sm font-bold bg-white px-2 py-0.5 rounded-md shadow-sm border border-amber-100">{{ statusCounts.Pending || 0 }}</span>
+          </div>
+          <!-- Processing Badge -->
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider">Process</span>
+            <span class="text-sm font-bold bg-white px-2 py-0.5 rounded-md shadow-sm border border-blue-100">{{ statusCounts.Process || 0 }}</span>
+          </div>
+          <!-- Completed Badge -->
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider">Completed</span>
+            <span class="text-sm font-bold bg-white px-2 py-0.5 rounded-md shadow-sm border border-green-100">{{ statusCounts.Completed || 0 }}</span>
+          </div>
+          <!-- Cancelled Badge -->
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-lg shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider">Cancelled</span>
+            <span class="text-sm font-bold bg-white px-2 py-0.5 rounded-md shadow-sm border border-red-100">{{ statusCounts.Cancelled || 0 }}</span>
+          </div>
+        </div>
+      </template>
+    </PageHeader>
 
     <!-- Filters & Search -->
     <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
@@ -100,6 +129,8 @@ const isEditModalOpen = ref(false);
 const isCreateModalOpen = ref(false);
 const selectedOrder = ref(null);
 
+const statusCounts = ref(null);
+
 const fetchOrders = async () => {
   orders.value = [];
   loading.value = true;
@@ -116,6 +147,7 @@ const fetchOrders = async () => {
     const response = await axios.get("/api/v1/orders", { params });
     if (response.data.success) {
       orders.value = response.data.data.data;
+      statusCounts.value = response.data.data.status_counts || null;
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from || 1,

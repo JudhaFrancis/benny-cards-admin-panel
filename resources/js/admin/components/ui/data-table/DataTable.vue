@@ -1,7 +1,7 @@
 <template>
   <div :class="[
     !noWrapper
-      ? 'bg-white rounded-[2rem] border border-slate-200 shadow-soft-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col min-h-[400px]'
+      ? 'bg-white rounded-[2rem] border border-slate-200 shadow-soft-xl animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col min-h-[400px]'
       : 'flex flex-col min-h-[400px]',
   ]">
     <!-- Header with Slots -->
@@ -20,15 +20,18 @@
         <thead>
           <tr class="border-b border-slate-200">
             <th v-for="column in columns" :key="column.key" :class="[
-              'px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 select-none transition-colors duration-200 whitespace-nowrap bg-slate-50/50 sticky top-0 z-20',
+              'px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 select-none transition-colors duration-200 whitespace-nowrap bg-slate-50/50 sticky top-0 z-[var(--z-popover)]',
               column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',
               column.class,
             ]" :style="column.width ? { width: column.width } : {}">
-              {{ column.label }}
+              <div class="flex items-center gap-1.5">
+                {{ column.label }}
+                <AppTooltip v-if="column.tooltip" :content="column.tooltip" position="top" />
+              </div>
             </th>
           </tr>
           <!-- Filter Row -->
-          <tr class="bg-slate-50/50 border-b border-slate-100 sticky top-[49px] z-10">
+          <tr class="bg-slate-50/50 border-b border-slate-100 sticky top-[49px] z-[var(--z-popover)]">
             <th v-for="column in columns" :key="'filter-' + column.key" class="px-3 py-2 border-slate-100">
               <div v-if="shouldShowFilter(column)" class="relative group min-w-[120px]">
                 <DatePicker v-if="column.type === 'date'" v-model="filters[column.filterKey || column.key]" placeholder="Select Date" />
@@ -50,7 +53,7 @@
                       <transition leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100"
                         leave-to-class="opacity-0">
                         <ListboxOptions
-                          class="absolute z-50 mt-1 max-h-60 min-w-full w-max left-0 overflow-auto rounded-xl bg-white py-1 text-[11px] shadow-2xl ring-1 ring-black/5 focus:outline-none scrollbar-hide">
+                          class="absolute z-[var(--z-popover)] mt-1 max-h-60 min-w-full w-max left-0 overflow-auto rounded-xl bg-white py-1 text-[11px] shadow-2xl ring-1 ring-black/5 focus:outline-none scrollbar-hide">
                           <ListboxOption v-if="!column.hideAllOption" v-slot="{ active, selected }" :value="column.multiple ? '__all__' : ''" as="template">
                             <li :class="[
                               active || selected ? 'bg-primary/5 text-primary' : 'text-slate-600',
@@ -122,7 +125,7 @@
               class="group hover:bg-slate-50/50 transition-colors duration-200 cursor-pointer">
               <slot name="row" :item="item" :index="index">
                 <td v-for="column in columns" :key="column.key" :class="[
-                  'px-4 py-4 text-[13px] whitespace-nowrap text-slate-600 font-medium',
+                  'px-4 py-4 text-[13px] whitespace-nowrap text-slate-600 font-medium align-top',
                   column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',
                   column.cellClass,
                 ]" :style="column.width ? { width: column.width } : {}">
@@ -158,6 +161,7 @@ import {
   ListboxOption,
 } from "@headlessui/vue";
 import DatePicker from "../pickers/DatePicker.vue";
+import AppTooltip from "../display/AppTooltip.vue";
 import { X as XIcon, Search as SearchIcon, ChevronDown as ChevronDownIcon, Check as CheckIcon } from "lucide-vue-next";
 
 const props = defineProps({

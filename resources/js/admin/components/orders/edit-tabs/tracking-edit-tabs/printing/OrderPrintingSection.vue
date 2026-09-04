@@ -13,13 +13,11 @@
       </div>
       <div class="space-y-2">
         <label class="text-xs font-medium text-slate-700"
-          >Printer Company Name</label
+          >Printer Company Names</label
         >
-        <input
-          v-model="printingStatus.company_name"
-          type="text"
-          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          placeholder="Enter printer name"
+        <TagInput 
+          v-model="printingStatus.company_names" 
+          placeholder="Enter printer name" 
         />
       </div>
       <div v-if="printingStatus" class="flex items-center h-full pt-6 pl-2">
@@ -289,6 +287,7 @@ import { computed, watch, onMounted, ref } from "vue";
 import { Clock as ClockIcon, User as UserIcon, Brush as BrushIcon, Edit3 as Edit3Icon, Box as BoxIcon, Smartphone as SmartphoneIcon } from "lucide-vue-next";
 import ContextDropdown from "../../../../ui/dropdowns/ContextDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
+import TagInput from "../../../../ui/forms/TagInput.vue";
 
 const isDayActive = (day, typeId) => {
   const dateStr = printingStatus.value[typeId + '_sent_to_print_date'];

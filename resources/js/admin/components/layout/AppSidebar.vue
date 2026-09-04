@@ -46,6 +46,7 @@
               trackingOpen && !isCollapsed
                 ? 'bg-white/20 text-white backdrop-blur-md'
                 : 'text-white/40 hover:bg-white/10 hover:text-white',
+              isCollapsed ? 'justify-center px-0 mx-auto w-12 h-12' : ''
             )
               ">
               <DashboardIcon class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110" :class="trackingOpen && !isCollapsed
@@ -96,6 +97,7 @@
             catalogOpen && !isCollapsed
               ? 'bg-white/20 text-white backdrop-blur-md'
               : 'text-white/40 hover:bg-white/10 hover:text-white',
+            isCollapsed ? 'justify-center px-0 mx-auto w-12 h-12' : ''
           )
             ">
             <PackageIcon class="h-5 w-5 shrink-0 transition-all duration-300 group-hover:scale-110" :class="catalogOpen && !isCollapsed

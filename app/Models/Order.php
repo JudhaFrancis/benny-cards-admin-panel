@@ -30,6 +30,7 @@ class Order extends Model
         'total_amount',
         'balance_due',
         'paid_amount',
+        'priority',
         'payment_status',
         'status',
         'added_by',
@@ -139,7 +140,56 @@ class Order extends Model
     }
 
 
-    protected $appends = ['resolved_status'];
+    protected $appends = [
+        'resolved_status',
+        'design_finalized_date',
+        'order_taken_by',
+        'order_placed_in',
+        'assigned_name'
+    ];
+
+    public function getDesignFinalizedDateAttribute(): ?string
+    {
+        return $this->designing?->work_assign['completed_date'] ?? null;
+    }
+
+    public function getOrderTakenByAttribute(): ?string
+    {
+        return $this->clientInformation?->order_details['order_taken_by'] ?? null;
+    }
+
+    public function getOrderPlacedInAttribute(): ?string
+    {
+        return $this->clientInformation?->order_details['order_placed_in'] ?? null;
+    }
+
+    public function getAssignedNameAttribute(): ?string
+    {
+        $status = $this->resolved_status;
+        
+        if ($status === 'Designing in Progress') {
+            return $this->designing?->work_assign['assigned_to'] ?? null;
+        }
+        if ($status === 'Printing in Progress') {
+            return $this->printing?->printing_status['assigned_to'] 
+                ?? $this->designing?->work_assign['assigned_to'] 
+                ?? null;
+        }
+        if ($status === 'Packing in Progress') {
+            $log = $this->packaging?->packaging_logistics;
+            if (!$log) return null;
+            $names = [];
+            if (is_array($log['assigned_by_multiple'] ?? null)) $names = array_merge($names, $log['assigned_by_multiple']);
+            if (is_array($log['crafted_by_multiple'] ?? null)) $names = array_merge($names, $log['crafted_by_multiple']);
+            if (!empty($log['crafted_by']) && !in_array($log['crafted_by'], $names)) $names[] = $log['crafted_by'];
+            return !empty($names) ? implode(", ", array_unique($names)) : null;
+        }
+        if ($status === 'Out for Delivery') {
+            return $this->dispatchDelivery?->dispatch_mode['packed_by'] ?? null;
+        }
+
+        return null;
+    }
 
     public function getResolvedStatusAttribute(): string
     {

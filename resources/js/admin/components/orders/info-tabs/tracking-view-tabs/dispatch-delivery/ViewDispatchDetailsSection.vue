@@ -53,10 +53,10 @@
     >
       <div class="flex items-center gap-3 pb-4 border-b border-purple-100/50">
         <div class="p-2 bg-purple-100 rounded-xl">
-          <PackageIcon class="h-5 w-5 text-purple-600" />
+          <component :is="order.dispatch_delivery?.dispatch_mode?.modes === 'Direct to Client' ? UserCheckIcon : PackageIcon" class="h-5 w-5 text-purple-600" />
         </div>
         <h4 class="text-sm font-black text-purple-900 uppercase tracking-tight">
-          Courier Details
+          {{ order.dispatch_delivery?.dispatch_mode?.modes === 'Direct to Client' ? 'Direct to Client Details' : 'Courier Details' }}
         </h4>
         <div
           v-if="courierDetails.shared_whatsapp"
@@ -69,7 +69,7 @@
         <div class="space-y-1">
           <label
             class="text-[10px] font-black uppercase tracking-widest text-purple-400"
-            >Courier Name</label
+            >{{ order.dispatch_delivery?.dispatch_mode?.modes === 'Direct to Client' ? 'Client / Contact Name' : 'Courier Name' }}</label
           >
           <div class="text-sm font-bold text-purple-900">
             {{ courierDetails.name || "—" }}
@@ -78,7 +78,7 @@
         <div class="space-y-1">
           <label
             class="text-[10px] font-black uppercase tracking-widest text-purple-400"
-            >Tracking No</label
+            >{{ order.dispatch_delivery?.dispatch_mode?.modes === 'Direct to Client' ? 'Reference No' : 'Tracking No' }}</label
           >
           <div class="text-sm font-bold text-purple-900">
             {{ courierDetails.tracking_no || "—" }}
@@ -155,6 +155,7 @@ import {
   Truck as TruckIcon,
   Clock as ClockIcon,
   MessageCircle as MessageCircleIcon,
+  UserCheck as UserCheckIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({

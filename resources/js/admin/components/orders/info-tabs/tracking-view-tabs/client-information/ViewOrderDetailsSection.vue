@@ -20,6 +20,12 @@
           </div>
         </div>
         <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Priority</label>
+          <div :class="['p-3 rounded-xl border text-sm font-bold', getPriorityClass(order.priority || 'P4')]">
+            {{ getPriorityLabel(order.priority || 'P4') }}
+          </div>
+        </div>
+        <div class="space-y-2">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Order Taken By</label>
           <div
             class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-slate-900 flex items-center gap-2">
@@ -95,6 +101,7 @@ import {
   Clock as ClockIcon,
   Calendar as CalendarIcon,
 } from "lucide-vue-next";
+import { getPriorityLabel, getPriorityClass } from "../../../../../constants/orderPriorities";
 
 const props = defineProps({
   order: { type: Object, required: true },

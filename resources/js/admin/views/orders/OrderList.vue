@@ -16,6 +16,38 @@
       </template>
     </PageHeader>
 
+    <!-- 5 Stage Summary Cards (Only visible if stageSummaries exist) -->
+    <div v-if="stageSummaries" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <router-link
+        v-for="card in summaryCards"
+        :key="card.stage"
+        :to="`/order-management/${card.stage}`"
+        class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all duration-300 group cursor-pointer"
+      >
+        <div class="flex flex-col space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-teal-50 rounded-xl group-hover:bg-teal-100 transition-colors duration-300">
+              <component :is="card.icon" class="h-5 w-5 text-teal-600" />
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">{{ card.title }}</h3>
+          </div>
+          
+          <div class="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+            <!-- Pending -->
+            <div class="flex flex-col items-center flex-1 bg-amber-50/50 rounded-lg py-1.5 border border-amber-100/50">
+              <span class="text-[10px] font-black uppercase tracking-widest text-amber-500/80 mb-0.5">Pending</span>
+              <span class="text-sm font-black text-amber-600">{{ stageSummaries[card.stage]?.Pending || 0 }}</span>
+            </div>
+            <!-- Processing -->
+            <div class="flex flex-col items-center flex-1 bg-blue-50/50 rounded-lg py-1.5 border border-blue-100/50">
+              <span class="text-[10px] font-black uppercase tracking-widest text-blue-500/80 mb-0.5">Process</span>
+              <span class="text-sm font-black text-blue-600">{{ stageSummaries[card.stage]?.Process || 0 }}</span>
+            </div>
+          </div>
+        </div>
+      </router-link>
+    </div>
+
     <!-- Filters & Search -->
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
       <AdvancedDateFilter v-model="dateFilters" @change="handleDateFilterChange" />
@@ -106,6 +138,11 @@ import {
   ChevronRight as ChevronRightIcon,
   Plus as PlusIcon,
   Search as SearchIcon,
+  User as UserCircleIcon,
+  Palette as PaletteIcon,
+  Printer as PrinterIcon,
+  Package as PackageIcon,
+  CheckCircle as CheckCircleIcon
 } from "lucide-vue-next";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -133,6 +170,15 @@ const statusFilter = ref("all");
 const searchQuery = ref("");
 const columnFilters = ref({});
 const meta = ref({ total: 0, from: 1 });
+const stageSummaries = ref(null);
+
+const summaryCards = [
+  { stage: 'client-information', title: 'Client Information', icon: UserCircleIcon },
+  { stage: 'designing', title: 'Designing', icon: PaletteIcon },
+  { stage: 'printing', title: 'Printing', icon: PrinterIcon },
+  { stage: 'packaging', title: 'Packaging', icon: PackageIcon },
+  { stage: 'delivery', title: 'Dispatch & Delivery', icon: CheckCircleIcon }
+];
 
 const formatDate = (date) => {
     if (!date) return '';
@@ -179,6 +225,7 @@ const fetchOrders = async () => {
     const response = await axios.get("/api/v1/orders", { params });
     if (response.data.success) {
       orders.value = response.data.data.data;
+      stageSummaries.value = response.data.data.stage_summaries || null;
       meta.value = {
         total: response.data.data.total,
         from: response.data.data.from || 1,
@@ -294,6 +341,7 @@ const handleOrderSaved = async (updatedOrderData) => {
       "remarks",
       "payment_method",
       "status",
+      "priority",
       "order_date",
       "coupon_id"
     ];

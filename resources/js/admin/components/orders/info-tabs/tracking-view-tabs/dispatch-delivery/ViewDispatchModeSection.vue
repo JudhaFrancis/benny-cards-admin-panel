@@ -125,6 +125,7 @@ import {
   User as UserIcon,
   Check as CheckIcon,
   Clock as ClockIcon,
+  UserCheck as UserCheckIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -136,6 +137,7 @@ const dispatchMode = computed(() => props.order.dispatch_delivery?.dispatch_mode
 
 const modeOptions = [
   { id: "Shop Pickup", label: "Shop Pickup", icon: StoreIcon },
+  { id: "Direct to Client", label: "Direct to Client", icon: UserCheckIcon },
   { id: "Bus", label: "Bus", icon: BusIcon },
   { id: "Transport", label: "Transport", icon: TruckIcon },
   { id: "Courier", label: "Courier", icon: PackageIcon },

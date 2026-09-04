@@ -226,9 +226,11 @@ const handleSave = async () => {
 
     if (stage.value === 'client-information') {
       const orderDetails = order.value[relation]?.order_details || {};
+      console.log("Saving client info. Order priority is:", order.value.priority);
       await axios.put(`/api/v1/orders/${order.value.id}`, {
         order_date: order.value.order_date,
-        delivery_date: orderDetails.expected_delivery_date
+        delivery_date: orderDetails.expected_delivery_date,
+        priority: order.value.priority
       });
     }
 

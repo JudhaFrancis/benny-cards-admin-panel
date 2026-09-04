@@ -356,7 +356,8 @@ const handleSave = async () => {
     if (props.stage === 'client-information') {
       await axios.put(`/api/v1/orders/${orderData.value.id}`, {
         order_date: orderData.value.order_date,
-        delivery_date: stageData.order_details?.expected_delivery_date
+        delivery_date: stageData.order_details?.expected_delivery_date,
+        priority: orderData.value.priority
       });
     }
 

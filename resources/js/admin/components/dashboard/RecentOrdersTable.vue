@@ -2,7 +2,7 @@
   <DataTable :columns="columns" :items="recentOrders" :loading="loading" no-wrapper>
     <template #cell-order_number="{ item: order }">
       <span class="font-semibold text-slate-900 italic">
-        {{ order.order_number }}
+        {{ order.order_number?.split('-')[0] }}
       </span>
     </template>
 

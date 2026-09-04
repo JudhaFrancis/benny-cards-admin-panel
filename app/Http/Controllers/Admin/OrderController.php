@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\OrderService;
 use App\Services\OrderTrackingService;
+use App\Services\OrderListingService;
 use App\Models\Order;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
@@ -15,7 +16,8 @@ class OrderController extends Controller
 {
     public function __construct(
         protected OrderService $orderService,
-        protected OrderTrackingService $orderTrackingService
+        protected OrderTrackingService $orderTrackingService,
+        protected OrderListingService $orderListingService
     ) {
     }
 
@@ -26,14 +28,21 @@ class OrderController extends Controller
     {
         $perPage = $request->get('per_page') ?: $request->get('limit') ?: 20;
 
-        $orders = $this->orderService->listOrders(
+        $result = $this->orderListingService->listOrdersWithCounts(
             $request->all(),
             (int) $perPage
         );
 
+        $response = $result['paginator']->toArray();
+        $response['status_counts'] = $result['status_counts'];
+
+        if (!$request->has('stage')) {
+            $response['stage_summaries'] = $this->orderListingService->getStageSummaries($request->all());
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $orders,
+            'data' => $response,
         ]);
     }
 
@@ -46,6 +55,7 @@ class OrderController extends Controller
             'customer.name' => 'required|string',
             'customer.phone' => 'required|string',
             'customer.address_1' => 'required|string',
+            'priority' => 'nullable|string|in:P1,P2,P3,P4',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'nullable|exists:products,id',
             'items.*.product_name' => 'required_without:items.*.product_id|string',
@@ -67,7 +77,7 @@ class OrderController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $order = $this->orderService->getOrder($id);
+        $order = $this->orderListingService->getOrder($id);
 
         return response()->json([
             'success' => true,
@@ -80,12 +90,14 @@ class OrderController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $order = $this->orderService->getOrder($id);
+        $order = $this->orderListingService->getOrder($id);
+        \Log::info("Order update payload for ID $id: ", $request->all());
 
         $request->validate([
             'customer.name' => 'nullable|string',
             'customer.phone' => 'nullable|string',
             'customer.address_1' => 'nullable|string',
+            'priority' => 'nullable|string|in:P1,P2,P3,P4',
             'items' => 'nullable|array|min:1',
             'items.*.product_id' => 'nullable|exists:products,id',
             'items.*.product_name' => 'required_without:items.*.product_id|string',
@@ -110,7 +122,7 @@ class OrderController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $order = $this->orderService->getOrder($id);
+        $order = $this->orderListingService->getOrder($id);
 
         $this->orderService->deleteOrder($order);
 
@@ -125,7 +137,7 @@ class OrderController extends Controller
      */
     public function updateCustomerDetails(Request $request, int $id): JsonResponse
     {
-        $order = $this->orderService->getOrder($id);
+        $order = $this->orderListingService->getOrder($id);
 
         $updatedOrder = $this->orderService->updateCustomerDetails($order, $request->all());
 
@@ -141,7 +153,7 @@ class OrderController extends Controller
      */
     public function updateTracking(Request $request, int $id): JsonResponse
     {
-        $order = $this->orderService->getOrder($id);
+        $order = $this->orderListingService->getOrder($id);
 
         $updatedOrder = $this->orderTrackingService->updateTracking($order, $request->all());
 
@@ -161,7 +173,7 @@ class OrderController extends Controller
             'status' => ['required'],
         ]);
 
-        $order = $this->orderService->getOrder($id);
+        $order = $this->orderListingService->getOrder($id);
         $order = $this->orderService->updateStatus($order, $request->status);
 
         return response()->json([

@@ -17,15 +17,23 @@
 
       <div class="space-y-2">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider"
-          >Printer Company Name</label
+          >Printer Company Names</label
         >
         <div
-          class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
+          class="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 min-h-[46px]"
         >
-          <PrinterIcon class="h-4 w-4 text-slate-400" />
-          <span class="text-sm font-medium text-slate-900">{{
-            printingStatus.company_name || "N/A"
-          }}</span>
+          <PrinterIcon class="h-4 w-4 text-slate-400" v-if="!printingStatus.company_names?.length" />
+          <span v-if="!printingStatus.company_names?.length" class="text-sm font-medium text-slate-900">
+            N/A
+          </span>
+          <span
+            v-for="(company, index) in printingStatus.company_names"
+            :key="index"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-700 shadow-sm"
+          >
+            <PrinterIcon class="h-3 w-3 text-slate-400" />
+            {{ company }}
+          </span>
         </div>
       </div>
 

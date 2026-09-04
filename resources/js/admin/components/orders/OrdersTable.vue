@@ -7,50 +7,37 @@
           class="font-semibold text-slate-900 italic cursor-pointer hover:text-primary transition-colors duration-200"
           @click.stop="$emit('edit', order)"
         >
-          {{ order.order_number }}
+          {{ order.order_number?.split('-')[0] }}
         </span>
-        <span v-if="order.delivery_date && order.resolved_status?.toLowerCase() !== 'delivered'" class="text-[10px] mt-0.5"
-          :class="getCountdownColor(order.delivery_date)">
-          {{ getCountdownText(order.delivery_date) }}
-        </span>
-        <span v-else-if="order.resolved_status?.toLowerCase() === 'delivered'" class="text-[10px] mt-0.5 text-slate-400 font-bold uppercase tracking-wider">
-          Delivered
-        </span>
+        <div class="flex items-center gap-2 mt-0.5">
+          <span v-if="order.delivery_date && order.resolved_status?.toLowerCase() !== 'delivered'" class="text-[10px]"
+            :class="getCountdownColor(order.delivery_date)">
+            {{ getCountdownText(order.delivery_date) }}
+          </span>
+          <span v-else-if="order.resolved_status?.toLowerCase() === 'delivered'" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            Delivered
+          </span>
+          <span v-if="order.priority" :class="['text-[10px] px-1.5 py-0.5 rounded-full font-bold border', getPriorityClass(order.priority)]">
+            {{ getPriorityLabel(order.priority) }}
+          </span>
+        </div>
       </div>
     </template>
 
     <template #cell-customer="{ item: order }">
-      <div class="flex flex-col">
-        <span class="text-sm font-medium text-slate-900">{{
-          order.customer_details?.name || "N/A"
-        }}</span>
-      </div>
+      <OrderCustomerCell :order="order" />
     </template>
 
-    <template #cell-orderDate="{ item: order }">
-      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
-        {{ formatDate(order.order_date) }}
-      </span>
+    <template #cell-dates="{ item: order }">
+      <OrderDatesCell :order="order" />
     </template>
 
-
+    <template #cell-orderSrc="{ item: order }">
+      <OrderSourceCell :order="order" />
+    </template>
 
     <template #cell-status="{ item: order }">
-      <span :class="cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors duration-200',
-        (order.resolved_status &&
-          orderStatusStyles[order.resolved_status.toLowerCase()]) ||
-        'bg-slate-100 text-slate-800 border-slate-200',
-      )
-        ">
-        {{ order.resolved_status || "New Order" }}
-      </span>
-    </template>
-
-    <template #cell-delivery_date="{ item: order }">
-      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
-        {{ formatDate(order.delivery_date) }}
-      </span>
+      <OrderStatusCell :order="order" :orderStatusStyles="orderStatusStyles" />
     </template>
 
     <template #cell-payment="{ item: order }">
@@ -65,42 +52,24 @@
       </span>
     </template>
 
-    <template #cell-assigned_name="{ item: order }">
-      <span class="text-sm font-medium text-slate-700">
-        {{ getAssignedName(order) }}
-      </span>
-    </template>
-
-    <template #cell-assigned_date="{ item: order }">
-      <span class="text-xs font-mono text-slate-500">
-        {{ formatDate(getAssignedDate(order)) }}
-      </span>
-    </template>
-
     <template #cell-created_at="{ item: order }">
-      <div class="flex flex-col">
-        <span class="text-[10px] text-slate-600 font-extrabold uppercase tracking-tight">{{ formatDate(order.created_at) }}</span>
-        <span class="text-[9px] text-slate-400 font-medium">by {{ order.added_by?.name || "Admin" }}</span>
-      </div>
+      <OrderMetaCell :date="order.created_at" :by="order.added_by?.name || 'Admin'" />
     </template>
 
     <template #cell-modified_by="{ item: order }">
-      <div class="flex flex-col">
-        <span class="text-[10px] text-slate-600 font-extrabold uppercase tracking-tight">{{ formatDate(order.computed_modified_at) }}</span>
-        <span class="text-[9px] text-slate-400 font-medium">by {{ order.computed_modified_by }}</span>
-      </div>
+      <OrderMetaCell :date="order.computed_modified_at" :by="order.computed_modified_by" />
     </template>
 
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
         <!-- Main Actions (Always show view/edit, show others if in main 'Orders' view) -->
-        <button v-if="canEdit && statusFilter === 'all'" @click.stop="sendWhatsApp(order)"
+        <!-- <button v-if="canEdit && statusFilter === 'all'" @click.stop="sendWhatsApp(order)"
           :disabled="sendingWhatsapp === order.id"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-600 transition-all duration-200 disabled:opacity-50"
           title="Send WhatsApp">
           <Loader2 v-if="sendingWhatsapp === order.id" class="h-4 w-4 animate-spin" />
           <MessageCircle v-else class="h-4 w-4" />
-        </button>
+        </button> -->
 
         <button v-if="canView" @click.stop="$emit('view-info', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
@@ -131,6 +100,14 @@ import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 import axios from "axios";
 import DataTable from "../ui/data-table/DataTable.vue";
+import { getPriorityLabel, getPriorityClass } from "../../constants/orderPriorities";
+
+// New cell components
+import OrderCustomerCell from "./cells/OrderCustomerCell.vue";
+import OrderDatesCell from "./cells/OrderDatesCell.vue";
+import OrderSourceCell from "./cells/OrderSourceCell.vue";
+import OrderStatusCell from "./cells/OrderStatusCell.vue";
+import OrderMetaCell from "./cells/OrderMetaCell.vue";
 
 const props = defineProps({
   orders: {
@@ -266,14 +243,13 @@ const columns = computed(() => {
     return [
       { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
       { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
-      { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name" },
-      { key: "orderDate", label: "Order Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: "order_date" },
-      { key: "delivery_date", label: "Delivery Date", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "delivery_date" },
-
-      { key: "status", label: "Order Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status", type: "select", options: Object.keys(orderStatusStyles).map(s => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })) },
+      { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name", tooltip: "Customer Name\nProduct Name\nTotal Quantity" },
+      { key: "dates", label: "Dates", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "order_date", tooltip: "Order Date (OD)\nDesign Finalized (DF)\nDelivery Date (DD)" },
+      { key: "orderSrc", label: "Order Src", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "client_information.order_details.order_taken_by", tooltip: "Order Taken By\nOrder Placed In" },
+      { key: "status", label: "Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status", type: "select", options: Object.keys(orderStatusStyles).map(s => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })), tooltip: "Current Status\nAssigned Staff Name" },
       { key: "payment", label: "Payment Status", align: "left", width: "140px", class: "whitespace-nowrap", filterKey: "payment_status", type: "select", options: [ { label: "Paid", value: "paid" }, { label: "Unpaid", value: "unpaid" }, { label: "Partial", value: "partial" } ] },
-      { key: "created_at", label: "Created", align: "left", width: "150px", type: "date", filterKey: "created_at" },
-      { key: "modified_by", label: "Modified", align: "left", width: "150px", type: "date", filterKey: "computed_modified_at" },
+      { key: "created_at", label: "Created", align: "left", width: "130px", type: "date", filterKey: "created_at", tooltip: "Created Date\nCreated By" },
+      { key: "modified_by", label: "Modified", align: "left", width: "130px", type: "date", filterKey: "computed_modified_at", tooltip: "Modified Date\nModified By" },
       { key: "actions", label: "Actions", align: "right", width: "130px", class: "whitespace-nowrap" },
     ];
   }

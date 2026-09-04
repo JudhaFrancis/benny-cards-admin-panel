@@ -37,6 +37,12 @@
         </div>
         <div class="space-y-2">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Priority
+          </label>
+          <SearchableDropdown v-model="orderPriority" :options="PRIORITY_OPTIONS" placeholder="Select Priority" />
+        </div>
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Order Taken By
           </label>
           <SearchableDropdown v-model="jobDetails.order_taken_by" :options="staffOptions" placeholder="Select staff"
@@ -178,6 +184,7 @@ import { User as UserIcon, Clock as ClockIcon, Calendar as CalendarIcon } from "
 import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 import { useSettings } from "../../../../../composables/useSettings";
+import { PRIORITY_OPTIONS } from "../../../../../constants/orderPriorities";
 
 const { settings, fetchSettings } = useSettings();
 fetchSettings();
@@ -239,6 +246,13 @@ const formattedOrderDate = computed({
   set: (val) => {
     // val is YYYY-MM-DD from the input
     props.order.order_date = val;
+  },
+});
+
+const orderPriority = computed({
+  get: () => props.order.priority || 'P4',
+  set: (val) => {
+    props.order.priority = val;
   },
 });
 </script>

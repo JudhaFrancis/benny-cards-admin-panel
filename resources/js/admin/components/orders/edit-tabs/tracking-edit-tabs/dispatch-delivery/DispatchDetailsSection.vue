@@ -141,17 +141,17 @@
       </div>
     </div>
 
-    <div v-else-if="selectedMode === 'Courier'" class="animate-in fade-in slide-in-from-top-2 duration-300">
+    <div v-else-if="selectedMode === 'Courier' || selectedMode === 'Direct to Client'" class="animate-in fade-in slide-in-from-top-2 duration-300">
       <!-- Courier Details -->
       <div
         class="p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm space-y-8"
       >
         <div class="flex items-center gap-3 pb-2 border-b border-slate-50">
           <div class="p-2 bg-purple-50 rounded-xl">
-            <PackageIcon class="h-5 w-5 text-purple-600" />
+            <component :is="selectedMode === 'Direct to Client' ? UserCheckIcon : PackageIcon" class="h-5 w-5 text-purple-600" />
           </div>
           <h4 class="font-black text-slate-800 uppercase tracking-tight">
-            Courier Details
+            {{ selectedMode === 'Direct to Client' ? 'Direct to Client Details' : 'Courier Details' }}
           </h4>
         </div>
 
@@ -161,7 +161,7 @@
               class="text-sm font-semibold text-slate-700 flex items-center gap-2"
             >
               <TagIcon class="h-4 w-4 text-primary" />
-              Courier Name <span class="text-red-500">*</span>
+              {{ selectedMode === 'Direct to Client' ? 'Client / Contact Name' : 'Courier Name' }} <span v-if="selectedMode !== 'Direct to Client'" class="text-red-500">*</span>
             </label>
             <div class="relative group">
               <TagIcon
@@ -180,7 +180,7 @@
               class="text-sm font-semibold text-slate-700 flex items-center gap-2"
             >
               <LayersIcon class="h-4 w-4 text-primary" />
-              Tracking No <span class="text-red-500">*</span>
+              {{ selectedMode === 'Direct to Client' ? 'Reference No (Optional)' : 'Tracking No' }}
             </label>
             <div class="relative group">
               <LayersIcon
@@ -298,7 +298,7 @@
               class="text-sm font-semibold text-slate-700 flex items-center gap-2"
             >
               <FileTextIcon class="h-4 w-4 text-primary" />
-              LR Number <span class="text-red-500">*</span>
+              LR Number
             </label>
             <div class="relative group">
               <FileTextIcon
@@ -427,6 +427,7 @@ import {
   Check as CheckIcon,
   Building as BuildingIcon,
   FileText as FileTextIcon,
+  UserCheck as UserCheckIcon,
 } from "lucide-vue-next";
 import TimePicker from "../../../../ui/pickers/TimePicker.vue";
 

@@ -29,7 +29,7 @@
       leave-to-class="translate-y-1 opacity-0"
     >
       <PopoverPanel
-        class="absolute z-[60] mt-3 w-72 -translate-x-1/2 left-1/2 lg:left-0 lg:translate-x-0 transform rounded-[2rem] bg-white p-4 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-slate-100"
+        class="absolute z-[var(--z-popover)] mt-3 w-72 -translate-x-1/2 left-1/2 lg:left-0 lg:translate-x-0 transform rounded-[2rem] bg-white p-4 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-slate-100"
       >
         <!-- Calendar Header -->
         <div class="flex items-center justify-between mb-4 px-1">

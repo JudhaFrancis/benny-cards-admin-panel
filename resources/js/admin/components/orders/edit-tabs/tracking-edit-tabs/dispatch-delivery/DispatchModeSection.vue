@@ -79,14 +79,17 @@
           Dispatch Details with Date <span class="text-red-500">*</span>
         </label>
         <div class="relative group">
-          <CalendarIcon
-            class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
-          />
-          <input
-            type="date"
+          <DatePicker
             v-model="dispatchMode.date"
-            class="w-full px-11 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-          />
+            placeholder="dd-mm-yyyy"
+            custom-class="pl-11 py-2.5 text-xs"
+          >
+            <template #leading>
+              <CalendarIcon
+                class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors z-10"
+              />
+            </template>
+          </DatePicker>
         </div>
       </div>
 
@@ -164,7 +167,9 @@ import {
   User as UserIcon,
   Check as CheckIcon,
   Clock as ClockIcon,
+  UserCheck as UserCheckIcon,
 } from "lucide-vue-next";
+import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 
 const props = defineProps({
   order: {
@@ -187,6 +192,7 @@ const dispatchMode = computed(() => {
 
 const modeOptions = [
   { id: "Shop Pickup", label: "Shop Pickup", icon: StoreIcon },
+  { id: "Direct to Client", label: "Direct to Client", icon: UserCheckIcon },
   { id: "Bus", label: "Bus", icon: BusIcon },
   { id: "Transport", label: "Transport", icon: TruckIcon },
   { id: "Courier", label: "Courier", icon: PackageIcon },

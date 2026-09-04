@@ -859,6 +859,7 @@ const handleSubmit = async () => {
     formData.append("remarks", form.remarks || "");
     formData.append("payment_method", form.payment_method || "cash");
     formData.append("status", form.status || "pending");
+    formData.append("priority", form.priority || "P4");
 
     // Append items
     form.items.forEach((item, index) => {

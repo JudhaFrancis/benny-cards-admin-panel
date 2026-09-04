@@ -192,7 +192,8 @@ const relevantSections = computed(() => {
     case 'designing':
       return [
         { id: 'assign', label: 'Work Assign Process', icon: Briefcase, component: ViewWorkAssignSection },
-        { id: 'design', label: 'Design Details', icon: Printer, component: ViewDesignPrintSection }
+        { id: 'design', label: 'Design Details', icon: Printer, component: ViewDesignPrintSection },
+        { id: 'specs', label: 'Card Specifications', icon: CreditCard, component: ViewCardSpecsSection }
       ];
     case 'printing':
       return [
