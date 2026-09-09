@@ -96,7 +96,7 @@
 
         <template #cell-order_number="{ item: invoice }">
           <span class="text-sm font-semibold text-slate-900 italic">
-            {{ invoice.order_number }}
+            {{ invoice.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}
           </span>
         </template>
 

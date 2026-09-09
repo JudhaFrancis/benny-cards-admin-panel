@@ -2,7 +2,7 @@
   <DataTable :columns="columns" :items="recentOrders" :loading="loading" no-wrapper>
     <template #cell-order_number="{ item: order }">
       <span class="font-semibold text-slate-900 italic">
-        {{ order.order_number?.split('-')[0] }}
+        {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}
       </span>
     </template>
 

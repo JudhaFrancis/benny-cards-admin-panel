@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <PageHeader :title="`Edit Order #${order?.order_number || ''}`">
+    <PageHeader :title="`Edit Order ${order?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || ''}`">
       <template #subtitle>
         <div class="flex items-center gap-2">
           <span>{{ stageTitle }}</span>

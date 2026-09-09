@@ -55,7 +55,7 @@
                         as="h3"
                         class="text-2xl font-bold tracking-tight text-white mb-1"
                       >
-                        Edit Order #{{ editedOrder?.order_number || editedOrder?.id }}
+                        Edit Order {{ editedOrder?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || editedOrder?.id  }}
                       </DialogTitle>
                       <div class="flex items-center gap-3 mt-1.5">
                         <span

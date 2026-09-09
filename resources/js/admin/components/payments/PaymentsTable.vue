@@ -19,7 +19,7 @@
 
     <template #cell-order="{ item: payment }">
       <span v-if="payment.order" class="text-sm text-slate-600 font-medium"
-        >#{{ payment.order.order_number }}</span
+        >{{ payment.order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}</span
       >
       <span v-else class="text-slate-400 italic font-medium">None</span>
     </template>

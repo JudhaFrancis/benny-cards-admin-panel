@@ -77,7 +77,7 @@
               <!-- Top Row: ID & Delivery Date -->
               <div class="flex items-center justify-between mb-5">
                 <span class="text-xs font-black text-slate-500 bg-slate-50 px-4 py-1.5 rounded-lg tracking-widest uppercase border border-slate-100 shadow-sm">
-                  ORDER ID: {{ order.order_number }}
+                  ORDER ID: {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}
                 </span>
                 <div v-if="order.delivery_date" class="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100 shadow-sm">
                   <Calendar class="h-3.5 w-3.5" />

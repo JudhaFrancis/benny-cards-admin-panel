@@ -7,7 +7,7 @@
           class="font-semibold text-slate-900 italic cursor-pointer hover:text-primary transition-colors duration-200"
           @click.stop="$emit('edit', order)"
         >
-          {{ order.order_number?.split('-')[0] }}
+          {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}
         </span>
         <div class="flex items-center gap-2 mt-0.5">
           <span v-if="order.delivery_date && order.resolved_status?.toLowerCase() !== 'delivered'" class="text-[10px]"

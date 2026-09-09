@@ -77,7 +77,7 @@
              <button @click="isPreviewOpen = true" class="p-2 bg-white text-slate-900 rounded-xl hover:bg-slate-50 transition-all active:scale-95 shadow-lg" title="Preview">
                 <EyeIcon class="h-4 w-4" />
              </button>
-             <a :href="getImageSource(order.designing.sticker_image)" :download="`sticker-${order.order_number}`" class="p-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all active:scale-95 shadow-lg" title="Download">
+             <a :href="getImageSource(order.designing.sticker_image)" :download="`sticker-${order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4))}`" class="p-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all active:scale-95 shadow-lg" title="Download">
                 <DownloadIcon class="h-4 w-4" />
              </a>
           </div>
@@ -86,7 +86,7 @@
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sticker Design</span>
             <div class="flex items-center gap-3">
                <button @click="isPreviewOpen = true" class="text-[10px] font-bold text-primary hover:underline">Preview</button>
-               <a :href="getImageSource(order.designing.sticker_image)" :download="`sticker-${order.order_number}`" class="text-[10px] font-bold text-primary hover:underline">Download</a>
+               <a :href="getImageSource(order.designing.sticker_image)" :download="`sticker-${order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4))}`" class="text-[10px] font-bold text-primary hover:underline">Download</a>
             </div>
         </div>
       </div>

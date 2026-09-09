@@ -9,7 +9,7 @@
       </button>
     </div>
 
-    <PageHeader :title="`Order #${order?.order_number || ''}`">
+    <PageHeader :title="`Order ${order?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || ''}`">
       <template #subtitle>
         <div class="flex items-center gap-2 text-slate-500">
           <span>{{ stageTitle }}</span>

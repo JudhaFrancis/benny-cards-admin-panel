@@ -10,7 +10,7 @@
         <div class="space-y-2">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Order No</label>
           <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 font-mono text-sm">
-            #{{ order.order_number }}
+            {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}
           </div>
         </div>
         <div class="space-y-2">

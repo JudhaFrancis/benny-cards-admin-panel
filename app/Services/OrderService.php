@@ -29,10 +29,26 @@ class OrderService
         return $this->trackingService->updateTracking($order, $data);
     }
 
+    private function generateOrderNumber(): string
+    {
+        $prefix = 'OD-';
+        $monthYear = strtoupper(date('My')); // e.g., SEP26
+        
+        $latestOrder = \App\Models\Order::withTrashed()
+            ->where('order_number', 'LIKE', $prefix . $monthYear . '%')
+            ->orderBy('id', 'desc')
+            ->first();
 
+        if (!$latestOrder) {
+            $sequence = 1;
+        } else {
+            $prefixLength = strlen($prefix . $monthYear);
+            $sequenceStr = substr($latestOrder->order_number, $prefixLength);
+            $sequence = (int)$sequenceStr + 1;
+        }
 
-
-
+        return $prefix . $monthYear . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+    }
 
     /**
      * Create a new order with items and customer details.
@@ -49,7 +65,7 @@ class OrderService
             $paidAmount = $data['paid_amount'] ?? 0;
 
             $order = Order::create([
-                'order_number' => 'TEMP-' . uniqid(),
+                'order_number' => $this->generateOrderNumber(),
                 'order_date' => $data['order_date'] ?? now(),
                 'delivery_date' => $data['delivery_date'] ?? ($data['customer']['expected_delivery_date'] ?? null),
                 'user_id' => $data['user_id'] ?? auth()->id(),
@@ -67,10 +83,6 @@ class OrderService
                 'status' => $data['status'] ?? 'pending',
                 'added_by' => auth()->id(),
                 'modified_by' => auth()->id(),
-            ]);
-
-            $order->update([
-                'order_number' => 'ORD' . $order->id . '-' . date('dmY'),
             ]);
 
             foreach ($itemsData as $item) {

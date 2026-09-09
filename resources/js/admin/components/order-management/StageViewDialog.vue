@@ -1,7 +1,7 @@
 <template>
   <InfoModal 
     :is-open="isOpen" 
-    :title="`Order #${orderData?.order_number || ''}`" 
+    :title="`Order ${orderData?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || ''}`" 
     :icon="Package"
     max-width="xl"
     @close="$emit('close')"

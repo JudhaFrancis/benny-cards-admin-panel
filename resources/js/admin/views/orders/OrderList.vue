@@ -121,7 +121,7 @@
     <ConfirmationModal
       :is-open="isDeleteModalOpen"
       title="Delete Order"
-      :message="`Are you sure you want to delete order #${selectedOrder?.order_number || selectedOrder?.id}? This action cannot be undone.`"
+      :message="`Are you sure you want to delete order ${selectedOrder?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || selectedOrder?.id}? This action cannot be undone.`"
       confirm-text="Delete Order"
       variant="danger"
       @close="isDeleteModalOpen = false"

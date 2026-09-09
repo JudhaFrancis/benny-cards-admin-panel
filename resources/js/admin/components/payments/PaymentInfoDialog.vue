@@ -85,7 +85,7 @@
                       Order Number
                     </p>
                     <p class="text-sm font-bold text-gray-900">
-                      #{{ payment.order?.order_number || "N/A" }}
+                      {{ payment.order?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || "N/A"  }}
                     </p>
                   </div>
                   <div class="space-y-1.5 border-t border-gray-50 pt-5">

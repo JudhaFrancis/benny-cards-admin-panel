@@ -101,7 +101,7 @@
                                 <li :class="['relative cursor-pointer select-none py-3 pl-11 pr-4 transition-colors', active ? 'bg-primary/5 text-primary' : 'text-gray-900']">
                                   <div class="flex flex-col">
                                     <span :class="['block truncate font-bold', selected ? 'text-primary' : '']">
-                                      {{ order.order_number }}
+                                      {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}
                                     </span>
                                     <span class="block truncate text-xs font-medium text-gray-400 mt-0.5">
                                       {{ order.customer_details?.name }} • ₹{{ Number(order.total_amount).toLocaleString('en-IN') }} • Due: ₹{{ Number(order.balance_due).toLocaleString('en-IN') }}
