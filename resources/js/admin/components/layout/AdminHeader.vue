@@ -100,13 +100,6 @@
           <BellIcon
             class="h-5 w-5 transition-transform group-hover:scale-110"
           />
-          <!-- Notification Badge with Count -->
-          <span v-if="whatsappLogsCount > 0" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center">
-            <span
-              class="relative inline-flex rounded-full h-5 w-5 bg-rose-500 items-center justify-center text-[10px] font-bold text-white"
-              >{{ whatsappLogsCount > 99 ? '99+' : whatsappLogsCount }}</span
-            >
-          </span>
         </button>
 
         <!-- User Dropdown -->
@@ -195,7 +188,9 @@
 
   <WhatsAppLogsSidebar 
     :isOpen="isWhatsAppLogsOpen" 
+    :whatsapp-count="whatsappLogsCount"
     @close="isWhatsAppLogsOpen = false" 
+    @refresh-count="handleWorkCountUpdate"
   />
 </template>
 
@@ -220,6 +215,7 @@ import { useRouter } from "vue-router";
 import ConfirmationModal from "../ui/modals/ConfirmationModal.vue";
 import { useAuth } from "../../composables/useAuth";
 import { usePermissions } from "../../composables/usePermissions";
+import { useToast } from "../../composables/useToast";
 import WhatsAppLogsSidebar from "../whatsapp/WhatsAppLogsSidebar.vue";
 
 const router = useRouter();
@@ -227,9 +223,51 @@ const { isSuperAdmin } = usePermissions();
 const isConfirmOpen = ref(false);
 const isLoading = ref(false);
 const { user, logout } = useAuth();
+const toast = useToast();
 
 const isWhatsAppLogsOpen = ref(false);
 const whatsappLogsCount = ref(0);
+const workUnreadCount = ref(0);
+const hasShownLoginToast = ref(false);
+
+const totalBadgeCount = computed(() => {
+  return workUnreadCount.value;
+});
+
+const handleWorkCountUpdate = (newCount) => {
+  workUnreadCount.value = newCount;
+};
+
+const fetchWorkNotificationsCount = async (isLoginCheck = false) => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+    const response = await fetch('/api/v1/work-notifications?limit=1&unread_only=1', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+    const data = await response.json();
+    if (data.success) {
+      const oldCount = workUnreadCount.value;
+      const count = data.data.unread_count || 0;
+      workUnreadCount.value = count;
+
+      // 1. Initial Login Check (Show toast if they have unread assignments)
+      if (isLoginCheck && !hasShownLoginToast.value && count > 0) {
+        hasShownLoginToast.value = true;
+        toast.info(`You have ${count} pending tasks!`, 4000);
+      }
+      // 2. Real-time alert when new work is assigned while logged in
+      else if (!isLoginCheck && count > oldCount && oldCount > 0) {
+        toast.info(`New task assigned! (${count} pending)`, 4000);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch work notifications count:', error);
+  }
+};
 
 const fetchWhatsAppCount = async () => {
   try {
@@ -366,15 +404,27 @@ const handleLogout = async () => {
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
   
-  // Fetch WhatsApp logs count on mount
+  // 1. Fetch initial counts on mount & show login toast if unread assignments exist
+  fetchWorkNotificationsCount(true);
   fetchWhatsAppCount();
   
-  // Refresh count every 30 seconds
-  const interval = setInterval(fetchWhatsAppCount, 30000);
+  // 2. Poll counts periodically every 30s for badge updates
+  const interval = setInterval(() => {
+    fetchWorkNotificationsCount(false);
+    fetchWhatsAppCount();
+  }, 30000);
+
+  // 3. Periodic Reminder Toast: Triggers every 30 minutes if staff still has unread assignments
+  const reminderInterval = setInterval(() => {
+    if (workUnreadCount.value > 0) {
+      toast.info(`Reminder: ${workUnreadCount.value} tasks pending!`, 4000);
+    }
+  }, 30 * 60 * 1000); // 30 minutes
   
-  // Clean up interval on unmount
+  // Clean up intervals on unmount
   onUnmounted(() => {
     clearInterval(interval);
+    clearInterval(reminderInterval);
   });
 });
 

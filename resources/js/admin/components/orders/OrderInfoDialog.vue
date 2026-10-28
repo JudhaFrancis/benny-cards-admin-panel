@@ -69,7 +69,12 @@
                           <CalendarIcon class="h-3.5 w-3.5" />
                           {{ formatDate(order?.order_date) }}
                         </span>
-
+                        <span
+                          v-if="order?.budget_tier && order?.budget_tier !== 'None'"
+                          class="text-xs text-amber-200 font-bold flex items-center gap-1.5 bg-white/10 px-2.5 py-0.5 rounded-lg border border-amber-300/30 backdrop-blur-sm"
+                        >
+                          {{ order.budget_tier }} Tier
+                        </span>
                       </div>
                     </div>
                   </div>

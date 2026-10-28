@@ -14,11 +14,17 @@
             :class="getCountdownColor(order.delivery_date)">
             {{ getCountdownText(order.delivery_date) }}
           </span>
-          <span v-else class="text-[10px] text-slate-400 font-medium">
-            -
+          <span v-else-if="order.status?.toLowerCase() === 'delivered' || getStageStatus(order).toLowerCase() === 'completed'" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            {{ getStageStatus(order).toLowerCase() === 'completed' ? 'Completed' : 'Delivered' }}
           </span>
           <span v-if="order.priority" :class="['text-[10px] px-1.5 py-0.5 rounded-full font-bold border', getPriorityClass(order.priority)]">
             {{ getPriorityLabel(order.priority) }}
+          </span>
+        </div>
+        <div v-if="order.budget_tier && order.budget_tier !== 'None'" class="mt-1 flex items-center">
+          <span :class="['text-[10px] px-2 py-0.5 rounded-full font-bold border inline-flex items-center gap-1.5 shadow-sm', getBudgetTierClass(order.budget_tier)]">
+            <span class="w-1.5 h-1.5 rounded-full" :class="getBudgetTierDotClass(order.budget_tier)"></span>
+            {{ getBudgetTierLabel(order.budget_tier) }}
           </span>
         </div>
       </div>
@@ -37,7 +43,21 @@
     </template>
 
     <template #cell-assigned_name="{ item: order }">
-      <div class="flex flex-col">
+      <div v-if="stage === 'designing'" class="flex flex-col gap-1 text-[11px] font-medium tracking-tight">
+        <div class="flex items-center gap-1.5 text-slate-600">
+          <span class="text-slate-400 font-bold shrink-0">Assigned to:</span>
+          <span class="text-slate-800 truncate" :title="order.designing?.work_assign?.assigned_to">{{ order.designing?.work_assign?.assigned_to || "N/A" }}</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-600">
+          <span class="text-slate-400 font-bold shrink-0">Content by:</span>
+          <span class="text-slate-800 truncate" :title="order.designing?.work_assign?.content_by">{{ order.designing?.work_assign?.content_by || "N/A" }}</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-600">
+          <span class="text-slate-400 font-bold shrink-0">Completed by:</span>
+          <span class="text-slate-800 truncate" :title="order.designing?.work_assign?.completed_by">{{ order.designing?.work_assign?.completed_by || "N/A" }}</span>
+        </div>
+      </div>
+      <div v-else class="flex flex-col">
         <span class="text-sm font-semibold text-slate-900">{{ getAssignedName(order) }}</span>
       </div>
     </template>
@@ -46,6 +66,23 @@
       <span class="text-sm font-medium text-slate-700">
         {{ order.client_information?.order_details?.order_placed_in || "N/A" }}
       </span>
+    </template>
+
+    <template #cell-dates="{ item: order }">
+      <div class="flex flex-col gap-1 text-[11px] font-medium tracking-tight">
+        <div class="flex items-center gap-1.5 text-slate-600">
+          <span class="w-5 text-slate-400 font-bold">AD</span>
+          <span class="text-slate-800">{{ getAssignedDate(order) }}</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-600">
+          <span class="w-5 text-slate-400 font-bold">CD</span>
+          <span class="text-slate-800">{{ order.computed_completed_date && order.computed_completed_date !== 'N/A' ? formatDate(order.computed_completed_date) : 'N/A' }}</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-600">
+          <span class="w-5 text-slate-400 font-bold">DD</span>
+          <span class="text-slate-800">{{ order.delivery_date ? formatDate(order.delivery_date) : 'N/A' }}</span>
+        </div>
+      </div>
     </template>
 
     <template #cell-assigned_date="{ item: order }">
@@ -97,12 +134,87 @@
     </template>
 
     <template #cell-status="{ item: order }">
-      <span :class="cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
-        statusStyles[getStageStatus(order).toLowerCase()] || 'bg-slate-500/10 text-slate-500 border-slate-500/20'
-      )">
-        {{ getStageStatus(order) }}
-      </span>
+      <div v-if="stage === 'designing'" class="flex flex-col gap-1 items-start">
+        <AppTooltip v-if="getStageStatus(order).toLowerCase() === 'cancelled'">
+          <template #trigger>
+            <span :class="cn(
+              'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-colors duration-200 cursor-help',
+              statusStyles['cancelled']
+            )">
+              {{ getStageStatus(order) }}
+              <Info class="w-3 h-3 text-rose-500 opacity-80" />
+            </span>
+          </template>
+          <div class="p-1 space-y-1 text-left max-w-xs">
+            <div v-if="order.cancelled_module" class="text-[11px] font-semibold text-rose-300">
+              <span class="text-slate-400 font-normal">Cancelled In:</span> {{ order.cancelled_module }}
+            </div>
+            <div v-if="order.cancelled_reason" class="text-[11px] text-slate-100">
+              <span class="text-slate-400 font-normal">Reason:</span> {{ order.cancelled_reason }}
+            </div>
+            <div v-if="!order.cancelled_module && !order.cancelled_reason" class="text-[11px] text-slate-300 italic">
+              Order cancelled
+            </div>
+          </div>
+        </AppTooltip>
+        <span v-else :class="cn(
+          'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
+          statusStyles[getStageStatus(order).toLowerCase()] || 'bg-slate-500/10 text-slate-500 border-slate-500/20'
+        )">
+          {{ getStageStatus(order) }}
+        </span>
+        <span v-if="getStageStatus(order).toLowerCase() === 'cancelled' && order.cancelled_reason" 
+          class="text-[9px] text-rose-500 font-medium truncate max-w-[120px]"
+          :title="order.cancelled_reason">
+          {{ order.cancelled_reason }}
+        </span>
+        <div v-if="order.computed_process_status !== 'N/A'" :class="cn(
+          'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors duration-200',
+          order.computed_process_status === 'Content Received'
+            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+            : 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+        )">
+          <span class="w-1.5 h-1.5 rounded-full mr-1.5 shrink-0"
+            :class="order.computed_process_status === 'Content Received' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+          <span class="whitespace-nowrap">{{ order.computed_process_status }}</span>
+        </div>
+        <span v-else class="text-[10px] text-slate-400 font-medium pl-1">N/A</span>
+      </div>
+      <div v-else class="flex flex-col gap-0.5 items-start">
+        <AppTooltip v-if="getStageStatus(order).toLowerCase() === 'cancelled'">
+          <template #trigger>
+            <span :class="cn(
+              'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-colors duration-200 cursor-help',
+              statusStyles['cancelled']
+            )">
+              {{ getStageStatus(order) }}
+              <Info class="w-3 h-3 text-rose-500 opacity-80" />
+            </span>
+          </template>
+          <div class="p-1 space-y-1 text-left max-w-xs">
+            <div v-if="order.cancelled_module" class="text-[11px] font-semibold text-rose-300">
+              <span class="text-slate-400 font-normal">Cancelled In:</span> {{ order.cancelled_module }}
+            </div>
+            <div v-if="order.cancelled_reason" class="text-[11px] text-slate-100">
+              <span class="text-slate-400 font-normal">Reason:</span> {{ order.cancelled_reason }}
+            </div>
+            <div v-if="!order.cancelled_module && !order.cancelled_reason" class="text-[11px] text-slate-300 italic">
+              Order cancelled
+            </div>
+          </div>
+        </AppTooltip>
+        <span v-else :class="cn(
+          'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors duration-200',
+          statusStyles[getStageStatus(order).toLowerCase()] || 'bg-slate-500/10 text-slate-500 border-slate-500/20'
+        )">
+          {{ getStageStatus(order) }}
+        </span>
+        <span v-if="getStageStatus(order).toLowerCase() === 'cancelled' && order.cancelled_reason" 
+          class="text-[9px] text-rose-500 font-medium truncate max-w-[110px]"
+          :title="order.cancelled_reason">
+          {{ order.cancelled_reason }}
+        </span>
+      </div>
     </template>
 
     <template #cell-created_at="{ item: order }">
@@ -208,18 +320,44 @@
         {{ order.dispatch_delivery?.dispatch_mode?.modes || "N/A" }}
       </span>
     </template>
+
+    <template #cell-notification_status="{ item: order }">
+      <div class="flex items-center justify-center">
+        <span
+          :class="cn(
+            'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition-all duration-200 cursor-pointer shadow-sm select-none',
+            (order[relationKey]?.notification_status === 'read' || order.computed_notification_status === 'read')
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+              : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+          )"
+          @click.stop="toggleNotificationStatus(order)"
+          :title="(order[relationKey]?.notification_status === 'read' || order.computed_notification_status === 'read') ? 'Click to mark as Unread' : 'Click to mark as Read'"
+        >
+          <span
+            class="w-1.5 h-1.5 rounded-full mr-1.5"
+            :class="(order[relationKey]?.notification_status === 'read' || order.computed_notification_status === 'read') ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'"
+          ></span>
+          {{ (order[relationKey]?.notification_status === 'read' || order.computed_notification_status === 'read') ? 'Read' : 'Unread' }}
+        </span>
+      </div>
+    </template>
     
     <template #cell-actions="{ item: order }">
       <div class="flex justify-end gap-1.5 transition-opacity duration-200">
-        <button @click.stop="$emit('view', order)"
+        <button v-if="canView" @click.stop="$emit('view', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600 transition-all duration-200"
           title="View Info">
           <Eye class="h-4 w-4" />
         </button>
-        <button @click.stop="$emit('edit', order)"
+        <button v-if="canEdit" @click.stop="$emit('edit', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-all duration-200"
           title="Edit Order">
           <Pencil class="h-4 w-4" />
+        </button>
+        <button v-if="canDelete" @click.stop="$emit('delete', order)"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
+          title="Cancel Order">
+          <Trash2 class="h-4 w-4" />
         </button>
       </div>
     </template>
@@ -228,12 +366,20 @@
 
 <script setup>
 import { computed } from "vue";
-import { Eye, Pencil, Check, X, Clock } from "lucide-vue-next";
+import axios from "axios";
+import { Eye, Pencil, Trash2, Check, X, Clock, Info, Bell } from "lucide-vue-next";
 import DataTable from "../ui/data-table/DataTable.vue";
 import AppTooltip from "../ui/display/AppTooltip.vue";
 import OrderCustomerCell from "../orders/cells/OrderCustomerCell.vue";
 import { useSettings } from "../../composables/useSettings";
+import { usePermissions } from "../../composables/usePermissions";
+import { useToast } from "../../composables/useToast";
 import { getPriorityLabel, getPriorityClass } from "../../constants/orderPriorities";
+import { getBudgetTierLabel, getBudgetTierClass, getBudgetTierDotClass } from "../../constants/orderBudgetTiers";
+
+const toast = useToast();
+const { getModulePermissions } = usePermissions();
+const { canView, canEdit, canDelete } = getModulePermissions("Order");
 
 const { settings, fetchSettings } = useSettings();
 fetchSettings();
@@ -264,7 +410,7 @@ const props = defineProps({
   from: { type: Number, default: 1 }
 });
 
-const emit = defineEmits(["view", "edit", "filter-change"]);
+const emit = defineEmits(["view", "edit", "delete", "filter-change"]);
 
 const relationKey = computed(() => {
   switch (props.stage) {
@@ -310,7 +456,8 @@ const processedOrders = computed(() => {
         if (val === "Buttersheet / Master") return "Master";
         return val;
       }),
-      computed_printing_days_status: printingDaysStatus
+      computed_printing_days_status: printingDaysStatus,
+      computed_notification_status: order[relationKey.value]?.notification_status || 'unread'
     };
   });
 
@@ -338,13 +485,24 @@ const columns = computed(() => {
   ];
 
   if (props.stage !== 'printing') {
-    cols.push({
-      key: "assigned_name",
-      label: props.stage === 'client-information' ? "Order Taken By" : "Assigned Name",
-      align: "left",
-      width: "180px",
-      filterKey: "computed_assigned_name"
-    });
+    if (props.stage === 'designing') {
+      cols.push({
+        key: "assigned_name",
+        label: "Assigned",
+        align: "left",
+        width: "200px",
+        filterKey: "computed_assigned_name",
+        tooltip: "Assigned By\nContent By\nCompleted By"
+      });
+    } else {
+      cols.push({
+        key: "assigned_name",
+        label: props.stage === 'client-information' ? "Order Taken By" : "Assigned Name",
+        align: "left",
+        width: "180px",
+        filterKey: "computed_assigned_name"
+      });
+    }
   }
 
   if (props.stage === 'client-information') {
@@ -387,28 +545,16 @@ const columns = computed(() => {
     });
   }
 
-  const dateLabel = props.stage === 'client-information' ? "Order Date" : 
-                    (props.stage === 'printing' ? "Confirmed Date" : "Assigned Date");
-
-  cols.push({
-    key: "assigned_date",
-    label: dateLabel,
-    align: "left",
-    width: "140px",
-    class: "whitespace-nowrap",
-    type: "date",
-    filterKey: props.stage === 'client-information' ? "order_date" : null
-  });
-
   if (props.stage === 'designing') {
     cols.push({
-      key: "completed_date_col",
-      label: "Completed Date",
+      key: "dates",
+      label: "Dates",
       align: "left",
       width: "140px",
       class: "whitespace-nowrap",
       type: "date",
-      filterKey: "designing.work_assign.completed_date"
+      filterKey: "dates",
+      tooltip: "Assigned Date (AD)\nCompleted Date (CD)\nDelivery Date (DD)"
     });
     cols.push({
       key: "assign_timings_col",
@@ -418,6 +564,19 @@ const columns = computed(() => {
       class: "whitespace-nowrap",
       type: "text",
       filterKey: "designing_work_assign_assign_timings"
+    });
+  } else {
+    const dateLabel = props.stage === 'client-information' ? "Order Date" : 
+                      (props.stage === 'printing' ? "Confirmed Date" : "Assigned Date");
+
+    cols.push({
+      key: "assigned_date",
+      label: dateLabel,
+      align: "left",
+      width: "140px",
+      class: "whitespace-nowrap",
+      type: "date",
+      filterKey: props.stage === 'client-information' ? "order_date" : null
     });
   }
 
@@ -529,31 +688,6 @@ const columns = computed(() => {
 
   if (props.stage === 'designing') {
     cols.push({
-      key: "process_status",
-      label: "Process Status",
-      align: "left",
-      width: "180px",
-      class: "whitespace-nowrap",
-      type: "select",
-      filterKey: "computed_process_status",
-      options: [
-        { label: "Content Received", value: "Content Received" },
-        { label: "Content Not Received", value: "Content Not Received" },
-        { label: "Not Assigned", value: "n/a" }
-      ]
-    });
-
-    cols.push({
-      key: "completed_by",
-      label: "Completed By",
-      align: "left",
-      width: "160px",
-      class: "whitespace-nowrap",
-      type: "text",
-      filterKey: "computed_completed_by"
-    });
-
-    cols.push({
       key: "design_outputs_col",
       label: "Design Output",
       align: "left",
@@ -581,35 +715,48 @@ const columns = computed(() => {
   }
 
   // Add Status
+  const statusOptions = [
+    { label: "Pending", value: "Pending" },
+    { label: "Processing", value: "Process" },
+    { label: "Completed", value: "Completed" },
+    { label: "Cancelled", value: "Cancelled" }
+  ];
+
+  if (props.stage === 'designing') {
+    statusOptions.push(
+      { header: true, label: "Process Status" },
+      { label: "Content Received", value: "Content Received" },
+      { label: "Content Not Received", value: "Content Not Received" }
+    );
+  }
+
   cols.push({
     key: "status",
     label: "Status",
     align: "left",
-    width: "120px",
+    width: props.stage === 'designing' ? "160px" : "120px",
     class: "whitespace-nowrap",
     type: "select",
     multiple: true,
     defaultFilter: ["Pending", "Process"],
     hideAllOption: true,
     filterKey: "computed_stage_status",
-    options: [
-      { label: "Pending", value: "Pending" },
-      { label: "Processing", value: "Process" },
-      { label: "Completed", value: "Completed" },
-      { label: "Cancelled", value: "Cancelled" }
-    ]
+    tooltip: props.stage === 'designing' ? "Status\nProcess Status" : null,
+    options: statusOptions
   });
 
-  // Add Delivery Date (Global)
-  cols.push({
-    key: "delivery_date",
-    label: props.stage === 'printing' ? "Received Date" : "Delivery Date",
-    align: "left",
-    width: "140px",
-    class: "whitespace-nowrap",
-    type: "date",
-    filterKey: "delivery_date"
-  });
+  // Add Delivery Date (Global except Designing which has DD in Dates)
+  if (props.stage !== 'designing') {
+    cols.push({
+      key: "delivery_date",
+      label: props.stage === 'printing' ? "Received Date" : "Delivery Date",
+      align: "left",
+      width: "140px",
+      class: "whitespace-nowrap",
+      type: "date",
+      filterKey: "delivery_date"
+    });
+  }
 
   // Add Audit
   if (props.stage !== 'client-information' && props.stage !== 'designing') {
@@ -620,7 +767,6 @@ const columns = computed(() => {
         align: "left",
         width: "120px",
         class: "whitespace-nowrap",
-        type: "date",
         filterKey: "created_at"
       });
     }
@@ -632,13 +778,26 @@ const columns = computed(() => {
     align: "left",
     width: "140px",
     class: "whitespace-nowrap",
-    type: "date",
-    filterKey: `${stageDataKey}.updated_at`
+    filterKey: "modified_at"
+  });
+
+  cols.push({
+    key: "notification_status",
+    label: "Notification Status",
+    align: "center",
+    width: "150px",
+    class: "whitespace-nowrap",
+    type: "select",
+    filterKey: "computed_notification_status",
+    options: [
+      { label: "Unread", value: "unread" },
+      { label: "Read", value: "read" }
+    ]
   });
 
   // Common final columns
   cols.push(
-    { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" }
+    { key: "actions", label: "Action", align: "right", width: "120px", class: "whitespace-nowrap" }
   );
 
   return cols;
@@ -887,6 +1046,36 @@ const getProcessStatus = (order) => {
   if (wa.content_received) return "Content Received";
   if (wa.content_not_received) return "Content Not Received";
   return "N/A";
+};
+
+const toggleNotificationStatus = async (order) => {
+  const current = order[relationKey.value]?.notification_status || order.computed_notification_status || 'unread';
+  const newStatus = current === 'read' ? 'unread' : 'read';
+  const recordId = order[relationKey.value]?.id;
+  if (!recordId) return;
+
+  // Optimistic UI update
+  if (order[relationKey.value]) {
+    order[relationKey.value].notification_status = newStatus;
+  }
+  order.computed_notification_status = newStatus;
+
+  try {
+    const res = await axios.post(`/api/v1/work-notifications/${relationKey.value}/${recordId}/${newStatus}`);
+    if (res.data?.success) {
+      toast.success(newStatus === 'read' ? 'Marked as read' : 'Marked as unread');
+    } else {
+      throw new Error(res.data?.message || 'Failed to update notification status');
+    }
+  } catch (e) {
+    console.error("Failed to toggle notification status", e);
+    // Rollback optimistic update
+    if (order[relationKey.value]) {
+      order[relationKey.value].notification_status = current;
+    }
+    order.computed_notification_status = current;
+    toast.error(e.response?.data?.message || e.message || "Failed to update notification status");
+  }
 };
 
 function cn(...classes) {

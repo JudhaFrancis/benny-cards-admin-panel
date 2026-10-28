@@ -20,6 +20,7 @@ class OrderDispatchDelivery extends Model
         'dispatch_mode',
         'dispatch_details',
         'assigned_user_ids',
+        'notification_status',
         'modified_by'
     ];
 

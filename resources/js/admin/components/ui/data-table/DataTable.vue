@@ -65,18 +65,22 @@
                             </li>
                           </ListboxOption>
 
-                          <ListboxOption v-slot="{ active, selected }" v-for="opt in column.options" :key="opt.value"
-                            :value="opt.value" as="template">
-                            <li :class="[
-                              active || selected ? 'bg-primary/5 text-primary' : 'text-slate-600',
-                              'relative cursor-pointer select-none py-2 pl-4 pr-4 transition-colors font-semibold',
-                            ]">
-                              <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-1 text-primary">
-                                <CheckIcon class="h-3 w-3" aria-hidden="true" />
-                              </span>
-                              <span :class="[selected ? 'font-bold pl-3' : '', 'block truncate']">{{ opt.label }}</span>
+                          <template v-for="(opt, optIdx) in column.options" :key="opt.value || optIdx">
+                            <li v-if="opt.header" class="my-1 border-t border-slate-100 px-3 pt-2 pb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400 select-none">
+                              {{ opt.label }}
                             </li>
-                          </ListboxOption>
+                            <ListboxOption v-else v-slot="{ active, selected }" :value="opt.value" as="template">
+                              <li :class="[
+                                active || selected ? 'bg-primary/5 text-primary' : 'text-slate-600',
+                                'relative cursor-pointer select-none py-2 pl-4 pr-4 transition-colors font-semibold',
+                              ]">
+                                <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-1 text-primary">
+                                  <CheckIcon class="h-3 w-3" aria-hidden="true" />
+                                </span>
+                                <span :class="[selected ? 'font-bold pl-3' : '', 'block truncate']">{{ opt.label }}</span>
+                              </li>
+                            </ListboxOption>
+                          </template>
                         </ListboxOptions>
                       </transition>
                     </div>

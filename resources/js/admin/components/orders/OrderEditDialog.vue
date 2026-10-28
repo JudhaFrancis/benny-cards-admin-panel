@@ -116,7 +116,7 @@
                         Information
                       </h4>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="md:col-span-2">
+                        <div>
                           <label
                             class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2.5 ml-1"
                             >Full Name<span class="text-rose-500"
@@ -129,6 +129,18 @@
                             class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold text-xs"
                             placeholder="John Doe"
                             required
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2.5 ml-1"
+                            >Budget Tier</label
+                          >
+                          <SearchableDropdown
+                            v-model="editedOrder.budget_tier"
+                            :options="BUDGET_TIER_OPTIONS"
+                            placeholder="Select Budget Tier"
                           />
                         </div>
                         <div>
@@ -676,6 +688,8 @@ import {
 } from "lucide-vue-next";
 import axios from "axios";
 import { useToast } from "../../composables/useToast";
+import { BUDGET_TIER_OPTIONS } from "../../constants/orderBudgetTiers";
+import SearchableDropdown from "../ui/dropdowns/SearchableDropdown.vue";
 
 const props = defineProps({
   order: {

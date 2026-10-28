@@ -2,21 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class SmsTemplate extends Model
+/**
+ * Class SmsTemplate
+ * Kept for backwards compatibility. Use NotificationTemplate instead.
+ * 
+ * @package App\Models
+ */
+class SmsTemplate extends NotificationTemplate
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'event_name',
-        'template_content',
-        'parameter',
-        'allow_to_send',
-        'status',
-        'sender_id',
-        'whatsapp_content',
-        'module_id',
-    ];
+    protected $table = 'notification_templates';
 }

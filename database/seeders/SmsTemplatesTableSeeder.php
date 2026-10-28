@@ -12,7 +12,11 @@ class SmsTemplatesTableSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('sms_templates')->insert([
+        $table = \Illuminate\Support\Facades\Schema::hasTable('notification_templates')
+            ? 'notification_templates'
+            : 'sms_templates';
+
+        DB::table($table)->insert([
             'id' => 1,
             'event_name' => 'NEW_ORDER',
             'template_content' => 'Dear {customerName}, thank you for choosing InvitaPrint! Your order #{order_id} has been received. We’re excited to craft your perfect invitations. For assistance, contact us at 9876543210.',

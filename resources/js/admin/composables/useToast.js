@@ -20,6 +20,7 @@ export function useToast() {
 
     const success = (message, duration) => addToast(message, "success", duration);
     const error = (message, duration) => addToast(message, "error", duration);
+    const info = (message, duration) => addToast(message, "info", duration);
 
     return {
         toasts,
@@ -27,5 +28,7 @@ export function useToast() {
         removeToast,
         success,
         error,
+        info,
     };
 }
+

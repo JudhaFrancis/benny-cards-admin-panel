@@ -21,6 +21,12 @@
             {{ getPriorityLabel(order.priority) }}
           </span>
         </div>
+        <div v-if="order.budget_tier && order.budget_tier !== 'None'" class="mt-1 flex items-center">
+          <span :class="['text-[10px] px-2 py-0.5 rounded-full font-bold border inline-flex items-center gap-1.5 shadow-sm', getBudgetTierClass(order.budget_tier)]">
+            <span class="w-1.5 h-1.5 rounded-full" :class="getBudgetTierDotClass(order.budget_tier)"></span>
+            {{ getBudgetTierLabel(order.budget_tier) }}
+          </span>
+        </div>
       </div>
     </template>
 
@@ -83,7 +89,7 @@
           <Pencil class="h-4 w-4" />
         </button>
 
-        <button v-if="canDelete && statusFilter === 'all'" @click.stop="$emit('delete', order)"
+        <button v-if="canDelete" @click.stop="$emit('delete', order)"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
           title="Delete Order">
           <Trash2 class="h-4 w-4" />
@@ -101,6 +107,7 @@ import { useToast } from "../../composables/useToast";
 import axios from "axios";
 import DataTable from "../ui/data-table/DataTable.vue";
 import { getPriorityLabel, getPriorityClass } from "../../constants/orderPriorities";
+import { getBudgetTierLabel, getBudgetTierClass, getBudgetTierDotClass } from "../../constants/orderBudgetTiers";
 
 // New cell components
 import OrderCustomerCell from "./cells/OrderCustomerCell.vue";
@@ -244,12 +251,12 @@ const columns = computed(() => {
       { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
       { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
       { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name", tooltip: "Customer Name\nProduct Name\nTotal Quantity" },
-      { key: "dates", label: "Dates", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "order_date", tooltip: "Order Date (OD)\nDesign Finalized (DF)\nDelivery Date (DD)" },
-      { key: "orderSrc", label: "Order Src", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "client_information.order_details.order_taken_by", tooltip: "Order Taken By\nOrder Placed In" },
+      { key: "dates", label: "Dates", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "dates", tooltip: "Order Date (OD)\nDesign Finalized (DF)\nDelivery Date (DD)" },
+      { key: "orderSrc", label: "Order Src", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "orderSrc", tooltip: "Order Taken By\nOrder Placed In" },
       { key: "status", label: "Status", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "resolved_status", type: "select", options: Object.keys(orderStatusStyles).map(s => ({ label: s.charAt(0).toUpperCase() + s.slice(1), value: s })), tooltip: "Current Status\nAssigned Staff Name" },
       { key: "payment", label: "Payment Status", align: "left", width: "140px", class: "whitespace-nowrap", filterKey: "payment_status", type: "select", options: [ { label: "Paid", value: "paid" }, { label: "Unpaid", value: "unpaid" }, { label: "Partial", value: "partial" } ] },
-      { key: "created_at", label: "Created", align: "left", width: "130px", type: "date", filterKey: "created_at", tooltip: "Created Date\nCreated By" },
-      { key: "modified_by", label: "Modified", align: "left", width: "130px", type: "date", filterKey: "computed_modified_at", tooltip: "Modified Date\nModified By" },
+      { key: "created_at", label: "Created", align: "left", width: "130px", filterKey: "created_at", tooltip: "Created Date\nCreated By" },
+      { key: "modified_by", label: "Modified", align: "left", width: "130px", filterKey: "computed_modified_at", tooltip: "Modified Date\nModified By" },
       { key: "actions", label: "Actions", align: "right", width: "130px", class: "whitespace-nowrap" },
     ];
   }
@@ -279,8 +286,8 @@ const columns = computed(() => {
     { key: "assigned_name", label: "Assigned Name", align: "left", width: "200px", filterKey: assignedNameKey },
     { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: assignedDateKey },
     { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },
-    { key: "created_at", label: "Created At", align: "left", width: "150px", type: "date" },
-    { key: "modified_by", label: "Modified By", align: "left", width: "150px" },
+    { key: "created_at", label: "Created At", align: "left", width: "150px", filterKey: "created_at" },
+    { key: "modified_by", label: "Modified By", align: "left", width: "150px", filterKey: "computed_modified_at" },
     { key: "actions", label: "Action", align: "right", width: "110px", class: "whitespace-nowrap" },
   ];
 });

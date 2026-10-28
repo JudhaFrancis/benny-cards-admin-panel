@@ -2,22 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Notification extends Model
+/**
+ * Class Notification
+ * Kept for backwards compatibility. Use NotificationLog instead.
+ * 
+ * @package App\Models
+ */
+class Notification extends NotificationLog
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'message',
-        'message_type',
-        'status',
-        'resend',
-        'created_by',
-        'sender_mobile_no',
-        'recipient_mobile_no',
-        'response',
-    ];
-    
+    protected $table = 'notification_logs';
 }

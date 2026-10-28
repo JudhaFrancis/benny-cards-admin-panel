@@ -40,6 +40,12 @@ Route::prefix('v1')->group(function () {
             // Dashboard
             Route::get('dashboard/stats', [DashboardController::class , 'index']);
 
+            // Work Assignment Notifications
+            Route::get('work-notifications', [App\Http\Controllers\Api\WorkNotificationController::class , 'index']);
+            Route::post('work-notifications/{stage}/{id}/read', [App\Http\Controllers\Api\WorkNotificationController::class , 'markRead']);
+            Route::post('work-notifications/{stage}/{id}/unread', [App\Http\Controllers\Api\WorkNotificationController::class , 'markUnread']);
+            Route::post('work-notifications/mark-all-read', [App\Http\Controllers\Api\WorkNotificationController::class , 'markAllRead']);
+
             // Orders
             Route::get('orders', [OrderController::class , 'index']);
             Route::post('orders', [OrderController::class , 'store']);

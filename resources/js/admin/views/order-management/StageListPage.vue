@@ -36,7 +36,7 @@
       <AdvancedDateFilter v-model="dateFilters" @change="fetchOrders" />
     </div>
 
-    <OrderStageTable :orders="filteredOrders" :loading="loading" :stage="stage" :from="meta.from" @view="handleView" @edit="handleEdit" @filter-change="handleFilterChange" />
+    <OrderStageTable :orders="filteredOrders" :loading="loading" :stage="stage" :from="meta.from" @view="handleView" @edit="handleEdit" @delete="handleConfirmDelete" @filter-change="handleFilterChange" />
 
     <!-- Pagination Controls -->
     <div
@@ -76,6 +76,27 @@
       @close="isEditModalOpen = false" @success="fetchOrders" />
 
     <OrderCreateDialog :is-open="isCreateModalOpen" @close="isCreateModalOpen = false" @success="fetchOrders" />
+
+    <ConfirmationModal
+      :is-open="isDeleteModalOpen"
+      title="Cancel Order"
+      :message="`Are you sure you want to cancel order ${selectedOrder?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || selectedOrder?.id}?`"
+      confirm-text="Cancel Order"
+      variant="danger"
+      :loading="isDeleting"
+      @close="isDeleteModalOpen = false"
+      @confirm="handleDelete"
+    >
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700">Reason <span class="text-slate-400 font-normal">(Optional)</span></label>
+        <textarea
+          v-model="cancelledReason"
+          rows="2"
+          placeholder="Enter reason for cancellation..."
+          class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none resize-none transition-all"
+        ></textarea>
+      </div>
+    </ConfirmationModal>
   </div>
 </template>
 
@@ -85,16 +106,22 @@ import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import OrderStageTable from "../../components/order-management/OrderStageTable.vue";
 import StageViewDialog from "../../components/order-management/StageViewDialog.vue";
 import StageEditDialog from "../../components/order-management/StageEditDialog.vue";
+import ConfirmationModal from "../../components/ui/modals/ConfirmationModal.vue";
 import AdvancedDateFilter from "../../components/reports/AdvancedDateFilter.vue";
 import { useAuth } from "../../composables/useAuth";
 import { usePermissions } from "../../composables/usePermissions";
-import { Plus as PlusIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from "lucide-vue-next";
+import { useToast } from "../../composables/useToast";
+import { Plus as PlusIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Trash2 as Trash2Icon } from "lucide-vue-next";
 import axios from "axios";
+import { useRoute } from "vue-router";
 import OrderCreateDialog from "../../components/orders/OrderCreateDialog.vue";
+
+const route = useRoute();
 
 const { user } = useAuth();
 const { getModulePermissions } = usePermissions();
 const { canAdd: canCreate } = getModulePermissions("Order");
+const toast = useToast();
 
 const props = defineProps({
   stage: { type: String, required: true },
@@ -127,6 +154,8 @@ const dateFilters = ref({
 const isViewModalOpen = ref(false);
 const isEditModalOpen = ref(false);
 const isCreateModalOpen = ref(false);
+const isDeleteModalOpen = ref(false);
+const isDeleting = ref(false);
 const selectedOrder = ref(null);
 
 const statusCounts = ref(null);
@@ -135,12 +164,14 @@ const fetchOrders = async () => {
   orders.value = [];
   loading.value = true;
   try {
+    const searchQuery = route.query.search;
     const params = {
       page: page.value,
       per_page: 20,
       stage: props.stage,
-      start_date: dateFilters.value.from_date,
-      end_date: dateFilters.value.to_date,
+      start_date: searchQuery ? null : dateFilters.value.from_date,
+      end_date: searchQuery ? null : dateFilters.value.to_date,
+      search: searchQuery || undefined,
       ...columnFilters.value
     };
 
@@ -180,7 +211,7 @@ const getAssignedNameHelper = (order, stage) => {
     case 'client-information':
       return order.client_information?.order_details?.order_taken_by;
     case 'designing':
-      return order.designing?.work_assign?.assigned_to || order.designing?.work_assign?.completed_by;
+      return order.designing?.work_assign?.assigned_to || order.designing?.work_assign?.content_by || order.designing?.work_assign?.completed_by;
     case 'printing':
       return order.printing?.printing_status?.assigned_to || order.designing?.work_assign?.assigned_to;
     case 'packaging':
@@ -218,12 +249,51 @@ const handleEdit = (order) => {
   isEditModalOpen.value = true;
 };
 
+const cancelledReason = ref("");
+
+const handleConfirmDelete = (order) => {
+  selectedOrder.value = order;
+  cancelledReason.value = "";
+  isDeleteModalOpen.value = true;
+};
+
+const handleDelete = async () => {
+  if (!selectedOrder.value) return;
+
+  try {
+    isDeleting.value = true;
+    const stageTitle = props.title || props.stage;
+    await axios.delete(`/api/v1/orders/${selectedOrder.value.id}`, {
+      params: {
+        cancelled_module: stageTitle,
+        cancelled_reason: cancelledReason.value,
+      },
+      data: {
+        cancelled_module: stageTitle,
+        cancelled_reason: cancelledReason.value,
+      }
+    });
+    toast.success("Order cancelled successfully");
+    isDeleteModalOpen.value = false;
+    fetchOrders();
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    toast.error(error.response?.data?.message || "Failed to cancel order");
+  } finally {
+    isDeleting.value = false;
+  }
+};
+
 onMounted(fetchOrders);
 
 // Refetch if stage or filter changes (if we want backend filter)
 watch(() => props.stage, () => {
   page.value = 1;
   columnFilters.value = {}; // Reset filters when switching between stages
+  fetchOrders();
+});
+watch(() => route.query.search, () => {
+  page.value = 1;
   fetchOrders();
 });
 watch(page, fetchOrders);

@@ -56,6 +56,7 @@ class OrderController extends Controller
             'customer.phone' => 'required|string',
             'customer.address_1' => 'required|string',
             'priority' => 'nullable|string|in:P1,P2,P3,P4',
+            'budget_tier' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'nullable|exists:products,id',
             'items.*.product_name' => 'required_without:items.*.product_id|string',
@@ -98,6 +99,7 @@ class OrderController extends Controller
             'customer.phone' => 'nullable|string',
             'customer.address_1' => 'nullable|string',
             'priority' => 'nullable|string|in:P1,P2,P3,P4',
+            'budget_tier' => 'nullable|string',
             'items' => 'nullable|array|min:1',
             'items.*.product_id' => 'nullable|exists:products,id',
             'items.*.product_name' => 'required_without:items.*.product_id|string',
@@ -120,15 +122,18 @@ class OrderController extends Controller
     /**
      * Remove the specified order from storage.
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         $order = $this->orderListingService->getOrder($id);
 
-        $this->orderService->deleteOrder($order);
+        $this->orderService->deleteOrder($order, [
+            'cancelled_module' => $request->input('cancelled_module'),
+            'cancelled_reason' => $request->input('cancelled_reason') ?: $request->input('remarks'),
+        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Order deleted successfully.',
+            'message' => 'Order cancelled successfully.',
         ]);
     }
 

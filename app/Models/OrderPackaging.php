@@ -19,6 +19,7 @@ class OrderPackaging extends Model
         'packaging_logistics',
         'packaging_status',
         'assigned_user_ids',
+        'notification_status',
         'modified_by'
     ];
 

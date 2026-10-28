@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Notification;
+use App\Models\NotificationLog;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +18,7 @@ class WhatsAppLogController extends Controller
         $limit = $request->get('limit', 15);
         $search = $request->get('search');
 
-        $query = Notification::where('message_type', 'whatsapp')->latest();
+        $query = NotificationLog::where('message_type', 'whatsapp')->latest();
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -38,7 +38,7 @@ class WhatsAppLogController extends Controller
      */
     public function resend($id, WhatsAppService $whatsAppService): JsonResponse
     {
-        $log = Notification::find($id);
+        $log = NotificationLog::find($id);
         if (!$log) {
             return response()->json(['success' => false, 'message' => 'Log not found'], 404);
         }

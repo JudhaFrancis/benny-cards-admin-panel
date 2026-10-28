@@ -142,7 +142,8 @@ import {
   Palette as PaletteIcon,
   Printer as PrinterIcon,
   Package as PackageIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  Trash2 as Trash2Icon
 } from "lucide-vue-next";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -342,6 +343,7 @@ const handleOrderSaved = async (updatedOrderData) => {
       "payment_method",
       "status",
       "priority",
+      "budget_tier",
       "order_date",
       "coupon_id"
     ];
@@ -393,6 +395,8 @@ const handleOrderSaved = async (updatedOrderData) => {
   }
 };
 
+const cancelledReason = ref("");
+
 const handleConfirmDelete = (order) => {
   selectedOrder.value = order;
   isDeleteModalOpen.value = true;
@@ -402,10 +406,13 @@ const handleDelete = async () => {
   if (!selectedOrder.value) return;
 
   try {
-    await axios.delete(`/api/v1/orders/${selectedOrder.value.id}`);
+    await axios.delete(`/api/v1/orders/${selectedOrder.value.id}`, {
+      params: { cancelled_module: 'Orders' },
+      data: { cancelled_module: 'Orders' }
+    });
     toast.success("Order deleted successfully");
-    orders.value = orders.value.filter((o) => o.id !== selectedOrder.value.id);
     isDeleteModalOpen.value = false;
+    fetchOrders();
   } catch (error) {
     console.error("Error deleting order:", error);
     toast.error("Failed to delete order");

@@ -32,6 +32,24 @@
     </div>
 
     <div v-else-if="orderData" class="space-y-6 px-1">
+      <!-- Cancelled Notice Banner -->
+      <div v-if="orderData.status === 'cancelled'" class="bg-rose-50 border border-rose-200/80 rounded-2xl p-4 flex items-start gap-3.5 shadow-sm">
+        <div class="p-2 bg-rose-100 rounded-xl text-rose-600 shrink-0">
+          <AlertCircle class="h-5 w-5" />
+        </div>
+        <div class="space-y-1 text-xs flex-1">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-rose-900 text-sm">Order Cancelled</h4>
+            <span v-if="orderData.cancelled_module" class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold text-[10px] uppercase tracking-wider">
+              {{ orderData.cancelled_module }}
+            </span>
+          </div>
+          <p v-if="orderData.cancelled_reason" class="text-rose-700">
+            <span class="font-semibold text-rose-900">Reason:</span> {{ orderData.cancelled_reason }}
+          </p>
+          <p v-else class="text-rose-500 italic">No cancellation reason provided</p>
+        </div>
+      </div>
 
       <div v-for="section in relevantSections" :key="section.id" class="bg-slate-50/50 rounded-3xl border border-slate-100 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white/50">
@@ -54,6 +72,7 @@
                   'text-xs font-bold transition-colors',
                   stageStatus === 'Completed' ? 'text-emerald-600' :
                   stageStatus === 'Process' ? 'text-blue-600' :
+                  stageStatus === 'Cancelled' ? 'text-rose-600' :
                   'text-amber-600'
                 ]"
               >
@@ -87,7 +106,7 @@
 
 <script setup>
 import { ref, computed, watch } from "vue";
-import { Loader2, ClipboardList, User, CreditCard, Briefcase, Printer, Package, Box, MapPin, Truck, FileText, Activity, Calendar, Clock, User as UserIcon } from "lucide-vue-next";
+import { Loader2, ClipboardList, User, CreditCard, Briefcase, Printer, Package, Box, MapPin, Truck, FileText, Activity, Calendar, Clock, AlertCircle, User as UserIcon } from "lucide-vue-next";
 import axios from "axios";
 import InfoModal from "../ui/modals/InfoModal.vue";
 
@@ -140,6 +159,7 @@ const orderData = ref(null);
 const loading = ref(false);
 
 const stageStatus = computed(() => {
+  if (orderData.value?.status === 'cancelled') return 'Cancelled';
   const stageMap = {
     'client-information': 'client_information',
     'designing': 'designing',

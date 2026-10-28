@@ -14,7 +14,7 @@
         </svg>
         Order Information
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="space-y-2">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Order No
@@ -40,6 +40,12 @@
             Priority
           </label>
           <SearchableDropdown v-model="orderPriority" :options="PRIORITY_OPTIONS" placeholder="Select Priority" />
+        </div>
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Budget Tier
+          </label>
+          <SearchableDropdown v-model="orderBudgetTier" :options="BUDGET_TIER_OPTIONS" placeholder="Select Budget Tier" />
         </div>
         <div class="space-y-2">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -111,10 +117,11 @@
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Reference <span class="text-red-500">*</span>
           </label>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             <label v-for="ref in [
               'Already Client',
               'Instagram',
+              'Google',
               'Walk-In',
               'By Client',
               'Other',
@@ -185,6 +192,7 @@ import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue"
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 import { useSettings } from "../../../../../composables/useSettings";
 import { PRIORITY_OPTIONS } from "../../../../../constants/orderPriorities";
+import { BUDGET_TIER_OPTIONS } from "../../../../../constants/orderBudgetTiers";
 
 const { settings, fetchSettings } = useSettings();
 fetchSettings();
@@ -253,6 +261,13 @@ const orderPriority = computed({
   get: () => props.order.priority || 'P4',
   set: (val) => {
     props.order.priority = val;
+  },
+});
+
+const orderBudgetTier = computed({
+  get: () => props.order.budget_tier || '',
+  set: (val) => {
+    props.order.budget_tier = val;
   },
 });
 </script>

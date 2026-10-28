@@ -1,4 +1,4 @@
-<template>
+  <template>
   <TransitionRoot appear :show="isOpen" as="template">
     <Dialog as="div" @close="handleClose" class="relative z-50">
       <!-- Backdrop -->
@@ -111,7 +111,7 @@
                         Information
                       </h4>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="md:col-span-2">
+                        <div>
                           <label
                             class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
                             >Full Name<span class="text-rose-500"
@@ -124,6 +124,18 @@
                             class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all font-semibold"
                             placeholder="John Doe"
                             required
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            class="block text-sm font-bold text-gray-700 mb-2.5 ml-1"
+                            >Budget Tier</label
+                          >
+                          <SearchableDropdown
+                            v-model="form.budget_tier"
+                            :options="BUDGET_TIER_OPTIONS"
+                            placeholder="Select Budget Tier"
                           />
                         </div>
                         <div>
@@ -674,6 +686,8 @@ import {
 } from "lucide-vue-next";
 import axios from "axios";
 import { useToast } from "../../composables/useToast";
+import { BUDGET_TIER_OPTIONS } from "../../constants/orderBudgetTiers";
+import SearchableDropdown from "../ui/dropdowns/SearchableDropdown.vue";
 
 const props = defineProps({
   isOpen: {
@@ -695,6 +709,7 @@ const form = reactive({
     address_1: "",
     address_2: "",
   },
+  budget_tier: "",
   items: [],
   discount: 0,
   extra_charges: 0,
@@ -803,6 +818,7 @@ const resetForm = () => {
   form.extra_charges = 0;
   form.paid_amount = 0;
   form.remarks = "";
+  form.budget_tier = "";
   form.customer = {
     name: "",
     email: "",
@@ -860,6 +876,7 @@ const handleSubmit = async () => {
     formData.append("payment_method", form.payment_method || "cash");
     formData.append("status", form.status || "pending");
     formData.append("priority", form.priority || "P4");
+    formData.append("budget_tier", form.budget_tier || "");
 
     // Append items
     form.items.forEach((item, index) => {

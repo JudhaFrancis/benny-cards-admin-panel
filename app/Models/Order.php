@@ -31,8 +31,11 @@ class Order extends Model
         'balance_due',
         'paid_amount',
         'priority',
+        'budget_tier',
         'payment_status',
         'status',
+        'cancelled_module',
+        'cancelled_reason',
         'added_by',
         'modified_by'
     ];

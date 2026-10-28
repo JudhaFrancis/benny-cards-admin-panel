@@ -80,6 +80,7 @@ class OrderService
                 'balance_due' => (float) max(0, $totalAmount - $paidAmount),
                 'payment_status' => $paidAmount <= 0 ? 'unpaid' : ($paidAmount < $totalAmount ? 'due' : 'paid'),
                 'priority' => $data['priority'] ?? 'P4',
+                'budget_tier' => (!empty($data['budget_tier']) && $data['budget_tier'] !== 'None') ? $data['budget_tier'] : null,
                 'status' => $data['status'] ?? 'pending',
                 'added_by' => auth()->id(),
                 'modified_by' => auth()->id(),
@@ -175,6 +176,8 @@ class OrderService
                 $order->order_date = $data['order_date'];
             if (isset($data['priority']))
                 $order->priority = $data['priority'];
+            if (array_key_exists('budget_tier', $data))
+                $order->budget_tier = (!empty($data['budget_tier']) && $data['budget_tier'] !== 'None') ? $data['budget_tier'] : null;
             if (isset($data['delivery_date'])) {
                 $order->delivery_date = $data['delivery_date'];
             } elseif (isset($data['customer']['expected_delivery_date'])) {
@@ -201,15 +204,32 @@ class OrderService
     }
 
     /**
-     * Soft delete an order.
+     * Soft delete / cancel an order.
      */
-    public function deleteOrder(Order $order): bool
+    public function deleteOrder(Order $order, array $cancellationData = []): bool
     {
-        return DB::transaction(function () use ($order) {
-            $order->items()->delete();
-            $order->customerDetails()->delete();
-            $order->payments()->delete();
-            return $order->delete();
+        return DB::transaction(function () use ($order, $cancellationData) {
+            $stage = $cancellationData['cancelled_module'] ?? null;
+            $reason = $cancellationData['cancelled_reason'] ?? null;
+
+            $updateData = ['status' => 'cancelled'];
+            if (!empty($stage)) {
+                $updateData['cancelled_module'] = $stage;
+            }
+            if (!empty($reason)) {
+                $updateData['cancelled_reason'] = $reason;
+            }
+            $updateData['modified_by'] = auth()->id();
+            $order->update($updateData);
+
+            // Update all stages to Cancelled so the cancellation reflects across all departments
+            $order->clientInformation()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
+            $order->designing()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
+            $order->printing()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
+            $order->packaging()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
+            $order->dispatchDelivery()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
+
+            return true;
         });
     }
 

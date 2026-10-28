@@ -40,6 +40,10 @@
                   </p>
                 </div>
 
+                <div v-if="$slots.default" class="mt-4 w-full text-left">
+                  <slot />
+                </div>
+
                 <div class="mt-8 flex w-full gap-3">
                   <button
                     type="button"

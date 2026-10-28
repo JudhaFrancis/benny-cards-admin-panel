@@ -90,25 +90,53 @@ class OrderTrackingService
 
                 if ($relation) {
                     $status = $data['status'];
+                    $stageUpdateData = [
+                        'status' => $status,
+                        'modified_by' => auth()->id()
+                    ];
+
+                    // Completed/Cancelled stages become read; active stages reset to unread
+                    if ($status === 'Completed' || $status === 'Cancelled') {
+                        $stageUpdateData['notification_status'] = 'read';
+                    } else {
+                        $stageUpdateData['notification_status'] = 'unread';
+                    }
+
                     $order->{$relation}()->updateOrCreate(
                         ['order_id' => $order->id],
-                        [
-                            'status' => $status,
-                            'modified_by' => auth()->id()
-                        ]
+                        $stageUpdateData
                     );
 
                     // Sequential Stage Triggering
                     if ($status === 'Completed') {
                         if ($relation === 'clientInformation') {
-                            $order->designing()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
+                            $order->designing()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending', 'notification_status' => 'unread']);
                         } elseif ($relation === 'designing') {
-                            $order->printing()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
+                            $order->printing()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending', 'notification_status' => 'unread']);
                         } elseif ($relation === 'printing') {
-                            $order->packaging()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
+                            $order->packaging()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending', 'notification_status' => 'unread']);
                         } elseif ($relation === 'packaging') {
-                            $order->dispatchDelivery()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending']);
+                            $order->dispatchDelivery()->firstOrCreate(['order_id' => $order->id], ['status' => 'Pending', 'notification_status' => 'unread']);
                         }
+                    } elseif ($status === 'Cancelled') {
+                        $stageTitle = match($relation) {
+                            'clientInformation' => 'Client Information',
+                            'designing' => 'Designing',
+                            'printing' => 'Printing',
+                            'packaging' => 'Packaging',
+                            'dispatchDelivery' => 'Delivery & Dispatch',
+                            default => $relation
+                        };
+                        $order->update([
+                            'status' => 'cancelled',
+                            'cancelled_module' => $order->cancelled_module ?: $stageTitle,
+                            'modified_by' => auth()->id()
+                        ]);
+                        $order->clientInformation()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
+                        $order->designing()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
+                        $order->printing()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
+                        $order->packaging()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
+                        $order->dispatchDelivery()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
                     }
                 }
             }
@@ -126,11 +154,48 @@ class OrderTrackingService
             }
 
             foreach ($updatesByStage as $relation => $sectionData) {
+                $existingStage = $order->{$relation};
+
+                // Smart assignment tracking: when assigned_to changes, record the assigner (auth user)
+                if ($relation === 'designing' && isset($sectionData['work_assign'])) {
+                    $existingWorkAssign = $existingStage?->work_assign ?? [];
+                    $newAssignedTo = $sectionData['work_assign']['assigned_to'] ?? null;
+                    $oldAssignedTo = $existingWorkAssign['assigned_to'] ?? null;
+
+                    if (!empty($newAssignedTo)) {
+                        // If newly assigned or designer changed, record logged-in user as assigned_by
+                        if (empty($oldAssignedTo) || trim((string)$newAssignedTo) !== trim((string)$oldAssignedTo)) {
+                            $sectionData['work_assign']['assigned_by'] = auth()->user()?->name ?? 'Admin';
+                            $sectionData['work_assign']['assigned_by_id'] = auth()->id();
+                            $sectionData['work_assign']['assigned_at'] = now()->toDateTimeString();
+                        } else {
+                            // Designer didn't change (other fields edited) - retain existing assigned_by
+                            $sectionData['work_assign']['assigned_by'] = $existingWorkAssign['assigned_by']
+                                ?? $existingStage?->modifiedBy?->name
+                                ?? (auth()->user()?->name ?? 'Admin');
+                            if (!empty($existingWorkAssign['assigned_by_id'])) {
+                                $sectionData['work_assign']['assigned_by_id'] = $existingWorkAssign['assigned_by_id'];
+                            }
+                            if (!empty($existingWorkAssign['assigned_at'])) {
+                                $sectionData['work_assign']['assigned_at'] = $existingWorkAssign['assigned_at'];
+                            }
+                        }
+                    }
+                }
+
+                $updatePayload = array_merge($sectionData, [
+                    'modified_by' => auth()->id()
+                ]);
+
+                // Reset notification to unread for active stages whenever updated or re-assigned
+                $currentStatus = $existingStage?->status ?? 'Pending';
+                if (!in_array($currentStatus, ['Completed', 'Cancelled'])) {
+                    $updatePayload['notification_status'] = 'unread';
+                }
+
                 $instance = $order->{$relation}()->updateOrCreate(
                     ['order_id' => $order->id],
-                    array_merge($sectionData, [
-                        'modified_by' => auth()->id()
-                    ])
+                    $updatePayload
                 );
 
                 // Multi-User Assignment Sync Logic

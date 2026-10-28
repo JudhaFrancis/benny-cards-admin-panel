@@ -2,20 +2,22 @@
 
 namespace App\Services;
 
-use App\Models\SmsTemplate;
-use App\Models\Notification;
+use App\Models\NotificationTemplate;
+use App\Models\NotificationLog;
+use App\Models\SmsTemplate; // Backward compatibility alias
+use App\Models\Notification; // Backward compatibility alias
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
     /**
-     * Send WhatsApp using Template from sms_templates table
+     * Send WhatsApp using Template from notification_templates table
      */
     public function sendFromTemplate($eventName, $recipientNo, $dynamicData = [])
     {
         // 1. Fetch Template
-        $template = SmsTemplate::where('event_name', $eventName)
+        $template = NotificationTemplate::where('event_name', $eventName)
             ->where('status', 1)
             ->first();
 
@@ -38,8 +40,8 @@ class WhatsAppService
             $mobileNo = '91' . $mobileNo;
         }
 
-        // 5. Create Log in notifications table (Initial Log)
-        $notification = Notification::create([
+        // 5. Create Log in notification_logs table (Initial Log)
+        $notification = NotificationLog::create([
             'message' => $messageContent,
             'message_type' => 'whatsapp',
             'status' => 'not_sent',
@@ -54,7 +56,7 @@ class WhatsAppService
     /**
      * Resend an existing notification record (Matches Pranav Flow)
      */
-    public function resend(Notification $notification)
+    public function resend($notification)
     {
         // Mark as resent
         $notification->update(['resend' => 'yes']);

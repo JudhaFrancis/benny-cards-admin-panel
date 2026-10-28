@@ -20,6 +20,7 @@ class OrderDesigning extends Model
         'design_print',
         'sticker_image',
         'assigned_user_ids',
+        'notification_status',
         'modified_by'
     ];
 

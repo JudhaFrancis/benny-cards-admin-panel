@@ -22,7 +22,7 @@ class WhatsAppController extends Controller
     {
         $request->validate([
             'phone' => 'required|string',
-            'event' => 'required|string', // Name of event in sms_templates
+            'event' => 'required|string', // Name of event in notification_templates
             'data' => 'nullable|array',   // Placeholders to replace
         ]);
 

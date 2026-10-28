@@ -20,6 +20,7 @@ class OrderClientInformation extends Model
         'client_info',
         'card_specs',
         'assigned_user_ids',
+        'notification_status',
         'modified_by'
     ];
 

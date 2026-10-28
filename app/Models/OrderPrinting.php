@@ -18,6 +18,7 @@ class OrderPrinting extends Model
         'status',
         'printing_status',
         'assigned_user_ids',
+        'notification_status',
         'modified_by'
     ];
 
