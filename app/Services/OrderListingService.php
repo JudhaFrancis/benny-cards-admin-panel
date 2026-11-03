@@ -185,7 +185,7 @@ class OrderListingService
                                              ->whereDoesntHave('packaging', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
                                              ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process'])),
                                              
-                        'new order' => $query->where(function($q) {
+                        'new order' => $query->where('status', '!=', 'cancelled')->where(function($q) {
                             $q->where(function($sub) {
                                 $sub->whereDoesntHave('clientInformation')
                                     ->orWhereHas('clientInformation', fn($ss) => $ss->where('status', '!=', 'Completed'));
@@ -195,6 +195,7 @@ class OrderListingService
                             ->whereDoesntHave('packaging', fn($q) => $q->whereIn('status', ['Completed', 'Process']))
                             ->whereDoesntHave('dispatchDelivery', fn($q) => $q->whereIn('status', ['Completed', 'Process']));
                         }),
+                        'cancelled' => $query->where('status', 'cancelled'),
                         default => $query->where('status', $statusValue)
                     };
                 }

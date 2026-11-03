@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\EnquiryController;
 
 /* |-------------------------------------------------------------------------- | Admin API Routes |-------------------------------------------------------------------------- | | Prefix: /api/admin */
 
@@ -22,6 +23,7 @@ Route::prefix('v1')->group(function () {
     // Public Routes
     Route::post('login', [AuthController::class , 'login']);
     Route::get('settings/logo', [SettingController::class , 'getPublicLogo']);
+    Route::post('enquiries/public', [EnquiryController::class , 'publicStore']);
 
     // WhatsApp Send Route
     Route::post('whatsapp/send', [App\Http\Controllers\Api\WhatsAppController::class , 'sendMessage']);
@@ -45,6 +47,16 @@ Route::prefix('v1')->group(function () {
             Route::post('work-notifications/{stage}/{id}/read', [App\Http\Controllers\Api\WorkNotificationController::class , 'markRead']);
             Route::post('work-notifications/{stage}/{id}/unread', [App\Http\Controllers\Api\WorkNotificationController::class , 'markUnread']);
             Route::post('work-notifications/mark-all-read', [App\Http\Controllers\Api\WorkNotificationController::class , 'markAllRead']);
+
+            // Enquiries
+            Route::get('enquiries', [EnquiryController::class , 'index']);
+            Route::post('enquiries', [EnquiryController::class , 'store']);
+            Route::get('enquiries/{id}', [EnquiryController::class , 'show']);
+            Route::put('enquiries/{id}', [EnquiryController::class , 'update']);
+            Route::delete('enquiries/{id}', [EnquiryController::class , 'destroy']);
+            Route::patch('enquiries/{id}/status', [EnquiryController::class , 'changeStatus']);
+            Route::post('enquiries/{id}/activities', [EnquiryController::class , 'addActivity']);
+            Route::post('enquiries/{id}/convert', [EnquiryController::class , 'convert']);
 
             // Orders
             Route::get('orders', [OrderController::class , 'index']);

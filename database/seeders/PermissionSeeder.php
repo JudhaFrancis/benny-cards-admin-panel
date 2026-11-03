@@ -52,6 +52,7 @@ class PermissionSeeder extends Seeder
             'Printing',
             'Packaging',
             'Dispatch Delivery',
+            'Enquiry',
         ];
 
         // 2. Define Actions

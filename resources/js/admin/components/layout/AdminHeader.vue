@@ -96,10 +96,17 @@
         <button
           @click="isWhatsAppLogsOpen = true"
           class="relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 border group bg-white border-slate-200 text-slate-500 hover:text-primary hover:bg-slate-50 shadow-sm"
+          title="Notifications & Tasks"
         >
           <BellIcon
             class="h-5 w-5 transition-transform group-hover:scale-110"
           />
+          <span
+            v-if="totalBadgeCount > 0"
+            class="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-white"
+          >
+            {{ totalBadgeCount > 99 ? '99+' : totalBadgeCount }}
+          </span>
         </button>
 
         <!-- User Dropdown -->

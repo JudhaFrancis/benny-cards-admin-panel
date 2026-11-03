@@ -120,13 +120,23 @@
 
     <ConfirmationModal
       :is-open="isDeleteModalOpen"
-      title="Delete Order"
-      :message="`Are you sure you want to delete order ${selectedOrder?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || selectedOrder?.id}? This action cannot be undone.`"
-      confirm-text="Delete Order"
+      title="Cancel Order"
+      :message="`Are you sure you want to cancel order ${selectedOrder?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || selectedOrder?.id}?`"
+      confirm-text="Cancel Order"
       variant="danger"
       @close="isDeleteModalOpen = false"
       @confirm="handleDelete"
-    />
+    >
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700">Reason <span class="text-slate-400 font-normal">(Optional)</span></label>
+        <textarea
+          v-model="cancelledReason"
+          rows="2"
+          placeholder="Enter reason for cancellation..."
+          class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none resize-none transition-all"
+        ></textarea>
+      </div>
+    </ConfirmationModal>
   </div>
 </template>
 
@@ -399,6 +409,7 @@ const cancelledReason = ref("");
 
 const handleConfirmDelete = (order) => {
   selectedOrder.value = order;
+  cancelledReason.value = "";
   isDeleteModalOpen.value = true;
 };
 
@@ -407,15 +418,21 @@ const handleDelete = async () => {
 
   try {
     await axios.delete(`/api/v1/orders/${selectedOrder.value.id}`, {
-      params: { cancelled_module: 'Orders' },
-      data: { cancelled_module: 'Orders' }
+      params: { 
+        cancelled_module: 'Orders',
+        cancelled_reason: cancelledReason.value,
+      },
+      data: { 
+        cancelled_module: 'Orders',
+        cancelled_reason: cancelledReason.value,
+      }
     });
-    toast.success("Order deleted successfully");
+    toast.success("Order cancelled successfully");
     isDeleteModalOpen.value = false;
     fetchOrders();
   } catch (error) {
-    console.error("Error deleting order:", error);
-    toast.error("Failed to delete order");
+    console.error("Error cancelling order:", error);
+    toast.error("Failed to cancel order");
   }
 };
 const pageTitle = computed(() => {

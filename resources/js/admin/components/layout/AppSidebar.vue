@@ -217,6 +217,7 @@ import {
   Printer as PrinterIcon,
   CheckCircle as CheckCircleIcon,
   Truck as TruckIcon,
+  ClipboardList as ClipboardListIcon,
 } from "lucide-vue-next";
 import SidebarNavItem from "./SidebarNavItem.vue";
 import ConfirmationModal from "../ui/modals/ConfirmationModal.vue";
@@ -265,6 +266,7 @@ const navDashboard = { title: "Dashboard", url: "/", icon: DashboardIcon };
 // Order Management section
 const navOrders = computed(() => {
   const items = [
+    { title: "Enquiries", url: "/enquiries", icon: ClipboardListIcon, module: "Enquiry" },
     { title: "Orders", url: "/orders", icon: OrdersIcon, module: "Order" },
   ];
   return items.filter((item) => hasPermission(item.module));

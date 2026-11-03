@@ -25,8 +25,12 @@
               column.class,
             ]" :style="column.width ? { width: column.width } : {}">
               <div class="flex items-center gap-1.5">
-                {{ column.label }}
-                <AppTooltip v-if="column.tooltip" :content="column.tooltip" position="top" />
+                <span>{{ column.label }}</span>
+                <AppTooltip v-if="column.tooltip" :content="column.tooltip" position="top">
+                  <template #trigger>
+                    <InfoIcon class="h-3.5 w-3.5 text-slate-400 hover:text-slate-600 cursor-help transition-colors shrink-0" />
+                  </template>
+                </AppTooltip>
               </div>
             </th>
           </tr>
@@ -86,7 +90,7 @@
                     </div>
                   </Listbox>
                 </div>
-                <input v-else type="text" v-model="filters[column.filterKey || column.key]" :placeholder="`Filter ${column.label}...`"
+                <input v-else type="text" v-model="filters[column.filterKey || column.key]" :placeholder="column.placeholder || `Filter ${column.label}...`"
                   class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all placeholder:text-slate-400/50 pr-8 shadow-sm" />
                 <button v-if="!isFilterEmpty(column)" @click="resetColumnFilter(column)"
                   class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-md hover:bg-slate-100">
@@ -166,7 +170,7 @@ import {
 } from "@headlessui/vue";
 import DatePicker from "../pickers/DatePicker.vue";
 import AppTooltip from "../display/AppTooltip.vue";
-import { X as XIcon, Search as SearchIcon, ChevronDown as ChevronDownIcon, Check as CheckIcon } from "lucide-vue-next";
+import { X as XIcon, Search as SearchIcon, ChevronDown as ChevronDownIcon, Check as CheckIcon, Info as InfoIcon } from "lucide-vue-next";
 
 const props = defineProps({
   columns: {

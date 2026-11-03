@@ -37,9 +37,17 @@
 
   /* Global input field styling for bright, readable text */
   input,
-  textarea,
-  select {
+  textarea {
     @apply text-slate-100 text-xs;
+  }
+
+  select {
+    @apply text-slate-800 text-xs bg-white;
+  }
+
+  select option {
+    color: #1e293b !important;
+    background-color: #ffffff !important;
   }
 
   input::placeholder,
@@ -71,8 +79,11 @@
   input[type="password"],
   input[type="tel"],
   input[type="number"],
-  textarea {
-    color: #475569 !important;
+  textarea,
+  select,
+  select option {
+    color: #334155 !important;
+    background-color: #ffffff !important;
     font-size: 0.75rem !important; /* text-xs */
   }
 }

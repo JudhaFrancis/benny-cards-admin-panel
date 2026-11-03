@@ -111,10 +111,20 @@ class OrderService
                 'modified_by' => auth()->id()
             ]);
 
+            // Auto-create corresponding OrderEnquiry for direct orders (zero-risk try-catch)
+            try {
+                if (empty($data['skip_enquiry_creation'])) {
+                    app(\App\Services\EnquiryService::class)->createEnquiryFromOrder($order, $data);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to auto-create enquiry for order #' . $order->order_number . ': ' . $e->getMessage());
+            }
+
             return $order->load([
                 'items.product',
                 'customerDetails',
                 'coupon',
+                'enquiry',
                 'clientInformation.modifiedBy',
                 'designing.modifiedBy',
                 'printing.modifiedBy',
@@ -223,11 +233,11 @@ class OrderService
             $order->update($updateData);
 
             // Update all stages to Cancelled so the cancellation reflects across all departments
-            $order->clientInformation()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
-            $order->designing()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
-            $order->printing()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
-            $order->packaging()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
-            $order->dispatchDelivery()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'modified_by' => auth()->id()]);
+            $order->clientInformation()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
+            $order->designing()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
+            $order->printing()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
+            $order->packaging()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
+            $order->dispatchDelivery()->updateOrCreate(['order_id' => $order->id], ['status' => 'Cancelled', 'notification_status' => 'read', 'modified_by' => auth()->id()]);
 
             return true;
         });

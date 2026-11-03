@@ -45,6 +45,12 @@ const routes = [
                 meta: { module: 'Product' }
             },
             {
+                path: 'enquiries',
+                name: 'Enquiries',
+                component: () => import('../views/enquiries/EnquiryList.vue'),
+                meta: { module: 'Enquiry' }
+            },
+            {
                 path: 'orders',
                 name: 'Orders',
                 component: OrderList,

@@ -5,9 +5,9 @@
       <template #trigger>
         <span :class="[
           'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors duration-200 cursor-help',
-          (order.resolved_status && orderStatusStyles[order.resolved_status.toLowerCase()]) || 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+          orderStatusStyles['cancelled'] || 'bg-rose-500/10 text-rose-500 border-rose-500/20'
         ]">
-          {{ order.resolved_status || "Cancelled" }}
+          Cancelled
           <Info class="w-3 h-3 text-rose-500 opacity-80" />
         </span>
       </template>
@@ -28,12 +28,6 @@
       (order.resolved_status && orderStatusStyles[order.resolved_status.toLowerCase()]) || 'bg-slate-100 text-slate-800 border-slate-200'
     ]">
       {{ order.resolved_status || "New Order" }}
-    </span>
-
-    <span v-if="isCancelled && order.cancelled_reason" 
-      class="text-[9px] text-rose-500 font-medium truncate max-w-[120px]"
-      :title="order.cancelled_reason">
-      {{ order.cancelled_reason }}
     </span>
 
     <!-- Assigned Personnel (Conditional) -->

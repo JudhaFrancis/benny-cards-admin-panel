@@ -114,6 +114,11 @@ class Order extends Model
         return $this->hasOne(OrderDispatchDelivery::class);
     }
 
+    public function enquiry(): HasOne
+    {
+        return $this->hasOne(OrderEnquiry::class, 'converted_order_id');
+    }
+
     // Helper methods
     public function calculatePaidAmount(): float
     {
@@ -196,6 +201,10 @@ class Order extends Model
 
     public function getResolvedStatusAttribute(): string
     {
+        if (strtolower($this->status ?? '') === 'cancelled') {
+            return 'Cancelled';
+        }
+
         $dispatch = $this->dispatchDelivery;
         if ($dispatch) {
             if ($dispatch->status === 'Completed') return 'Delivered';
