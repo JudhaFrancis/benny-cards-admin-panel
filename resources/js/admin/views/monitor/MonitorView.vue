@@ -137,23 +137,23 @@ const currentTime = ref("");
 const currentDate = ref("");
 const recentOrders = ref([]);
 const currentPage = ref(0);
-import { useSettings } from "../../composables/useSettings";
+import { useBranches } from "../../composables/useBranches";
 
 const itemsPerPage = 4;
 
-const { settings, fetchSettings } = useSettings();
-fetchSettings();
+const { activeBranches, fetchBranches } = useBranches();
+fetchBranches();
 
-const branches = computed(() => {
-    let list = ["All Branches"];
-    if (settings.value.branches) {
-        list.push(...settings.value.branches.filter(b => b.active).map(b => b.name));
-    } else {
-        list.push("NGL", "MTM", "TVL", "Chennai", "Online");
-    }
-    return list;
-});
-const selectedBranch = ref("All Branches");
+const ALL_BRANCHES = "All Branches";
+const branches = computed(() => [ALL_BRANCHES, ...activeBranches.value.map((b) => b.name)]);
+const selectedBranch = ref(ALL_BRANCHES);
+
+// The API filters by branch id; undefined = all branches
+const selectedBranchId = computed(() =>
+  selectedBranch.value === ALL_BRANCHES
+    ? undefined
+    : activeBranches.value.find((b) => b.name === selectedBranch.value)?.id
+);
 const showBranchDropdown = ref(false);
 
 const selectBranch = (branch) => {
@@ -202,12 +202,12 @@ const fetchMonitorData = async () => {
       axios.get("/api/v1/orders", { 
         params: { 
           limit: 12,
-          branch: selectedBranch.value
-        } 
+          branch_id: selectedBranchId.value
+        }
       }),
       axios.get("/api/v1/dashboard/stats", {
         params: {
-          branch: selectedBranch.value
+          branch_id: selectedBranchId.value
         }
       })
     ]);

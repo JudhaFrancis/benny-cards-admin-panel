@@ -271,53 +271,6 @@
       </div>
     </div>
 
-    <!-- Branches Section -->
-    <div class="mt-8 bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm">
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <label class="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            <PlusCircleIcon class="h-4 w-4 text-primary" />
-            Manage Branches
-          </label>
-          <div class="flex items-center gap-2">
-            <input
-              v-model="newBranchName"
-              @keyup.enter="handleAddBranch"
-              type="text"
-              placeholder="Add new branch..."
-              class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 w-40 transition-all font-medium"
-            />
-            <button
-              @click="handleAddBranch"
-              type="button"
-              class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-sm shadow-primary/20"
-            >
-              Add
-            </button>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-          <label
-            v-for="branch in form.branches"
-            :key="branch.id"
-            class="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-100"
-            :class="{ 'bg-white shadow-sm border-slate-200': branch.active }"
-          >
-            <input
-              type="checkbox"
-              v-model="branch.active"
-              class="w-4 h-4 rounded-md border-slate-300 text-primary focus:ring-primary/20"
-            />
-            <span class="text-xs font-bold text-slate-700 tracking-tight">{{ branch.name }}</span>
-          </label>
-          
-          <div v-if="!form.branches || form.branches.length === 0" class="col-span-full py-4 text-center text-slate-400 text-xs font-bold">
-            No branches added yet.
-          </div>
-        </div>
-      </div>
-
-    </div>
   </div>
 </template>
 
@@ -340,9 +293,6 @@ import {
   Share2 as Share2Icon,
   Facebook as FacebookIcon,
   Instagram as InstagramIcon,
-  Plus as PlusIcon,
-  Trash as TrashIcon,
-  PlusCircle as PlusCircleIcon,
 } from "lucide-vue-next";
 import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import { usePermissions } from "../../composables/usePermissions";
@@ -365,36 +315,14 @@ const form = reactive({
   photo: null,
   facebook_url: "",
   instagram_url: "",
-  branches: [],
 });
-
-const newBranchName = ref("");
-
-const handleAddBranch = () => {
-  if (newBranchName.value.trim()) {
-    if (!form.branches) form.branches = [];
-    form.branches.push({
-      id: Date.now(),
-      name: newBranchName.value.trim(),
-      active: true
-    });
-    newBranchName.value = "";
-  }
-};
 
 const fetchSettings = async () => {
   await loadSettings();
   if (settings.value) {
-    Object.assign(form, settings.value);
-    if (!form.branches || !Array.isArray(form.branches)) {
-        form.branches = [
-            { id: 1, name: "NGL", active: true },
-            { id: 2, name: "MTM", active: true },
-            { id: 3, name: "TVL", active: true },
-            { id: 4, name: "Chennai", active: true },
-            { id: 5, name: "Online", active: true }
-        ];
-    }
+    Object.keys(form).forEach((key) => {
+      if (settings.value[key] !== undefined) form[key] = settings.value[key];
+    });
   }
 };
 

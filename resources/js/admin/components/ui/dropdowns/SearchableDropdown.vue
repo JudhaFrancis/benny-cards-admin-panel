@@ -24,6 +24,8 @@
 
             <ComboboxInput
               @change="query = $event.target.value"
+              @blur="commitCustom"
+              @keydown.enter="commitCustom"
               :display-value="displayValue"
               :placeholder="placeholder"
               :class="
@@ -54,8 +56,28 @@
             <ComboboxOptions
               class="absolute mt-1 max-h-56 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-2xl ring-1 ring-black/5 focus:outline-none sm:text-sm z-[110] custom-scrollbar text-left"
             >
+              <!-- allowCustom: use the typed text as the value -->
+              <ComboboxOption
+                v-if="customValue"
+                :value="customValue"
+                as="template"
+                v-slot="{ active }"
+              >
+                <li
+                  :class="[
+                    active ? 'bg-slate-50 text-primary' : 'text-slate-900',
+                    'relative cursor-pointer select-none py-2.5 pl-10 pr-4 border-b border-slate-100',
+                  ]"
+                >
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                    <PlusIcon class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span class="block truncate font-medium">Use "{{ customValue }}"</span>
+                </li>
+              </ComboboxOption>
+
               <div
-                v-if="filteredOptions.length === 0 && query !== ''"
+                v-if="filteredOptions.length === 0 && query !== '' && !customValue"
                 class="relative cursor-default select-none py-4 px-4 text-slate-500 text-xs italic"
               >
                 No results found for "{{ query }}"
@@ -110,6 +132,7 @@ import {
 import {
   Check as CheckIcon,
   ChevronDown as ChevronDownIcon,
+  Plus as PlusIcon,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -128,11 +151,37 @@ const props = defineProps({
     default: false
   },
   icon: [Object, Function],
+  // Let the user type a value that isn't in the options (single select only).
+  // The typed text itself becomes the value.
+  allowCustom: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(["update:modelValue"]);
 
 const query = ref("");
+
+// Typed text offered as "Use …" when it doesn't exactly match an existing option
+const customValue = computed(() => {
+  if (!props.allowCustom || props.multiple) return "";
+  const typed = query.value.trim();
+  if (!typed) return "";
+  const lower = typed.toLowerCase();
+  const exists = props.options.some(
+    (o) => String(o.label).toLowerCase() === lower || String(o.value).toLowerCase() === lower
+  );
+  return exists ? "" : typed;
+});
+
+// allowCustom: keep a typed name that isn't in the list when the user presses Enter
+// or leaves the field, without needing to click "Use …"
+const commitCustom = () => {
+  if (customValue.value && customValue.value !== props.modelValue) {
+    emit("update:modelValue", customValue.value);
+  }
+};
 
 const filteredOptions = computed(() =>
   query.value === ""

@@ -55,6 +55,7 @@ class OrderController extends Controller
             'customer.name' => 'required|string',
             'customer.phone' => 'required|string',
             'customer.address_1' => 'required|string',
+            'branch_id' => 'required|integer|exists:branches,id',
             'priority' => 'nullable|string|in:P1,P2,P3,P4',
             'budget_tier' => 'nullable|string',
             'items' => 'required|array|min:1',

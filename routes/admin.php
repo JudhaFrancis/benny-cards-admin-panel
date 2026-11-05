@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\EnquiryController;
+use App\Http\Controllers\Admin\BranchController;
 
 /* |-------------------------------------------------------------------------- | Admin API Routes |-------------------------------------------------------------------------- | | Prefix: /api/admin */
 
@@ -54,9 +55,8 @@ Route::prefix('v1')->group(function () {
             Route::get('enquiries/{id}', [EnquiryController::class , 'show']);
             Route::put('enquiries/{id}', [EnquiryController::class , 'update']);
             Route::delete('enquiries/{id}', [EnquiryController::class , 'destroy']);
-            Route::patch('enquiries/{id}/status', [EnquiryController::class , 'changeStatus']);
-            Route::post('enquiries/{id}/activities', [EnquiryController::class , 'addActivity']);
-            Route::post('enquiries/{id}/convert', [EnquiryController::class , 'convert']);
+            Route::post('enquiries/{id}/approve', [EnquiryController::class , 'approve']);
+            Route::post('enquiries/{id}/reject', [EnquiryController::class , 'reject']);
 
             // Orders
             Route::get('orders', [OrderController::class , 'index']);
@@ -81,6 +81,13 @@ Route::prefix('v1')->group(function () {
                 // Settings
                 Route::get('settings', [SettingController::class , 'show']);
                 Route::put('settings', [SettingController::class , 'update']);
+
+                // Branches
+                Route::get('branches', [BranchController::class , 'index']);
+                Route::get('branches/{id}', [BranchController::class , 'show']);
+                Route::post('branches', [BranchController::class , 'store']);
+                Route::put('branches/{id}', [BranchController::class , 'update']);
+                Route::delete('branches/{id}', [BranchController::class , 'destroy']);
 
                 // Users
                 Route::get('users/roles', [UserController::class , 'roles']);

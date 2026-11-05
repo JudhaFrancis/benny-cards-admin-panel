@@ -203,6 +203,7 @@ import {
   User as UserIcon,
   Users as UsersIcon,
   Shield as ShieldIcon,
+  Store as StoreIcon,
   LogOut as LogOutIcon,
   Settings as SettingsIcon,
   ChevronDown as ChevronDownIcon,
@@ -363,6 +364,10 @@ const navBottom = computed(() => {
 
   if (hasPermission("Role")) {
     items.push({ title: "Roles", url: "/roles", icon: ShieldIcon });
+  }
+
+  if (hasPermission("Branch")) {
+    items.push({ title: "Branches", url: "/branches", icon: StoreIcon });
   }
 
   // Settings/Profile accessible to all authenticated dashboard users

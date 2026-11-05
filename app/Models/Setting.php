@@ -21,10 +21,8 @@ class Setting extends Model
         'app_version',
         'facebook_url',
         'instagram_url',
-        'branches',
     ];
 
     protected $casts = [
-        'branches' => 'array',
     ];
 }

@@ -15,12 +15,55 @@ class EnquiryController extends Controller
     ) {}
 
     /**
-     * Display a listing of enquiries.
+     * Same rules as OrderController::store.
      */
+    protected function rules(bool $creating): array
+    {
+        $req = $creating ? 'required' : 'sometimes|required';
+
+        return [
+            'customer.name' => "{$req}|string|max:191",
+            'customer.phone' => "{$req}|string|max:50",
+            'customer.email' => 'nullable|email|max:191',
+            'customer.address_1' => "{$req}|string",
+            'customer.address_2' => 'nullable|string',
+            'branch_id' => "{$req}|integer|exists:branches,id",
+            'remarks' => 'nullable|string',
+            'budget_tier' => 'nullable|string',
+            'discount' => 'nullable|numeric|min:0',
+            'extra_charges' => 'nullable|numeric|min:0',
+            'items' => "{$req}|array|min:1",
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.product_name' => 'required_without:items.*.product_id|nullable|string',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
+            'items.*.product_image' => 'nullable',
+        ];
+    }
+
+    /**
+     * Find an enquiry the current user is allowed to see.
+     */
+    protected function findVisible(Request $request, int $id, array $with = []): OrderEnquiry
+    {
+        return $this->enquiryService->visibleQuery($request->user())->with($with)->findOrFail($id);
+    }
+
+    protected function ensureApprover(Request $request): ?JsonResponse
+    {
+        if (!$this->enquiryService->canApprove($request->user())) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to approve or reject enquiries.',
+            ], 403);
+        }
+        return null;
+    }
+
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) ($request->get('per_page') ?: $request->get('limit') ?: 20);
-        $result = $this->enquiryService->listEnquiries($request->all(), $perPage);
+        $result = $this->enquiryService->listEnquiries($request->all(), $perPage, $request->user());
 
         return response()->json([
             'success' => true,
@@ -28,72 +71,48 @@ class EnquiryController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created enquiry.
-     */
     public function store(Request $request): JsonResponse
     {
-        $request->validate([
-            'customer_name' => 'required|string|max:191',
-            'customer_phone' => 'required|string|max:50',
-            'customer_email' => 'nullable|email|max:191',
-            'customer_address' => 'nullable|string',
-            'occasion' => 'nullable|string|max:191',
-            'source' => 'nullable|string|max:50',
-            'priority' => 'nullable|string|in:P1,P2,P3,P4',
-            'card_type' => 'nullable|string',
-            'expected_delivery_date' => 'nullable|date',
-            'items.*.product_id' => 'nullable|integer',
-            'items.*.product_name' => 'required_with:items|string',
-            'items.*.product_image' => 'nullable|string',
-            'items.*.quantity' => 'nullable|integer|min:1',
-            'items.*.unit_price' => 'nullable|numeric|min:0',
-        ]);
+        $request->validate($this->rules(true));
 
         $enquiry = $this->enquiryService->createEnquiry($request->all());
 
         return response()->json([
             'success' => true,
-            'message' => 'Enquiry logged successfully.',
+            'message' => "Enquiry {$enquiry->enquiry_number} submitted for approval.",
             'data' => $enquiry,
         ], 201);
     }
 
-    /**
-     * Display the specified enquiry.
-     */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $enquiry = OrderEnquiry::with([
+        $enquiry = $this->findVisible($request, $id, [
             'items.product',
-            'activities.creator',
+            'branch:id,name',
             'addedBy',
             'modifiedBy',
-            'convertedOrder.customerDetails'
-        ])->findOrFail($id);
+            'approvedBy',
+            'rejectedBy',
+            'convertedOrder.customerDetails',
+        ]);
 
         return response()->json([
             'success' => true,
             'data' => $enquiry,
+            'can_approve' => $this->enquiryService->canApprove($request->user()),
         ]);
     }
 
-    /**
-     * Update the specified enquiry.
-     */
     public function update(Request $request, int $id): JsonResponse
     {
-        $enquiry = OrderEnquiry::findOrFail($id);
+        $enquiry = $this->findVisible($request, $id);
+        $request->validate($this->rules(false));
 
-        $request->validate([
-            'customer_name' => 'nullable|string|max:191',
-            'customer_phone' => 'nullable|string|max:50',
-            'customer_email' => 'nullable|email|max:191',
-            'priority' => 'nullable|string|in:P1,P2,P3,P4',
-            'items' => 'nullable|array',
-        ]);
-
-        $updated = $this->enquiryService->updateEnquiry($enquiry, $request->all());
+        try {
+            $updated = $this->enquiryService->updateEnquiry($enquiry, $request->all());
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
 
         return response()->json([
             'success' => true,
@@ -102,12 +121,17 @@ class EnquiryController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified enquiry.
-     */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
-        $enquiry = OrderEnquiry::findOrFail($id);
+        $enquiry = $this->findVisible($request, $id);
+
+        if ($enquiry->status === EnquiryService::STATUS_APPROVED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Approved enquiries are linked to an order and cannot be deleted.',
+            ], 422);
+        }
+
         $enquiry->delete();
 
         return response()->json([
@@ -117,81 +141,55 @@ class EnquiryController extends Controller
     }
 
     /**
-     * Change enquiry status.
+     * Admin approval: creates the order from the enquiry.
      */
-    public function changeStatus(Request $request, int $id): JsonResponse
+    public function approve(Request $request, int $id): JsonResponse
     {
-        $request->validate([
-            'status' => 'required|string|in:new,under_review,quoted,approved,confirmed,not_approved',
-            'note' => 'nullable|string',
-            'quoted_amount' => 'nullable|numeric|min:0',
-            'lost_reason' => 'nullable|string',
-        ]);
+        if ($denied = $this->ensureApprover($request)) {
+            return $denied;
+        }
 
-        $enquiry = OrderEnquiry::findOrFail($id);
-
-        $updated = $this->enquiryService->changeStatus(
-            $enquiry,
-            $request->input('status'),
-            $request->input('note'),
-            $request->input('quoted_amount'),
-            $request->input('lost_reason')
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Enquiry status updated successfully.',
-            'data' => $updated,
-        ]);
-    }
-
-    /**
-     * Add activity (call, WhatsApp, note).
-     */
-    public function addActivity(Request $request, int $id): JsonResponse
-    {
-        $request->validate([
-            'type' => 'required|string|in:call,whatsapp,note,quote',
-            'note' => 'required|string',
-            'next_follow_up_at' => 'nullable|date',
-            'to_status' => 'nullable|string',
-            'quoted_amount' => 'nullable|numeric|min:0',
-        ]);
-
-        $enquiry = OrderEnquiry::findOrFail($id);
-        $activity = $this->enquiryService->addActivity($enquiry, $request->all());
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Follow-up activity recorded.',
-            'data' => $activity,
-        ]);
-    }
-
-    /**
-     * Convert enquiry to an active order.
-     */
-    public function convert(Request $request, int $id): JsonResponse
-    {
-        $enquiry = OrderEnquiry::with('items')->findOrFail($id);
+        $enquiry = OrderEnquiry::with(['items', 'addedBy'])->findOrFail($id);
 
         try {
-            $order = $this->enquiryService->convertToOrder($enquiry, $request->all());
-
-            return response()->json([
-                'success' => true,
-                'message' => "Enquiry {$enquiry->enquiry_number} successfully converted to Order #{$order->order_number}.",
-                'data' => [
-                    'order' => $order,
-                    'enquiry' => $enquiry->fresh(['convertedOrder', 'activities']),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            $order = $this->enquiryService->approve($enquiry);
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Enquiry {$enquiry->enquiry_number} approved. Order #{$order->order_number} created.",
+            'data' => [
+                'order' => $order,
+                'enquiry' => $enquiry->fresh(['convertedOrder', 'approvedBy']),
+            ],
+        ]);
+    }
+
+    /**
+     * Admin rejection with a reason. No order is created.
+     */
+    public function reject(Request $request, int $id): JsonResponse
+    {
+        if ($denied = $this->ensureApprover($request)) {
+            return $denied;
+        }
+
+        $request->validate(['reason' => 'required|string|max:1000']);
+        $enquiry = OrderEnquiry::findOrFail($id);
+
+        try {
+            $updated = $this->enquiryService->reject($enquiry, $request->input('reason'));
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Enquiry {$enquiry->enquiry_number} rejected.",
+            'data' => $updated,
+        ]);
     }
 
     /**
@@ -199,7 +197,7 @@ class EnquiryController extends Controller
      */
     public function publicStore(Request $request): JsonResponse
     {
-        // Simple honeypot check to prevent bot spam
+        // Honeypot: bots fill this hidden field
         if (!empty($request->input('website_check'))) {
             return response()->json([
                 'success' => true,
@@ -211,8 +209,7 @@ class EnquiryController extends Controller
             'customer_name' => 'required|string|max:191',
             'customer_phone' => 'required|string|max:50',
             'customer_email' => 'nullable|email|max:191',
-            'occasion' => 'nullable|string|max:191',
-            'card_type' => 'nullable|string',
+            'customer_address' => 'nullable|string',
             'quantity' => 'nullable|integer|min:1',
             'message' => 'nullable|string|max:1000',
             'product_id' => 'nullable|exists:products,id',
@@ -220,31 +217,26 @@ class EnquiryController extends Controller
         ]);
 
         $data = [
-            'customer_name' => $request->input('customer_name'),
-            'customer_phone' => $request->input('customer_phone'),
-            'customer_email' => $request->input('customer_email'),
-            'occasion' => $request->input('occasion', 'wedding'),
-            'card_type' => $request->input('card_type', 'customize'),
-            'message' => $request->input('message'),
-            'source' => 'website',
-            'status' => 'new',
-            'priority' => 'P4',
-            'user_id' => auth('sanctum')->id() ?: $request->input('user_id'),
+            'customer' => [
+                'name' => $request->input('customer_name'),
+                'phone' => $request->input('customer_phone'),
+                'email' => $request->input('customer_email'),
+                'address_1' => $request->input('customer_address'),
+            ],
+            'remarks' => $request->input('message'),
+            'user_id' => auth('sanctum')->id(),
         ];
 
-        // Attach item if from a product page
         if ($request->filled('product_name') || $request->filled('product_id')) {
-            $data['items'] = [
-                [
-                    'product_id' => $request->input('product_id'),
-                    'product_name' => $request->input('product_name') ?: 'Selected Wedding Card',
-                    'quantity' => (int) ($request->input('quantity') ?: 1),
-                    'unit_price' => (float) ($request->input('unit_price') ?: 0),
-                ]
-            ];
+            $data['items'] = [[
+                'product_id' => $request->input('product_id'),
+                'product_name' => $request->input('product_name') ?: 'Selected Wedding Card',
+                'quantity' => (int) ($request->input('quantity') ?: 1),
+                'unit_price' => (float) ($request->input('unit_price') ?: 0),
+            ]];
         }
 
-        $enquiry = $this->enquiryService->createEnquiry($data);
+        $enquiry = $this->enquiryService->createEnquiry($data, null);
 
         return response()->json([
             'success' => true,

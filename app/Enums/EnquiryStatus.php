@@ -4,32 +4,25 @@ namespace App\Enums;
 
 enum EnquiryStatus: string
 {
-    case NEW = 'new';
-    case UNDER_REVIEW = 'under_review';
-    case QUOTED = 'quoted';
+    case PENDING = 'pending';
     case APPROVED = 'approved';
-    case CONFIRMED = 'confirmed';
-    case NOT_APPROVED = 'not_approved';
+    case REJECTED = 'rejected';
 
     public function label(): string
     {
         return match($this) {
-            self::NEW => 'New',
-            self::UNDER_REVIEW => 'Under Review',
-            self::QUOTED => 'Quoted',
+            self::PENDING => 'Pending Approval',
             self::APPROVED => 'Approved',
-            self::CONFIRMED => 'Confirmed',
-            self::NOT_APPROVED => 'Not Approved',
+            self::REJECTED => 'Rejected',
         };
     }
 
     public function customerLabel(): string
     {
         return match($this) {
-            self::NEW => 'Received',
-            self::UNDER_REVIEW, self::QUOTED, self::APPROVED => 'In Discussion',
-            self::CONFIRMED => 'Order Placed',
-            self::NOT_APPROVED => 'Closed',
+            self::PENDING => 'Received',
+            self::APPROVED => 'Order Placed',
+            self::REJECTED => 'Closed',
         };
     }
 

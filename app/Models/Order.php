@@ -21,6 +21,7 @@ class Order extends Model
         'order_date',
         'delivery_date',
         'user_id',
+        'branch_id',
         'items_count',
         'total_quantity',
         'net_amount',
@@ -112,6 +113,11 @@ class Order extends Model
     public function dispatchDelivery(): HasOne
     {
         return $this->hasOne(OrderDispatchDelivery::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function enquiry(): HasOne

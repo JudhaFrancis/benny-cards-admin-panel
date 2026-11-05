@@ -43,7 +43,7 @@
                     </div>
                     <div>
                       <DialogTitle as="h3" class="text-2xl font-bold tracking-tight text-white mb-1">
-                        Enquiry {{ activeEnquiry?.enquiry_number || "Details" }}
+                        Enquiry {{ formatDisplayNumber(activeEnquiry?.enquiry_number) || "Details" }}
                       </DialogTitle>
                       <div class="flex items-center gap-3 mt-1.5 flex-wrap">
                         <span
@@ -58,24 +58,37 @@
                           <CalendarIcon class="h-3.5 w-3.5" />
                           {{ formatDate(activeEnquiry?.created_at) }}
                         </span>
-                        <span
-                          class="text-xs text-amber-200 font-bold flex items-center gap-1.5 bg-white/10 px-2.5 py-0.5 rounded-lg border border-amber-300/30 backdrop-blur-sm"
-                        >
-                          {{ getSourceDisplay(activeEnquiry) }}
-                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div class="flex items-center gap-3">
-                    <button
-                      v-if="activeEnquiry && activeEnquiry.status !== 'confirmed' && canEdit"
-                      @click="$emit('convert', activeEnquiry)"
-                      class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-900/20 active:scale-95 transition-all"
-                    >
-                      <ArrowRightCircleIcon class="h-4 w-4" />
-                      Convert to Order
-                    </button>
+                    <template v-if="isPending">
+                      <button
+                        v-if="canEdit"
+                        @click="$emit('edit', activeEnquiry)"
+                        class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 border border-white/10 active:scale-95 transition-all"
+                      >
+                        <PencilIcon class="h-4 w-4" />
+                        Edit
+                      </button>
+                      <button
+                        v-if="canApprove"
+                        @click="$emit('reject', activeEnquiry)"
+                        class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-rose-900/20 active:scale-95 transition-all"
+                      >
+                        <XCircleIcon class="h-4 w-4" />
+                        Reject
+                      </button>
+                      <button
+                        v-if="canApprove"
+                        @click="$emit('approve', activeEnquiry)"
+                        class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-900/20 active:scale-95 transition-all"
+                      >
+                        <CheckCircleIcon class="h-4 w-4" />
+                        Approve & Create Order
+                      </button>
+                    </template>
 
                     <button
                       @click="handleClose"
@@ -93,7 +106,20 @@
                     
                     <!-- Left Column: Primary Information (Matching ViewOrderGeneralDetails) -->
                     <div class="flex-1 p-8 space-y-10 custom-scrollbar">
-                      
+
+                      <!-- Rejection Reason (rejected enquiries only) -->
+                      <section v-if="activeEnquiry?.status === 'rejected'" class="p-5 rounded-3xl bg-rose-50 border border-rose-100">
+                        <h4 class="text-sm font-bold text-rose-700 mb-2 flex items-center gap-2">
+                          <XCircleIcon class="h-4 w-4" /> Rejection Reason
+                        </h4>
+                        <p class="text-sm text-rose-800 font-medium leading-relaxed whitespace-pre-line">
+                          {{ activeEnquiry?.rejection_reason || "No reason given" }}
+                        </p>
+                        <p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mt-3">
+                          Rejected{{ activeEnquiry?.rejected_by?.name ? ` by ${activeEnquiry.rejected_by.name}` : "" }} on {{ formatDate(activeEnquiry?.rejected_at) }}
+                        </p>
+                      </section>
+
                       <!-- Customer Info Section -->
                       <section>
                         <h4 class="text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 ml-1">
@@ -103,19 +129,22 @@
                           <InfoItem label="Full Name" :value="activeEnquiry?.customer_name" bordered class="md:col-span-2" />
                           <InfoItem label="Email Address" :value="activeEnquiry?.customer_email" bordered />
                           <InfoItem label="Phone Number" :value="activeEnquiry?.customer_phone" bordered />
-                          <InfoItem label="Occasion" :value="activeEnquiry?.occasion || 'Wedding'" bordered />
+                          <InfoItem label="Branch" :value="activeEnquiry?.branch?.name || 'N/A'" bordered />
+                          <InfoItem label="Budget Tier" :value="activeEnquiry?.budget_tier || 'N/A'" bordered />
                           <InfoItem label="Primary Address" bordered>
-                            <span class="text-xs font-semibold text-slate-700 leading-relaxed">{{ activeEnquiry?.customer_address || "N/A" }}</span>
+                            <span class="text-xs font-semibold text-slate-700 leading-relaxed">{{ activeEnquiry?.address_1 || "N/A" }}</span>
+                          </InfoItem>
+                          <InfoItem label="Secondary Address" bordered>
+                            <span class="text-xs font-semibold text-slate-700 leading-relaxed">{{ activeEnquiry?.address_2 || "N/A" }}</span>
                           </InfoItem>
 
-                          <!-- Remarks integrated into customer section as per Order modal -->
-                          <div v-if="activeEnquiry?.specifications || activeEnquiry?.message" class="md:col-span-2">
+                          <div v-if="notesText" class="md:col-span-2">
                             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">
-                              Specifications & Notes
+                              Additional Notes
                             </label>
                             <div class="p-5 rounded-3xl bg-slate-50 border border-slate-100 shadow-inner">
-                              <p class="text-xs text-slate-600 font-medium leading-relaxed italic">
-                                "{{ activeEnquiry?.specifications || activeEnquiry?.message }}"
+                              <p class="text-xs text-slate-600 font-medium leading-relaxed italic whitespace-pre-line">
+                                {{ notesText }}
                               </p>
                             </div>
                           </div>
@@ -196,24 +225,15 @@
                       <div class="flex-1 space-y-6">
                         <!-- Totals Card -->
                         <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-5">
-                          <div class="flex justify-between items-center text-sm">
-                            <span class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Quoted Amount</span>
-                            <span class="font-bold text-slate-900 tracking-tight">
-                              ₹{{ Number(activeEnquiry?.quoted_amount || itemsSubtotal || 0).toFixed(2) }}
-                            </span>
-                          </div>
-
-                          <div class="flex justify-between items-center text-sm">
-                            <span class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Delivery Date</span>
-                            <span class="font-bold text-slate-700 tracking-tight text-xs">
-                              {{ activeEnquiry?.expected_delivery_date ? formatDate(activeEnquiry.expected_delivery_date) : 'Flexible' }}
-                            </span>
+                          <div v-for="row in summaryRows" :key="row.label" class="flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">{{ row.label }}</span>
+                            <span class="font-bold text-slate-900 tracking-tight text-xs">{{ row.value }}</span>
                           </div>
 
                           <div class="pt-5 border-t border-slate-50 flex justify-between items-center">
-                            <span class="text-slate-900 font-black uppercase tracking-widest text-[10px] text-primary">Total Value</span>
+                            <span class="text-slate-900 font-black uppercase tracking-widest text-[10px] text-primary">Grand Total</span>
                             <span class="text-2xl font-black text-slate-900 tracking-tighter">
-                              ₹{{ Number(activeEnquiry?.quoted_amount || itemsSubtotal || 0).toFixed(2) }}
+                              ₹{{ grandTotal.toFixed(2) }}
                             </span>
                           </div>
                         </div>
@@ -226,13 +246,18 @@
                           </div>
 
                           <div class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            <span>Channel: <b class="text-slate-900">{{ getSourceDisplay(activeEnquiry) }}</b></span>
+                            <div class="w-2 h-2 rounded-full bg-slate-400"></div>
+                            <span>Created by: <b class="text-slate-900">{{ activeEnquiry?.added_by?.name || "Website" }}</b></span>
                           </div>
 
                           <div v-if="activeEnquiry?.converted_order_id && activeEnquiry?.converted_order" class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">
                             <div class="w-2 h-2 rounded-full bg-teal-500"></div>
-                            <span>Order: <router-link to="/orders" class="text-primary font-bold hover:underline">#{{ activeEnquiry.converted_order.order_number }}</router-link></span>
+                            <span>Order: <router-link to="/orders" class="text-primary font-bold hover:underline">#{{ formatDisplayNumber(activeEnquiry.converted_order.order_number) }}</router-link></span>
+                          </div>
+
+                          <div v-if="activeEnquiry?.approved_at" class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <span>Approved: <b class="text-slate-900">{{ activeEnquiry?.approved_by?.name || "—" }}, {{ formatDate(activeEnquiry.approved_at) }}</b></span>
                           </div>
                         </div>
                       </div>
@@ -273,7 +298,9 @@ import {
 import {
   ClipboardList as ClipboardListIcon,
   X as XIcon,
-  ArrowRightCircle as ArrowRightCircleIcon,
+  Pencil as PencilIcon,
+  CheckCircle as CheckCircleIcon,
+  XCircle as XCircleIcon,
   Calendar as CalendarIcon,
   Maximize2 as Maximize2Icon,
   Package as PackageIcon,
@@ -285,6 +312,8 @@ import axios from "axios";
 import InfoItem from "../ui/display/InfoItem.vue";
 import ImagePreviewModal from "../ui/modals/ImagePreviewModal.vue";
 import { usePermissions } from "../../composables/usePermissions";
+import { getEnquiryStatusLabel } from "../../constants/enquiryStatuses";
+import { formatDisplayNumber } from "../../utils/displayNumber";
 
 const { getModulePermissions } = usePermissions();
 const { canEdit } = getModulePermissions("Enquiry");
@@ -298,12 +327,41 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  canApprove: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const emit = defineEmits(["close", "updated", "convert"]);
+const emit = defineEmits(["close", "edit", "approve", "reject"]);
 
 const fullEnquiry = ref(null);
 const activeEnquiry = computed(() => fullEnquiry.value || props.enquiry);
+const isPending = computed(() => activeEnquiry.value?.status === "pending");
+
+const money = (v) => `₹${Number(v || 0).toFixed(2)}`;
+
+const grandTotal = computed(() => {
+  const e = activeEnquiry.value;
+  if (!e) return 0;
+  if (e.total_amount !== null && e.total_amount !== undefined) return Number(e.total_amount);
+  return Math.max(0, itemsSubtotal.value - Number(e.discount || 0) + Number(e.extra_charges || 0));
+});
+
+const summaryRows = computed(() => {
+  const e = activeEnquiry.value || {};
+  return [
+    { label: "Subtotal", value: money(itemsSubtotal.value) },
+    { label: "Discount", value: money(e.discount) },
+    { label: "Extra Charges", value: money(e.extra_charges) },
+  ];
+});
+
+const notesText = computed(() => {
+  const e = activeEnquiry.value;
+  if (!e) return "";
+  return e.remarks || "";
+});
 
 const isImagePreviewOpen = ref(false);
 const previewSrc = ref("");
@@ -317,13 +375,14 @@ const previewImage = (src, title = "") => {
 };
 
 const getItemImage = (item) => {
-  return (
+  const path =
     item?.product_image ||
     item?.image ||
     item?.product?.photo ||
-    item?.product?.image ||
-    "/images/placeholder.webp"
-  );
+    item?.product?.image;
+  if (!path) return "/images/placeholder.webp";
+  if (path.startsWith("data:") || path.startsWith("http") || path.startsWith("/")) return path;
+  return `/${path}`;
 };
 
 const handleImageError = (e) => {
@@ -364,22 +423,6 @@ const handleClose = () => {
   emit("close");
 };
 
-const formatSource = (src) => {
-  if (!src) return "N/A";
-  const map = {
-    website: "Website",
-    walk_in: "Walk-In",
-    whatsapp: "WhatsApp",
-    instagram: "Instagram",
-    phone: "Phone Call",
-  };
-  return map[src] || src.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-};
-
-const getSourceDisplay = (enq) => {
-  if (!enq) return "—";
-  return formatSource(enq.source);
-};
 
 const formatDate = (dateString) => {
   if (!dateString) return "—";
@@ -391,10 +434,7 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
-const formatStatusLabel = (status) => {
-  if (!status) return "NEW";
-  return status.replace(/_/g, " ").toUpperCase();
-};
+const formatStatusLabel = (status) => getEnquiryStatusLabel(status).toUpperCase();
 </script>
 
 <style scoped>

@@ -16,52 +16,40 @@ class OrderEnquiry extends Model
 
     protected $fillable = [
         'enquiry_number',
-        'source',
-        'reference',
         'user_id',
+        'branch_id',
         'customer_name',
         'customer_phone',
         'customer_email',
-        'customer_address',
-        'occasion',
-        'order_placed_in',
-        'card_type',
-        'card_size',
-        'specifications',
+        'address_1',
+        'address_2',
         'budget_tier',
-        'expected_delivery_date',
-        'message',
-        'attachments',
+        'remarks',
         'status',
-        'priority',
-        'assigned_user_ids',
-        'assigned_to',
-        'next_follow_up_at',
-        'quoted_amount',
-        'lost_reason',
+        'total_amount',
+        'discount',
+        'extra_charges',
         'converted_order_id',
-        'converted_at',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
         'added_by',
         'modified_by',
     ];
 
     protected $casts = [
-        'attachments' => 'array',
-        'assigned_user_ids' => 'array',
-        'expected_delivery_date' => 'date',
-        'next_follow_up_at' => 'datetime',
-        'converted_at' => 'datetime',
-        'quoted_amount' => 'decimal:2',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'discount' => 'decimal:2',
+        'extra_charges' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 
     public function items(): HasMany
     {
         return $this->hasMany(OrderEnquiryItem::class, 'enquiry_id');
-    }
-
-    public function activities(): HasMany
-    {
-        return $this->hasMany(OrderEnquiryActivity::class, 'enquiry_id')->orderBy('created_at', 'desc');
     }
 
     public function convertedOrder(): BelongsTo
@@ -82,5 +70,20 @@ class OrderEnquiry extends Model
     public function modifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'modified_by');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 }

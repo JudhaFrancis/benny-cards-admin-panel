@@ -7,7 +7,7 @@
           class="font-semibold text-slate-900 italic cursor-pointer hover:text-primary transition-colors duration-200"
           @click.stop="$emit('edit', order)"
         >
-          {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}
+          {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}<span v-if="order.branch?.name" class="not-italic font-medium text-slate-500"> - {{ order.branch.name }}</span>
         </span>
         <div class="flex items-center gap-2 mt-0.5">
           <span v-if="order.delivery_date && order.resolved_status?.toLowerCase() !== 'delivered'" class="text-[10px]"
@@ -249,7 +249,7 @@ const columns = computed(() => {
   if (props.statusFilter === "all") {
     return [
       { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
-      { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
+      { key: "order_number", label: "Order ID", align: "left", width: "190px", class: "whitespace-nowrap", tooltip: "Order ID - Branch\nDelay / Priority" },
       { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name", tooltip: "Customer Name\nProduct Name\nTotal Quantity" },
       { key: "dates", label: "Dates", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "dates", tooltip: "Order Date (OD)\nDesign Finalized (DF)\nDelivery Date (DD)" },
       { key: "orderSrc", label: "Order Src", align: "left", width: "150px", class: "whitespace-nowrap", filterKey: "orderSrc", tooltip: "Order Taken By\nOrder Placed In" },
@@ -282,7 +282,7 @@ const columns = computed(() => {
 
   return [
     { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
-    { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap" },
+    { key: "order_number", label: "Order ID", align: "left", width: "190px", class: "whitespace-nowrap", tooltip: "Order ID - Branch\nDelay / Priority" },
     { key: "assigned_name", label: "Assigned Name", align: "left", width: "200px", filterKey: assignedNameKey },
     { key: "assigned_date", label: "Assigned Date", align: "left", width: "140px", class: "whitespace-nowrap", type: "date", filterKey: assignedDateKey },
     { key: "status", label: "Status", align: "left", width: "120px", class: "whitespace-nowrap" },

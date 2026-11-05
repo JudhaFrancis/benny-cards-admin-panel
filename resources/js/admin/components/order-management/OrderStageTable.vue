@@ -7,7 +7,7 @@
       <div class="flex flex-col">
         <span class="font-semibold text-slate-900 italic hover:text-primary transition-colors cursor-pointer"
           @click.stop="$emit('edit', order)">
-          {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}
+          {{ order.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) }}<span v-if="order.branch?.name" class="not-italic font-medium text-slate-500"> - {{ order.branch.name }}</span>
         </span>
         <div class="flex items-center gap-2 mt-0.5">
           <span v-if="order.delivery_date && order.status?.toLowerCase() !== 'delivered' && getStageStatus(order).toLowerCase() !== 'completed'" class="text-[10px]"
@@ -371,7 +371,7 @@ import { Eye, Pencil, Trash2, Check, X, Clock, Info, Bell } from "lucide-vue-nex
 import DataTable from "../ui/data-table/DataTable.vue";
 import AppTooltip from "../ui/display/AppTooltip.vue";
 import OrderCustomerCell from "../orders/cells/OrderCustomerCell.vue";
-import { useSettings } from "../../composables/useSettings";
+import { useBranches } from "../../composables/useBranches";
 import { usePermissions } from "../../composables/usePermissions";
 import { useToast } from "../../composables/useToast";
 import { getPriorityLabel, getPriorityClass } from "../../constants/orderPriorities";
@@ -381,27 +381,15 @@ const toast = useToast();
 const { getModulePermissions } = usePermissions();
 const { canView, canEdit, canDelete } = getModulePermissions("Order");
 
-const { settings, fetchSettings } = useSettings();
-fetchSettings();
+const { branches, fetchBranches } = useBranches();
+fetchBranches();
 
-const activeBranches = computed(() => {
-    if (!settings.value.branches) {
-        return [
-            { label: "MTM", value: "MTM" },
-            { label: "TVL", value: "TVL" },
-            { label: "Chennai", value: "Chennai" },
-            { label: "Online", value: "Online" },
-            { label: "NGL", value: "NGL" },
-            { label: "Not Assigned", value: "n/a" }
-        ];
-    }
-    const options = settings.value.branches.filter(b => b.active).map(b => ({
-        label: b.name,
-        value: b.name
-    }));
-    options.push({ label: "Not Assigned", value: "n/a" });
-    return options;
-});
+// "Order Placed In" is text on the Client Information stage (not orders.branch_id), so filter by name.
+// Inactive branch names stay filterable so old orders can be found.
+const activeBranches = computed(() => [
+  ...branches.value.map((b) => ({ label: b.is_active ? b.name : `${b.name} (inactive)`, value: b.name })),
+  { label: "Not Assigned", value: "n/a" },
+]);
 
 const props = defineProps({
   orders: { type: Array, required: true },
@@ -480,7 +468,7 @@ const columns = computed(() => {
 
   const cols = [
     { key: "sn", label: "S.No", width: "60px", align: "center", class: "whitespace-nowrap" },
-    { key: "order_number", label: "Order ID", align: "left", width: "160px", class: "whitespace-nowrap", filterKey: "order_number" },
+    { key: "order_number", label: "Order ID", align: "left", width: "190px", class: "whitespace-nowrap", tooltip: "Order ID - Branch\nDelay / Priority", filterKey: "order_number" },
     { key: "customer", label: "Customer", align: "left", width: "200px", filterKey: "customer_details.name", tooltip: "Customer Name\nProduct Name\nTotal Quantity" },
   ];
 

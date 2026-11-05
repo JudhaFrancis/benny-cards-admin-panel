@@ -16,13 +16,14 @@ class OrderEnquiryItem extends Model
         'product_image',
         'quantity',
         'unit_price',
+        'discount_amount',
         'total_price',
-        'specifications',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'unit_price' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'total_price' => 'decimal:2',
     ];
 

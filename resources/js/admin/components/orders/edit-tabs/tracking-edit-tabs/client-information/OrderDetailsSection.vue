@@ -51,8 +51,9 @@
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Order Taken By
           </label>
-          <SearchableDropdown v-model="jobDetails.order_taken_by" :options="staffOptions" placeholder="Select staff"
-            :icon="UserIcon" />
+          <!-- Pick a staff member or type any name; saved as text in order_details.order_taken_by -->
+          <SearchableDropdown v-model="jobDetails.order_taken_by" :options="staffOptions"
+            placeholder="Search staff or type a name" :icon="UserIcon" allow-custom />
         </div>
         <div class="space-y-2">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -190,16 +191,21 @@ import { computed } from "vue";
 import { User as UserIcon, Clock as ClockIcon, Calendar as CalendarIcon } from "lucide-vue-next";
 import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
-import { useSettings } from "../../../../../composables/useSettings";
+import { useBranches } from "../../../../../composables/useBranches";
 import { PRIORITY_OPTIONS } from "../../../../../constants/orderPriorities";
 import { BUDGET_TIER_OPTIONS } from "../../../../../constants/orderBudgetTiers";
 
-const { settings, fetchSettings } = useSettings();
-fetchSettings();
+const { activeBranches: activeBranchList, fetchBranches } = useBranches();
+fetchBranches();
 
+// Branch names to pick from. The name is saved as order_details.order_placed_in and the
+// backend links orders.branch_id from it. An order's current branch stays listed even if
+// it has since been deactivated.
 const activeBranches = computed(() => {
-    if (!settings.value.branches) return ['NGL', 'MTM', 'TVL', 'Chennai', 'Online'];
-    return settings.value.branches.filter(b => b.active).map(b => b.name);
+  const names = activeBranchList.value.map((b) => b.name);
+  const current = jobDetails.value?.order_placed_in;
+  if (current && !names.includes(current)) names.push(current);
+  return names;
 });
 
 const props = defineProps({

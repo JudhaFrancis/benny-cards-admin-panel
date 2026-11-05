@@ -39,7 +39,7 @@ class OrderListingService
 
         $query = Order::query()
             ->with([
-                'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails',
+                'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'branch:id,name',
                 'coupon', 'clientInformation.modifiedBy', 'designing.modifiedBy',
                 'printing.modifiedBy', 'packaging.modifiedBy', 'dispatchDelivery.modifiedBy',
                 'payments.addedBy', 'payments.modifiedBy'
@@ -203,12 +203,24 @@ class OrderListingService
             ->when(data_get($filters, 'payment_status'), function (Builder $query, $value) {
                 if ($value !== 'all') $query->where('payment_status', $value);
             })
-            ->when(data_get($filters, 'branch') ?: data_get($filters, 'client_information_order_details_order_placed_in'), function (Builder $query, $value) {
-                $isNa = strtolower(trim($value)) === 'n/a' || strtolower(trim($value)) === 'na';
+            // Branch (orders.branch_id, picked when the order/enquiry is created): id, or a name from older callers; "n/a" = no branch
+            ->when(data_get($filters, 'branch_id') ?: data_get($filters, 'branch'), function (Builder $query, $value) {
+                $value = trim((string) $value);
+                $isNa = in_array(strtolower($value), ['n/a', 'na'], true);
                 if ($isNa) {
-                    $query->whereHas('clientInformation', fn($sub) => $sub->whereNull('order_details->order_placed_in')->orWhere('order_details->order_placed_in', ''));
-                } elseif ($value !== 'All Branches' && $value !== 'all') {
-                    $query->whereHas('clientInformation', fn($sub) => $sub->where('order_details->order_placed_in', $value));
+                    $query->whereNull('branch_id');
+                } elseif (!in_array(strtolower($value), ['all branches', 'all'], true)) {
+                    $query->where('branch_id', \App\Models\Branch::resolveId($value) ?? 0);
+                }
+            })
+            // Order Placed In (text on the Client Information stage): separate from the branch
+            ->when(data_get($filters, 'client_information_order_details_order_placed_in') ?: data_get($filters, 'client_information.order_details.order_placed_in'), function (Builder $query, $value) {
+                $value = trim((string) $value);
+                $isNa = in_array(strtolower($value), ['n/a', 'na'], true);
+                if ($isNa) {
+                    $query->where(fn ($q) => $q->doesntHave('clientInformation')->orWhereHas('clientInformation', fn ($sub) => $sub->whereNull('order_details->order_placed_in')->orWhere('order_details->order_placed_in', '')));
+                } else {
+                    $query->whereHas('clientInformation', fn ($sub) => $sub->where('order_details->order_placed_in', $value));
                 }
             })
             ->when(data_get($filters, 'customer_details_phone') ?: data_get($filters, 'customer_details.phone'), function (Builder $query, $value) {
@@ -943,7 +955,7 @@ class OrderListingService
     public function getOrder(int $id): Order
     {
         return Order::with([
-            'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails',
+            'user', 'items.product', 'addedBy', 'modifiedBy', 'customerDetails', 'branch:id,name',
             'coupon', 'clientInformation.modifiedBy', 'designing.modifiedBy',
             'printing.modifiedBy', 'packaging.modifiedBy', 'dispatchDelivery.modifiedBy',
             'payments.addedBy', 'payments.modifiedBy'

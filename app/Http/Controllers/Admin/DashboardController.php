@@ -12,20 +12,16 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         try {
-            $branch = $request->query('branch');
+            // ?branch_id=3 (current UI) or ?branch=NGL (older callers); empty / "All Branches" = no filter
+            $branch = $request->query('branch_id') ?: $request->query('branch');
 
             $orderQuery = Order::query();
             $paymentQuery = Payment::query();
 
-            if ($branch && $branch !== 'All Branches') {
-                $orderQuery->whereHas('clientInformation', function ($q) use ($branch) {
-                    $q->where('order_details->order_placed_in', $branch);
-                });
-                
-                // For payments, we need to join with orders to filter by branch
-                $paymentQuery->whereHas('order.clientInformation', function ($q) use ($branch) {
-                    $q->where('order_details->order_placed_in', $branch);
-                });
+            if ($branch && !in_array(strtolower((string) $branch), ['all branches', 'all'], true)) {
+                $branchId = \App\Models\Branch::resolveId($branch) ?? 0;
+                $orderQuery->where('branch_id', $branchId);
+                $paymentQuery->whereHas('order', fn ($q) => $q->where('branch_id', $branchId));
             }
 
             $totalOrders = (clone $orderQuery)->count();

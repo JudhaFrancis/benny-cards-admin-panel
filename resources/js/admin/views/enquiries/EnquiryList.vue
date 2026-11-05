@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 animate-in fade-in duration-500">
     <!-- Header Section (Matching OrderList.vue) -->
-    <PageHeader title="Order Enquiries" subtitle="Manage and track wedding card enquiries, follow-ups, and quotes">
+    <PageHeader title="Order Enquiries" subtitle="Enquiries created by sales staff. Approving an enquiry creates the order.">
       <template #actions>
         <button
           v-if="canAdd"
@@ -43,7 +43,10 @@
             ]"
             @click.stop="canView ? openInfoDialog(enq) : null"
           >
-            {{ enq.enquiry_number }}
+            {{ formatDisplayNumber(enq.enquiry_number) }}
+          </span>
+          <span class="text-[10px] font-semibold text-slate-500 mt-0.5">
+            {{ enq.branch?.name || "No branch" }}
           </span>
         </div>
       </template>
@@ -71,62 +74,26 @@
         </div>
       </template>
 
-      <!-- Dates Cell (Matching Orders Table OrderDatesCell style) -->
-      <template #cell-dates="{ item: enq }">
-        <div class="flex flex-col gap-1 text-[11px] font-medium tracking-tight">
-          <!-- Enquiry Date -->
-          <div class="flex items-center gap-1.5 text-slate-600">
-            <span class="w-5 text-slate-400 font-bold">ED</span>
-            <span class="text-slate-800">{{ formatDate(enq.created_at) }}</span>
-          </div>
-
-          <!-- Delivery Date -->
-          <div class="flex items-center gap-1.5 text-slate-600">
-            <span class="w-5 text-slate-400 font-bold">DD</span>
-            <span class="text-slate-800">{{ enq.expected_delivery_date ? formatDate(enq.expected_delivery_date) : 'N/A' }}</span>
-          </div>
-        </div>
-      </template>
-
-      <!-- Source Cell (Clean source name only) -->
-      <template #cell-source="{ item: enq }">
-        <span class="text-xs font-semibold text-slate-800">{{ formatSource(enq.source) }}</span>
-      </template>
-
       <!-- Status Cell (Matching OrderStatusCell) -->
       <template #cell-status="{ item: enq }">
         <div class="flex flex-col gap-1 items-start">
           <span
             :class="[
               'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors duration-200',
-              enquiryStatusStyles[enq.status?.toLowerCase()] || 'bg-slate-100 text-slate-800 border-slate-200'
+              getEnquiryStatusClass(enq.status?.toLowerCase())
             ]"
           >
-            {{ formatStatusLabel(enq.status) }}
+            {{ getEnquiryStatusLabel(enq.status) }}
           </span>
-          <span v-if="enq.assigned_to" class="text-[10px] text-slate-500 font-medium">
-            <span class="text-slate-400">By:</span> {{ enq.assigned_to }}
-          </span>
-        </div>
-      </template>
-
-      <!-- Quoted Amount Cell (Correctly labelled Quoted Amount) -->
-      <template #cell-quoted="{ item: enq }">
-        <div class="flex flex-col gap-0.5">
-          <span
-            v-if="enq.quoted_amount"
-            class="font-bold text-slate-900 text-xs"
-          >
-            ₹{{ Number(enq.quoted_amount).toLocaleString('en-IN') }}
+          <span v-if="enq.status === 'approved' && enq.converted_order" class="text-[10px] text-emerald-600 font-semibold">
+            Order #{{ formatDisplayNumber(enq.converted_order.order_number) }}
           </span>
           <span
-            v-else
-            class="text-xs text-slate-400 italic font-normal"
+            v-else-if="enq.status === 'rejected' && enq.rejection_reason"
+            class="text-[10px] text-rose-600 font-medium max-w-[160px] truncate"
+            :title="enq.rejection_reason"
           >
-            Not Quoted
-          </span>
-          <span v-if="enq.next_follow_up_at && enq.status !== 'confirmed'" class="text-[10px] text-amber-600 font-medium mt-0.5">
-            Due: {{ formatDate(enq.next_follow_up_at) }}
+            {{ shortReason(enq.rejection_reason) }}
           </span>
         </div>
       </template>
@@ -138,7 +105,7 @@
             {{ formatDate(enq.created_at) }}
           </span>
           <span class="text-[9px] text-slate-400 font-medium">
-            by {{ enq.added_by?.name || 'Admin' }}
+            by {{ enq.added_by?.name || 'Website' }}
           </span>
         </div>
       </template>
@@ -150,12 +117,12 @@
             {{ formatDate(enq.updated_at || enq.created_at) }}
           </span>
           <span class="text-[9px] text-slate-400 font-medium">
-            by {{ enq.modified_by?.name || enq.added_by?.name || 'Admin' }}
+            by {{ enq.modified_by?.name || enq.added_by?.name || 'Website' }}
           </span>
         </div>
       </template>
 
-      <!-- Actions Cell (View & Delete) -->
+      <!-- Actions Cell (View, Edit, Approve, Reject) -->
       <template #cell-actions="{ item: enq }">
         <div class="flex items-center justify-end gap-1.5" @click.stop>
           <button
@@ -167,12 +134,28 @@
             <EyeIcon class="h-4 w-4" />
           </button>
           <button
-            v-if="canDelete"
-            @click.stop="confirmDelete(enq)"
-            class="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all duration-200"
-            title="Delete Enquiry"
+            v-if="canEdit && enq.status === 'pending'"
+            @click.stop="openEditDialog(enq)"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-500/10 hover:text-slate-700 transition-all duration-200"
+            title="Edit Enquiry"
           >
-            <Trash2Icon class="h-4 w-4" />
+            <PencilIcon class="h-4 w-4" />
+          </button>
+          <button
+            v-if="canApprove && enq.status === 'pending'"
+            @click.stop="openApprove(enq)"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-600 transition-all duration-200"
+            title="Approve & Create Order"
+          >
+            <CheckCircleIcon class="h-4 w-4" />
+          </button>
+          <button
+            v-if="canApprove && enq.status === 'pending'"
+            @click.stop="openReject(enq)"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-amber-500 hover:bg-amber-500/10 hover:text-amber-600 transition-all duration-200"
+            title="Reject Enquiry"
+          >
+            <XCircleIcon class="h-4 w-4" />
           </button>
         </div>
       </template>
@@ -209,66 +192,91 @@
     <!-- Modals -->
     <EnquiryCreateDialog
       :isOpen="isCreateOpen"
-      @close="isCreateOpen = false"
+      :enquiry="editingEnquiry"
+      @close="closeFormDialog"
       @created="handleCreated"
+      @updated="handleUpdated"
     />
 
     <EnquiryInfoDialog
       :isOpen="isInfoOpen"
       :enquiry="selectedEnquiry"
+      :canApprove="canApprove"
       @close="isInfoOpen = false"
-      @updated="handleUpdated"
-      @convert="openConvertDialog(selectedEnquiry)"
+      @edit="openEditDialog"
+      @approve="openApprove"
+      @reject="openReject"
     />
 
-    <ConvertEnquiryDialog
-      :isOpen="isConvertOpen"
-      :enquiry="selectedEnquiry"
-      @close="isConvertOpen = false"
-      @converted="handleConverted"
-    />
-
+    <!-- Approve confirmation -->
     <ConfirmationModal
-      :isOpen="isDeleteOpen"
-      title="Delete Enquiry"
-      :description="`Are you sure you want to delete enquiry ${enquiryToDelete?.enquiry_number}?`"
-      confirmLabel="Delete"
-      variant="danger"
-      @close="isDeleteOpen = false"
-      @confirm="handleDelete"
+      :isOpen="isApproveOpen"
+      title="Approve Enquiry"
+      :description="`Approve ${formatDisplayNumber(actionEnquiry?.enquiry_number)} for ${actionEnquiry?.customer_name}? An order will be created for ₹${Number(actionEnquiry?.total_amount || 0).toLocaleString('en-IN')}.`"
+      confirmLabel="Approve & Create Order"
+      :icon="CheckCircleIcon"
+      :loading="actionLoading"
+      @close="isApproveOpen = false"
+      @confirm="handleApprove"
     />
+
+    <!-- Reject with reason -->
+    <ConfirmationModal
+      :isOpen="isRejectOpen"
+      title="Reject Enquiry"
+      :description="`Reject ${formatDisplayNumber(actionEnquiry?.enquiry_number)}? No order will be created.`"
+      confirmLabel="Reject"
+      variant="danger"
+      :icon="XCircleIcon"
+      :loading="actionLoading"
+      @close="isRejectOpen = false"
+      @confirm="handleReject"
+    >
+      <label class="block text-xs font-semibold text-slate-700 mb-1">Reason <span class="text-rose-500">*</span></label>
+      <textarea
+        v-model="rejectReason"
+        rows="3"
+        placeholder="e.g. Customer chose another vendor, budget too low..."
+        class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+      ></textarea>
+    </ConfirmationModal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import {
   Plus as PlusIcon,
   Eye as EyeIcon,
-  Trash2 as Trash2Icon,
-  Phone as PhoneIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  Pencil as PencilIcon,
+  CheckCircle as CheckCircleIcon,
+  XCircle as XCircleIcon,
 } from "lucide-vue-next";
 import axios from "axios";
 import DataTable from "../../components/ui/data-table/DataTable.vue";
 import EnquiryCreateDialog from "../../components/enquiries/EnquiryCreateDialog.vue";
 import EnquiryInfoDialog from "../../components/enquiries/EnquiryInfoDialog.vue";
-import ConvertEnquiryDialog from "../../components/enquiries/ConvertEnquiryDialog.vue";
 import ConfirmationModal from "../../components/ui/modals/ConfirmationModal.vue";
 import AdvancedDateFilter from "../../components/reports/AdvancedDateFilter.vue";
 import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import { useToast } from "../../composables/useToast";
 import { usePermissions } from "../../composables/usePermissions";
+import { getEnquiryStatusLabel, getEnquiryStatusClass } from "../../constants/enquiryStatuses";
+import { formatDisplayNumber, hideYearInText } from "../../utils/displayNumber";
 
 const toast = useToast();
-const { getModulePermissions } = usePermissions();
-const { canView, canAdd, canEdit, canDelete } = getModulePermissions("Enquiry");
+const { getModulePermissions, hasPermission } = usePermissions();
+const { canView, canAdd, canEdit } = getModulePermissions("Enquiry");
+const canApprove = computed(() => hasPermission("Enquiry", "approve"));
 
 const dataTableRef = ref(null);
 const loading = ref(false);
 const enquiries = ref([]);
-const columnFilters = ref({});
+// Pending Approval is selected by default (matches the status column's defaultFilter)
+const DEFAULT_STATUS = "pending";
+const columnFilters = ref({ status: DEFAULT_STATUS });
 
 const formatFilterDate = (date) => {
   if (!date) return "";
@@ -301,26 +309,8 @@ const pagination = reactive({
 
 const columns = [
   { key: "sn", label: "S.NO", width: "60px", align: "center", class: "whitespace-nowrap" },
-  { key: "enquiry_number", label: "ENQUIRY NO", align: "left", width: "160px", class: "whitespace-nowrap", filterKey: "enquiry_number" },
+  { key: "enquiry_number", label: "ENQUIRY", align: "left", width: "170px", class: "whitespace-nowrap", filterKey: "enquiry_number", tooltip: "Enquiry Number\nBranch" },
   { key: "customer", label: "CUSTOMER", align: "left", width: "240px", filterKey: "customer", tooltip: "Customer Name\nProduct Name\nTotal Quantity" },
-  { key: "dates", label: "DATES", align: "left", width: "150px", class: "whitespace-nowrap", type: "date", filterKey: "date", tooltip: "Enquiry Date (ED)\nDelivery Date (DD)" },
-  {
-    key: "source",
-    label: "SOURCE",
-    align: "left",
-    width: "140px",
-    class: "whitespace-nowrap",
-    type: "select",
-    filterKey: "source",
-    placeholder: "All Sources",
-    options: [
-      { label: "Walk-In", value: "walk_in" },
-      { label: "Website", value: "website" },
-      { label: "WhatsApp", value: "whatsapp" },
-      { label: "Instagram", value: "instagram" },
-      { label: "Phone Call", value: "phone" }
-    ]
-  },
   {
     key: "status",
     label: "STATUS",
@@ -330,38 +320,28 @@ const columns = [
     type: "select",
     filterKey: "status",
     placeholder: "All Status",
+    defaultFilter: DEFAULT_STATUS,
     options: [
-      { label: "New", value: "new" },
-      { label: "Under Review", value: "under_review" },
-      { label: "Quoted", value: "quoted" },
+      { label: "Pending Approval", value: "pending" },
       { label: "Approved", value: "approved" },
-      { label: "Confirmed", value: "confirmed" },
-      { label: "Not Approved", value: "not_approved" }
+      { label: "Rejected", value: "rejected" }
     ]
   },
-  { key: "quoted", label: "QUOTED AMOUNT", align: "left", width: "140px", class: "whitespace-nowrap", filterKey: "quoted" },
-  { key: "created_at", label: "CREATED", align: "left", width: "130px", filterKey: "created_at" },
+  { key: "created_at", label: "CREATED", align: "left", width: "130px", type: "date", filterKey: "date" },
   { key: "modified_at", label: "MODIFIED", align: "left", width: "130px", filterKey: "updated_at" },
   { key: "actions", label: "ACTIONS", align: "right", width: "90px", class: "whitespace-nowrap" },
 ];
 
-const enquiryStatusStyles = {
-  new: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  under_review: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  quoted: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  approved: "bg-teal-500/10 text-teal-600 border-teal-500/20",
-  confirmed: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  not_approved: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-  cancelled: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-};
-
 // Modals state
 const isCreateOpen = ref(false);
 const isInfoOpen = ref(false);
-const isConvertOpen = ref(false);
-const isDeleteOpen = ref(false);
+const isApproveOpen = ref(false);
+const isRejectOpen = ref(false);
 const selectedEnquiry = ref(null);
-const enquiryToDelete = ref(null);
+const editingEnquiry = ref(null);
+const actionEnquiry = ref(null);
+const actionLoading = ref(false);
+const rejectReason = ref("");
 
 const handleFilterChange = (filters) => {
   columnFilters.value = { ...filters };
@@ -404,7 +384,25 @@ const changePage = (page) => {
 };
 
 const openCreateDialog = () => {
+  editingEnquiry.value = null;
   isCreateOpen.value = true;
+};
+
+const openEditDialog = async (enq) => {
+  isInfoOpen.value = false;
+  try {
+    // load full record (items, addresses, money fields) before editing
+    const res = await axios.get(`/api/v1/enquiries/${enq.id}`);
+    editingEnquiry.value = res.data?.data || enq;
+  } catch (err) {
+    editingEnquiry.value = enq;
+  }
+  isCreateOpen.value = true;
+};
+
+const closeFormDialog = () => {
+  isCreateOpen.value = false;
+  editingEnquiry.value = null;
 };
 
 const openInfoDialog = (enq) => {
@@ -412,30 +410,58 @@ const openInfoDialog = (enq) => {
   isInfoOpen.value = true;
 };
 
-const openConvertDialog = (enq) => {
-  selectedEnquiry.value = enq;
+const openApprove = (enq) => {
+  actionEnquiry.value = enq;
   isInfoOpen.value = false;
-  isConvertOpen.value = true;
+  isApproveOpen.value = true;
 };
 
-const confirmDelete = (enq) => {
-  enquiryToDelete.value = enq;
-  isDeleteOpen.value = true;
+const openReject = (enq) => {
+  actionEnquiry.value = enq;
+  rejectReason.value = "";
+  isInfoOpen.value = false;
+  isRejectOpen.value = true;
 };
 
-const handleDelete = async () => {
-  if (!enquiryToDelete.value) return;
+const handleApprove = async () => {
+  if (!actionEnquiry.value) return;
+  actionLoading.value = true;
   try {
-    const res = await axios.delete(`/api/v1/enquiries/${enquiryToDelete.value.id}`);
+    const res = await axios.post(`/api/v1/enquiries/${actionEnquiry.value.id}/approve`);
     if (res.data.success) {
-      toast.success("Enquiry deleted.");
-      isDeleteOpen.value = false;
-      enquiryToDelete.value = null;
+      toast.success(hideYearInText(res.data.message) || "Enquiry approved.");
+      isApproveOpen.value = false;
+      actionEnquiry.value = null;
       fetchEnquiries(pagination.current_page);
     }
   } catch (err) {
-    console.error("Failed to delete enquiry", err);
-    toast.error(err.response?.data?.message || "Failed to delete enquiry.");
+    toast.error(hideYearInText(err.response?.data?.message) || "Failed to approve enquiry.");
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const handleReject = async () => {
+  if (!actionEnquiry.value) return;
+  if (!rejectReason.value.trim()) {
+    toast.error("Please enter a reason for rejecting.");
+    return;
+  }
+  actionLoading.value = true;
+  try {
+    const res = await axios.post(`/api/v1/enquiries/${actionEnquiry.value.id}/reject`, {
+      reason: rejectReason.value.trim(),
+    });
+    if (res.data.success) {
+      toast.success(hideYearInText(res.data.message) || "Enquiry rejected.");
+      isRejectOpen.value = false;
+      actionEnquiry.value = null;
+      fetchEnquiries(pagination.current_page);
+    }
+  } catch (err) {
+    toast.error(hideYearInText(err.response?.data?.message) || "Failed to reject enquiry.");
+  } finally {
+    actionLoading.value = false;
   }
 };
 
@@ -444,10 +470,6 @@ const handleCreated = () => {
 };
 
 const handleUpdated = () => {
-  fetchEnquiries(pagination.current_page);
-};
-
-const handleConverted = () => {
   fetchEnquiries(pagination.current_page);
 };
 
@@ -461,29 +483,13 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
-const formatSource = (src) => {
-  if (!src) return "N/A";
-  const map = {
-    website: "Website",
-    walk_in: "Walk-In",
-    whatsapp: "WhatsApp",
-    instagram: "Instagram",
-    phone: "Phone Call"
-  };
-  return map[src.toLowerCase()] || src.replace(/_/g, " ");
+// First 20 characters of the reject reason for the status column (full text in the tooltip and info modal)
+const shortReason = (reason) => {
+  const text = (reason || "").trim();
+  return text.length > 20 ? `${text.slice(0, 20)}…` : text;
 };
 
-const formatStatusLabel = (status) => {
-  if (!status) return "NEW";
-  return status.replace(/_/g, " ").toUpperCase();
-};
-
-const getEnquiryProduct = (enq) => {
-  if (enq.items && enq.items.length > 0) {
-    return enq.items[0]?.product_name;
-  }
-  return enq.specifications || (enq.card_type === 'customize' ? 'Custom Card' : (enq.card_type || 'Wedding Card'));
-};
+const getEnquiryProduct = (enq) => enq.items?.[0]?.product_name || "";
 
 const getAdditionalCount = (enq) => {
   if (!enq.items || enq.items.length <= 1) return 0;

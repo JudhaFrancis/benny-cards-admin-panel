@@ -29,25 +29,12 @@ class OrderService
         return $this->trackingService->updateTracking($order, $data);
     }
 
+    /**
+     * Order number: OD-NOV26001
+     */
     private function generateOrderNumber(): string
     {
-        $prefix = 'OD-';
-        $monthYear = strtoupper(date('My')); // e.g., SEP26
-        
-        $latestOrder = \App\Models\Order::withTrashed()
-            ->where('order_number', 'LIKE', $prefix . $monthYear . '%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if (!$latestOrder) {
-            $sequence = 1;
-        } else {
-            $prefixLength = strlen($prefix . $monthYear);
-            $sequenceStr = substr($latestOrder->order_number, $prefixLength);
-            $sequence = (int)$sequenceStr + 1;
-        }
-
-        return $prefix . $monthYear . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+        return SequenceNumberGenerator::next(Order::class, 'order_number', 'OD-');
     }
 
     /**
@@ -69,6 +56,7 @@ class OrderService
                 'order_date' => $data['order_date'] ?? now(),
                 'delivery_date' => $data['delivery_date'] ?? ($data['customer']['expected_delivery_date'] ?? null),
                 'user_id' => $data['user_id'] ?? auth()->id(),
+                'branch_id' => !empty($data['branch_id']) ? (int) $data['branch_id'] : null,
                 'items_count' => $totals['items_count'],
                 'total_quantity' => $totals['total_quantity'],
                 'net_amount' => $totals['net_amount'],
@@ -266,7 +254,7 @@ class OrderService
 
 
 
-    protected function prepareOrderItems(array $items): array
+    public function prepareOrderItems(array $items): array
     {
         $preparedItems = [];
         foreach ($items as $item) {
@@ -311,7 +299,7 @@ class OrderService
         return $preparedItems;
     }
 
-    protected function calculateOrderTotals(array $items): array
+    public function calculateOrderTotals(array $items): array
     {
         $netAmount = 0;
         $totalQuantity = 0;

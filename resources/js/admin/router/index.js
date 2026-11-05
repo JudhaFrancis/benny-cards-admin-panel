@@ -136,6 +136,12 @@ const routes = [
                 component: () => import('../views/settings/CompanySettings.vue')
             },
             {
+                path: 'branches',
+                name: 'branches.index',
+                component: () => import('../views/branches/BranchList.vue'),
+                meta: { title: 'Branches', module: 'Branch' }
+            },
+            {
                 path: 'users',
                 name: 'users.index',
                 component: UserList,
