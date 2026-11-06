@@ -92,6 +92,56 @@
 
       <!-- Right Section: Actions -->
       <div class="flex items-center gap-4">
+        <!-- Branch picker: limits enquiry / order lists to the picked branches -->
+        <Popover v-if="scopeBranches.length > 1" class="relative">
+          <PopoverButton
+            class="flex items-center gap-2 h-10 max-w-[260px] px-3 rounded-xl border bg-white border-slate-200 text-slate-700 text-sm font-semibold shadow-sm hover:border-slate-300"
+            title="Branches shown in enquiry and order lists"
+          >
+            <BranchIcon class="h-4 w-4 text-primary shrink-0" />
+            <span class="truncate">{{ scopeLabel }}</span>
+            <ChevronDownIcon class="h-4 w-4 text-slate-400 shrink-0" />
+          </PopoverButton>
+          <PopoverPanel
+            v-slot="{ close }"
+            class="absolute right-0 mt-2 w-64 rounded-2xl p-2 shadow-xl border bg-white border-slate-100 z-50"
+          >
+            <p class="px-3 pt-1 pb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Show branches</p>
+            <label class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-50 cursor-pointer text-sm font-semibold">
+              <input type="checkbox" class="rounded border-slate-300 text-primary" :checked="draftIds.length === scopeBranches.length" @change="toggleAll" />
+              {{ hasAllBranches ? 'All Branches' : 'All my branches' }}
+            </label>
+            <div class="border-t border-slate-100 my-1"></div>
+            <div class="max-h-64 overflow-auto">
+              <label
+                v-for="b in scopeBranches"
+                :key="b.id"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-50 cursor-pointer text-sm"
+              >
+                <input type="checkbox" class="rounded border-slate-300 text-primary" :checked="draftIds.includes(Number(b.id))" @change="toggleOne(b.id)" />
+                {{ b.name }}
+              </label>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 mt-1">
+              <button class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:bg-slate-100" @click="resetDraft(); close()">Cancel</button>
+              <button
+                class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-white disabled:opacity-50"
+                :disabled="!draftIds.length"
+                @click="applyDraft(); close()"
+              >Apply</button>
+            </div>
+          </PopoverPanel>
+        </Popover>
+        <div
+          v-else
+          class="flex items-center gap-2 h-10 px-3 rounded-xl border bg-white border-slate-200 text-sm font-semibold shadow-sm"
+          :class="scopeBranches.length ? 'text-slate-700' : 'text-rose-500'"
+          title="Your branch"
+        >
+          <BranchIcon class="h-4 w-4 shrink-0" :class="scopeBranches.length ? 'text-primary' : 'text-rose-400'" />
+          {{ scopeLabel }}
+        </div>
+
         <!-- Notifications -->
         <button
           @click="isWhatsAppLogsOpen = true"
@@ -202,7 +252,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import {
   Search as SearchIcon,
   Bell as BellIcon,
@@ -216,8 +266,10 @@ import {
   Settings as SettingsIcon,
   Shield as ShieldIcon,
   PieChart as ChartIcon,
+  Building2 as BranchIcon,
 } from "lucide-vue-next";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
+import { Menu, MenuButton, MenuItems, MenuItem, Popover, PopoverButton, PopoverPanel } from "@headlessui/vue";
+import { useBranchScope, branchScopeHeader } from "../../composables/useBranchScope";
 import { useRouter } from "vue-router";
 import ConfirmationModal from "../ui/modals/ConfirmationModal.vue";
 import { useAuth } from "../../composables/useAuth";
@@ -231,6 +283,33 @@ const isConfirmOpen = ref(false);
 const isLoading = ref(false);
 const { user, logout } = useAuth();
 const toast = useToast();
+
+// Branch picker
+const {
+  branches: scopeBranches,
+  hasAllBranches,
+  selectedIds,
+  setSelection,
+  label: scopeLabel,
+} = useBranchScope();
+const draftIds = ref([...selectedIds.value]);
+const resetDraft = () => { draftIds.value = [...selectedIds.value]; };
+watch(selectedIds, resetDraft);
+const toggleAll = () => {
+  draftIds.value = draftIds.value.length === scopeBranches.value.length
+    ? []
+    : scopeBranches.value.map((b) => Number(b.id));
+};
+const toggleOne = (id) => {
+  id = Number(id);
+  draftIds.value = draftIds.value.includes(id)
+    ? draftIds.value.filter((x) => x !== id)
+    : [...draftIds.value, id];
+};
+const applyDraft = () => {
+  setSelection(draftIds.value);
+  fetchWorkNotificationsCount(false);
+};
 
 const isWhatsAppLogsOpen = ref(false);
 const whatsappLogsCount = ref(0);
@@ -252,7 +331,8 @@ const fetchWorkNotificationsCount = async (isLoginCheck = false) => {
     const response = await fetch('/api/v1/work-notifications?limit=1&unread_only=1', {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-Branch-Ids': branchScopeHeader(),
       }
     });
     const data = await response.json();

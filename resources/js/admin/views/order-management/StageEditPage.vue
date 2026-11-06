@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <PageHeader :title="`Edit Order ${order?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || ''}`">
+    <PageHeader :title="`Edit Order ${order?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || ''}${order?.branch?.name ? ' - ' + order.branch.name : ''}`">
       <template #subtitle>
         <div class="flex items-center gap-2">
           <span>{{ stageTitle }}</span>
@@ -184,7 +184,7 @@ const fetchStaff = async () => {
     if (response.data.success) {
       staffOptions.value = response.data.data.data
         .filter(u => u.role?.name?.toLowerCase() !== 'user')
-        .map(u => ({ label: u.name, value: u.name }));
+        .map(u => ({ label: u.name, value: u.name, branch_ids: u.branch_ids || [] }));
     }
   } catch (e) {
     console.error("Failed to fetch staff", e);

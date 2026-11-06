@@ -190,6 +190,7 @@ const fetchStaff = async () => {
         .map((user) => ({
           label: user.name,
           value: user.name,
+          branch_ids: user.branch_ids || [],
         }));
     }
   } catch (e) {

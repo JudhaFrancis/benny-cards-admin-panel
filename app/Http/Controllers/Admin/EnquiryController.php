@@ -27,7 +27,11 @@ class EnquiryController extends Controller
             'customer.email' => 'nullable|email|max:191',
             'customer.address_1' => "{$req}|string",
             'customer.address_2' => 'nullable|string',
-            'branch_id' => "{$req}|integer|exists:branches,id",
+            'branch_id' => [...explode('|', "{$req}|integer|exists:branches,id"), function ($attr, $value, $fail) {
+                if (auth()->user() && !\App\Support\BranchScope::canUse($value)) {
+                    $fail('You are not assigned to this branch.');
+                }
+            }],
             'remarks' => 'nullable|string',
             'budget_tier' => 'nullable|string',
             'discount' => 'nullable|numeric|min:0',

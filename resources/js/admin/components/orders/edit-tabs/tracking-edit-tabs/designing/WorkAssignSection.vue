@@ -226,7 +226,7 @@
         >
         <SearchableDropdown
           v-model="workAssign.assigned_to"
-          :options="staffOptions"
+          :options="staffForBranch(staffOptions, order?.branch_id, workAssign.assigned_to)"
           placeholder="Select designer"
           :icon="UserIcon"
         />
@@ -291,7 +291,7 @@
         >
         <SearchableDropdown
           v-model="workAssign.content_by"
-          :options="staffOptions"
+          :options="staffForBranch(staffOptions, order?.branch_id, workAssign.content_by)"
           placeholder="Select staff"
           :icon="FilesIcon"
         />
@@ -366,6 +366,7 @@ import {
   Check as CheckIcon,
   FileText as FileTextIcon,
 } from "lucide-vue-next";
+import { staffForBranch } from "../../../../../utils/branchStaff";
 import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 

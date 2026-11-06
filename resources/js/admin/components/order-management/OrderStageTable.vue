@@ -449,17 +449,7 @@ const processedOrders = computed(() => {
     };
   });
 
-  // Sort by assign timings if it's the designing stage
-  if (props.stage === 'designing') {
-    const timeValue = (t) => {
-      const map = { '10am': 10, '12pm': 12, '2pm': 14, '4pm': 16, '6pm': 18 };
-      return map[t] || 999;
-    };
-    return processed.sort((a, b) => {
-      return timeValue(a.computed_assign_timings) - timeValue(b.computed_assign_timings);
-    });
-  }
-
+  // Keep the API order: newest first
   return processed;
 });
 

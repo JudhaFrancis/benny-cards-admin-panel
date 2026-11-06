@@ -43,7 +43,7 @@
                     </div>
                     <div>
                       <DialogTitle as="h3" class="text-2xl font-bold tracking-tight text-white mb-1">
-                        Enquiry {{ formatDisplayNumber(activeEnquiry?.enquiry_number) || "Details" }}
+                        Enquiry {{ formatDisplayNumber(activeEnquiry?.enquiry_number) || "Details" }}{{ activeEnquiry?.branch?.name ? ` - ${activeEnquiry.branch.name}` : "" }}
                       </DialogTitle>
                       <div class="flex items-center gap-3 mt-1.5 flex-wrap">
                         <span
