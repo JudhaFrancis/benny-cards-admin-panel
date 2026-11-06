@@ -1,0 +1,449 @@
+<template>
+  <div class="space-y-6 animate-in fade-in duration-500">
+    <!-- Header Section -->
+    <PageHeader :title="pageTitle" subtitle="Manage and track customer purchases">
+      <template #actions>
+        <div class="flex items-center gap-3">
+          <button
+            v-if="canCreate"
+            @click="isCreateModalOpen = true"
+            class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95 whitespace-nowrap"
+          >
+            <PlusIcon class="h-4 w-4" />
+            Create Order
+          </button>
+        </div>
+      </template>
+    </PageHeader>
+
+    <!-- 5 Stage Summary Cards (Only visible if stageSummaries exist) -->
+    <div v-if="stageSummaries" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <router-link
+        v-for="card in summaryCards"
+        :key="card.stage"
+        :to="`/order-management/${card.stage}`"
+        class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all duration-300 group cursor-pointer"
+      >
+        <div class="flex flex-col space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-teal-50 rounded-xl group-hover:bg-teal-100 transition-colors duration-300">
+              <component :is="card.icon" class="h-5 w-5 text-teal-600" />
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">{{ card.title }}</h3>
+          </div>
+          
+          <div class="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+            <!-- Pending -->
+            <div class="flex flex-col items-center flex-1 bg-amber-50/50 rounded-lg py-1.5 border border-amber-100/50">
+              <span class="text-[10px] font-black uppercase tracking-widest text-amber-500/80 mb-0.5">Pending</span>
+              <span class="text-sm font-black text-amber-600">{{ stageSummaries[card.stage]?.Pending || 0 }}</span>
+            </div>
+            <!-- Processing -->
+            <div class="flex flex-col items-center flex-1 bg-blue-50/50 rounded-lg py-1.5 border border-blue-100/50">
+              <span class="text-[10px] font-black uppercase tracking-widest text-blue-500/80 mb-0.5">Process</span>
+              <span class="text-sm font-black text-blue-600">{{ stageSummaries[card.stage]?.Process || 0 }}</span>
+            </div>
+          </div>
+        </div>
+      </router-link>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+      <AdvancedDateFilter v-model="dateFilters" @change="handleDateFilterChange" />
+    </div>
+
+    <!-- Table Section -->
+    <OrdersTable
+      :status-filter="statusFilter"
+      :orders="filteredOrders"
+      :loading="loading"
+      :from="meta.from"
+      @filter-change="handleFilterChange"
+      @view-info="handleViewInfo"
+      @edit="handleEdit"
+      @delete="handleConfirmDelete"
+      @update-status="handleUpdateStatus"
+    />
+
+    <!-- Pagination Controls -->
+    <div
+      v-if="meta.total > 0"
+      class="bg-white rounded-2xl border border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm"
+    >
+      <p class="text-[11px] text-gray-500 font-medium">
+        Showing
+        <span class="text-gray-700"
+          >{{ meta.from || 0 }} to {{ (meta.from || 0) + filteredOrders.length - 1 }}</span
+        >
+        of <span class="text-gray-700">{{ meta.total || 0 }}</span> results
+      </p>
+      <div class="flex items-center gap-2">
+        <button
+          @click="page--"
+          :disabled="page <= 1"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronLeftIcon class="h-4 w-4" />
+        </button>
+        <button
+          @click="page++"
+          :disabled="page >= meta.last_page"
+          class="p-2 rounded-xl border border-gray-200 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all active:scale-95"
+        >
+          <ChevronRightIcon class="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Dialogs -->
+    <OrderInfoDialog
+      :is-open="isInfoModalOpen"
+      :order="selectedOrder"
+      @close="isInfoModalOpen = false"
+    />
+
+    <OrderCreateDialog
+      :is-open="isCreateModalOpen"
+      @close="isCreateModalOpen = false"
+      @success="fetchOrders"
+    />
+
+    <OrderEditDialog
+      :open="isEditModalOpen"
+      :order="selectedOrder"
+      :is-saving="isSaving"
+      @open-change="isEditModalOpen = $event"
+      @save="handleOrderSaved"
+      @refresh="fetchOrders"
+    />
+
+    <ConfirmationModal
+      :is-open="isDeleteModalOpen"
+      title="Cancel Order"
+      :message="`Are you sure you want to cancel order ${selectedOrder?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || selectedOrder?.id}?`"
+      confirm-text="Cancel Order"
+      variant="danger"
+      @close="isDeleteModalOpen = false"
+      @confirm="handleDelete"
+    >
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700">Reason <span class="text-slate-400 font-normal">(Optional)</span></label>
+        <textarea
+          v-model="cancelledReason"
+          rows="2"
+          placeholder="Enter reason for cancellation..."
+          class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none resize-none transition-all"
+        ></textarea>
+      </div>
+    </ConfirmationModal>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from "vue";
+import {
+  CreditCard as CreditCardIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Plus as PlusIcon,
+  Search as SearchIcon,
+  User as UserCircleIcon,
+  Palette as PaletteIcon,
+  Printer as PrinterIcon,
+  Package as PackageIcon,
+  CheckCircle as CheckCircleIcon,
+  Trash2 as Trash2Icon
+} from "lucide-vue-next";
+import { useRouter, useRoute } from "vue-router";
+import axios from "axios";
+import { usePermissions } from "../../composables/usePermissions";
+import { useToast } from "../../composables/useToast";
+import OrdersTable from "../../components/orders/OrdersTable.vue";
+import OrderInfoDialog from "../../components/orders/OrderInfoDialog.vue";
+import OrderCreateDialog from "../../components/orders/OrderCreateDialog.vue";
+import OrderEditDialog from "../../components/orders/OrderEditDialog.vue";
+import PageHeader from "../../components/ui/layout/PageHeader.vue";
+import ConfirmationModal from "../../components/ui/modals/ConfirmationModal.vue";
+import AdvancedDateFilter from "../../components/reports/AdvancedDateFilter.vue";
+
+const { getModulePermissions } = usePermissions();
+const { canAdd: canCreate, canEdit, canDelete } = getModulePermissions("Order");
+const toast = useToast();
+const router = useRouter();
+const route = useRoute();
+
+const orders = ref([]);
+const loading = ref(true);
+const isSaving = ref(false);
+const page = ref(1);
+const statusFilter = ref("all");
+const searchQuery = ref("");
+const columnFilters = ref({});
+const meta = ref({ total: 0, from: 1 });
+const stageSummaries = ref(null);
+
+const summaryCards = [
+  { stage: 'client-information', title: 'Client Information', icon: UserCircleIcon },
+  { stage: 'designing', title: 'Designing', icon: PaletteIcon },
+  { stage: 'printing', title: 'Printing', icon: PrinterIcon },
+  { stage: 'packaging', title: 'Packaging', icon: PackageIcon },
+  { stage: 'delivery', title: 'Dispatch & Delivery', icon: CheckCircleIcon }
+];
+
+const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const dateFilters = ref({
+  filter_type: "month",
+  filter_option: "this_month",
+  from_date: formatDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1)),
+  to_date: formatDate(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)),
+});
+
+const handleDateFilterChange = () => {
+  page.value = 1;
+  fetchOrders();
+};
+
+let searchDebounce = null;
+const handleSearch = () => {
+  if (searchDebounce) clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    columnFilters.value.search = searchQuery.value;
+    page.value = 1;
+    fetchOrders();
+  }, 500);
+};
+
+const fetchOrders = async () => {
+  loading.value = true;
+  try {
+    const params = {
+      page: page.value,
+      per_page: 20,
+      start_date: dateFilters.value.from_date,
+      end_date: dateFilters.value.to_date,
+      ...columnFilters.value
+    };
+
+    const response = await axios.get("/api/v1/orders", { params });
+    if (response.data.success) {
+      orders.value = response.data.data.data;
+      stageSummaries.value = response.data.data.stage_summaries || null;
+      meta.value = {
+        total: response.data.data.total,
+        from: response.data.data.from || 1,
+        current_page: response.data.data.current_page,
+        last_page: response.data.data.last_page,
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    toast.error("Failed to load orders");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleUpdateStatus = async ({ orderId, status }) => {
+  try {
+    const response = await axios.post(`/api/v1/orders/${orderId}/status`, { status });
+    if (response.data.success) {
+      toast.success("Order status updated successfully");
+      fetchOrders();
+    }
+  } catch (error) {
+    console.error("Error updating status:", error);
+    toast.error("Failed to update status");
+    fetchOrders();
+  }
+};
+
+const handleFilterChange = (filters) => {
+  columnFilters.value = { ...filters, search: searchQuery.value };
+  page.value = 1;
+  fetchOrders();
+};
+
+onMounted(() => {
+  fetchOrders();
+});
+
+const isInfoModalOpen = ref(false);
+const isCreateModalOpen = ref(false);
+const isEditModalOpen = ref(false);
+const isDeleteModalOpen = ref(false);
+const selectedOrder = ref(null);
+
+const filteredOrders = computed(() => orders.value);
+
+// Watch for search/filter changes
+watch(page, fetchOrders);
+
+const handleViewInfo = (order) => {
+  selectedOrder.value = order;
+  isInfoModalOpen.value = true;
+};
+
+const handleEdit = (order) => {
+  selectedOrder.value = order;
+  isEditModalOpen.value = true;
+};
+
+const handleOrderSaved = async (updatedOrderData) => {
+  // If the dialog emits the full updated order, we might use it to optimistically update
+  // But reliable way is to re-fetch or patch the local list
+  // Assuming updatedOrderData might be partial or full.
+
+  // Optimistic update if we have full data
+  if (updatedOrderData && updatedOrderData.id) {
+    const index = orders.value.findIndex((o) => o.id === updatedOrderData.id);
+    if (index !== -1) {
+      orders.value[index] = { ...orders.value[index], ...updatedOrderData };
+    }
+  }
+
+  // Also verify backend persistence (save logic is inside the dialog components, but top level might need final save if dialog emits 'save' with data but didn't push to API itself)
+  // Wait, in OrderEditDialog structure I made, it emits 'save'.
+  // Let's check OrderEditDialog again. It emits 'save' with data. It DOES NOT call API itself.
+
+  // So we MUST save changes here!
+
+  try {
+    isSaving.value = true;
+    const oid = selectedOrder.value.id;
+    const payload = updatedOrderData || selectedOrder.value;
+
+    const formData = new FormData();
+    formData.append("_method", "PUT");
+
+    // Helper to append nested objects/arrays to FormData
+    const appendToFormData = (key, value) => {
+      if (value === null || value === undefined) {
+        formData.append(key, "");
+      } else if (value instanceof File) {
+        formData.append(key, value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v, index) => appendToFormData(`${key}[${index}]`, v));
+      } else if (typeof value === "object") {
+        Object.keys(value).forEach((k) => appendToFormData(`${key}[${k}]`, value[k]));
+      } else {
+        formData.append(key, value);
+      }
+    };
+
+    // Construct FormData from payload
+    const fieldsToInclude = [
+      "customer_name",
+      "customer_email",
+      "customer_phone",
+      "customer_address_1",
+      "customer_address_2",
+      "discount",
+      "extra_charges",
+      "paid_amount",
+      "remarks",
+      "payment_method",
+      "status",
+      "priority",
+      "budget_tier",
+      "order_date",
+      "coupon_id"
+    ];
+
+    fieldsToInclude.forEach(field => {
+      if (payload[field] !== undefined) formData.append(field, payload[field]);
+    });
+
+    // Special handling for customer_details object if it exists
+    if (payload.customer_details) {
+      Object.keys(payload.customer_details).forEach(key => {
+        formData.append(`customer[${key}]`, payload.customer_details[key] || "");
+      });
+    }
+
+    // append items
+    if (payload.items && Array.isArray(payload.items)) {
+      payload.items.forEach((item, index) => {
+        formData.append(`items[${index}][id]`, item.id || "");
+        formData.append(`items[${index}][product_id]`, item.product_id || "");
+        formData.append(`items[${index}][product_name]`, item.product_name || "");
+        formData.append(`items[${index}][quantity]`, item.quantity || 1);
+        formData.append(`items[${index}][unit_price]`, item.unit_price || 0);
+        
+        if (item.product_image instanceof File) {
+          formData.append(`items[${index}][product_image]`, item.product_image);
+        } else {
+          formData.append(`items[${index}][product_image]`, item.product_image || "");
+        }
+      });
+    }
+
+    const res = await axios.post(`/api/v1/orders/${oid}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    if (res.data.success) {
+      toast.success("Order updated successfully");
+      isEditModalOpen.value = false;
+      fetchOrders();
+    }
+  } catch (e) {
+    console.error(e);
+    toast.error(e.response?.data?.message || "Failed to save changes");
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+const cancelledReason = ref("");
+
+const handleConfirmDelete = (order) => {
+  selectedOrder.value = order;
+  cancelledReason.value = "";
+  isDeleteModalOpen.value = true;
+};
+
+const handleDelete = async () => {
+  if (!selectedOrder.value) return;
+
+  try {
+    await axios.delete(`/api/v1/orders/${selectedOrder.value.id}`, {
+      params: { 
+        cancelled_module: 'Orders',
+        cancelled_reason: cancelledReason.value,
+      },
+      data: { 
+        cancelled_module: 'Orders',
+        cancelled_reason: cancelledReason.value,
+      }
+    });
+    toast.success("Order cancelled successfully");
+    isDeleteModalOpen.value = false;
+    fetchOrders();
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    toast.error("Failed to cancel order");
+  }
+};
+const pageTitle = computed(() => {
+  if (statusFilter.value === "all") return "Orders";
+  const options = {
+    client_info: "Client Information",
+    designing: "Designing Process",
+    printing: "Printing Process",
+    packaging: "Packaging & Logistics",
+    delivered: "Delivery & Dispatch",
+  };
+  return options[statusFilter.value] || "Orders";
+});
+</script>

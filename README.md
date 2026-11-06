@@ -1,66 +1,124 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Benny Cards Admin Panel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+An Order Management Admin Panel built with **Laravel 10** and **Vue 3**.  
+Designed to integrate with an existing database, following strict architectural patterns.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Backend**: Laravel 10, PHP 8.1+
+- **Frontend**: Vue 3, Tailwind CSS, Vite
+- **Database**: MySQL (Existing Schema)
+- **Auth**: Laravel Sanctum (Token-based)
+- **ACL**: Spatie Laravel-Permission
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Folder Structure
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Following the `agoo_foods` project pattern:
 
-## Learning Laravel
+```
+app/
+ ├── Http/
+ │   ├── Controllers/
+ │   │    └── Admin/          # Thin Controllers
+ │   ├── Requests/            # Validation Logic
+ │   ├── Resources/           # API Resources
+ │   └── Middleware/
+ ├── Services/                # Business Logic (Service Layer)
+ ├── Models/                  # Eloquent Models
+ ├── Enums/                   # Status Enums
+ ├── Repositories/            # (Optional) Data Access
+routes/
+ ├── api.php                  # Public API
+ └── admin.php                # Admin Panel Routes
+resources/js/admin/
+ ├── views/                   # Vue Pages
+ ├── components/              # Reusable Components
+ ├── services/                # API Wrappers
+ ├── router/                  # Vue Router Config
+ └── store/                   # Vuex/Pinia Store
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Setup Instructions
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Prerequisites
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP 8.1 or higher
+- Composer
+- Node.js & NPM
+- MySQL
 
-## Laravel Sponsors
+### 2. Installation
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+# Clone repository
+git clone <repo-url>
+cd benny_cards_admin
 
-### Premium Partners
+# Install PHP dependencies
+composer install
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+# Install JS dependencies
+npm install
+```
 
-## Contributing
+### 3. Environment Configuration
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Copy `.env.example` to `.env` and configure your **existing database credentials**.
 
-## Code of Conduct
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+> **Important**: Do NOT run `php artisan migrate:fresh` as it will wipe the existing database. Only run migrations if adding _new_ tables (e.g., for permissions), but ensure you don't conflict with core tables.
 
-## Security Vulnerabilities
+### 4. Running Locally
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Start the backend server:
 
-## License
+```bash
+php artisan serve
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Start the frontend development server:
+
+```bash
+npm run dev
+```
+
+## Architecture Usage
+
+### Creating a New Module (e.g., Products)
+
+1.  **Model**: Create `app/Models/Product.php` mapping to the table.
+2.  **Service**: Create `app/Services/ProductService.php` for logic.
+3.  **Controller**: Create `app/Http/Controllers/Admin/ProductController.php`. Inject Service.
+4.  **Route**: Add to `routes/admin.php`.
+5.  **Frontend**: Create view in `resources/js/admin/views/products/ProductList.vue`.
+
+### API Response Standard
+
+All API responses must follow this JSON format:
+
+```json
+{
+    "success": true,
+    "message": "Optional success message",
+    "data": { ... } // Object or Array
+}
+```
+
+## Documentation
+
+For detailed technical documentation, please refer to the files in the `docs/` directory:
+
+- [Architecture Overview](docs/architecture.md)
+- [Backend Development](docs/backend.md)
+- [Frontend Development](docs/frontend.md)
+- [Order Management Flow](docs/order-management-flow.md) (End-to-end lifecycle & tracking)
+
+## Security
+
+- All Admin routes are protected by `auth:sanctum`.
+- Use `FormRequests` for validation.
+- Use `RoleMiddleware` for permission checks.

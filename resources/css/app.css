@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
+    --z-popover: 1000;
+  }
+
+  .dark {
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 48%;
+  }
+
+  body {
+    @apply antialiased text-slate-200 bg-[#0D1117];
+    font-family: "Poppins", sans-serif;
+  }
+
+  .dark body {
+    @apply text-slate-100 bg-[#0D1117];
+  }
+
+  /* Global input field styling for bright, readable text */
+  input,
+  textarea {
+    @apply text-slate-100 text-xs;
+  }
+
+  select {
+    @apply text-slate-800 text-xs bg-white;
+  }
+
+  select option {
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-xs text-slate-400;
+  }
+
+  /* Fix autofill text color visibility */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: #475569 !important;
+    -webkit-box-shadow: 0 0 0 30px #f8fafc inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  input:focus:-webkit-autofill,
+  input:focus:-webkit-autofill:hover,
+  input:focus:-webkit-autofill:focus,
+  input:focus:-webkit-autofill:active {
+    -webkit-text-fill-color: #475569 !important;
+    -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  }
+
+  /* Force input text color and size globally for all modals */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select,
+  select option {
+    color: #334155 !important;
+    background-color: #ffffff !important;
+    font-size: 0.75rem !important; /* text-xs */
+  }
+}
+
+.sidebar-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dark .sidebar-glass {
+  background: rgba(15, 23, 42, 0.7);
+}
+
+/* Custom transitions */
+.page-enter-active,
+.page-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}

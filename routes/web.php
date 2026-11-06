@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\OrderTrackingController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -15,9 +13,16 @@ use App\Http\Controllers\OrderTrackingController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/debug-config', function () {
+    $role = new \Spatie\Permission\Models\Role();
+    $related = $role->permissions()->getRelated();
+    return response()->json([
+        'config_permission_model' => config('permission.models.permission'),
+        'role_permissions_related_class' => get_class($related),
+        'related_has_module_method' => method_exists($related, 'module'),
+    ]);
 });
 
-Route::post('/order-tracking/store', [OrderTrackingController::class, 'store'])
-    ->name('order.tracking.store');
+Route::get('/{any}', function () {
+    return view('admin');
+})->where('any', '.*');

@@ -3,18 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-
-use Filament\Models\Contracts\FilamentUser;
-use Laravel\Sanctum\HasApiTokens;
-use Filament\Panel;
-// use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
+
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, \Spatie\Permission\Traits\HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -25,8 +24,17 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        'role_id',
+        'status',
     ];
+
+    /**
+     * Get the role associated with the user.
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -47,23 +55,33 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['permission_names'];
 
-    // public function canAccessFilament(): bool
-    // {
-    //     return $this->hasRole('Admin');
-    // }
+    /**
+     * Get all permissions of the user as formatted strings (module-action).
+     */
+    public function getPermissionNamesAttribute()
+    {
+        // If we have a role and it has permissions loaded, use them
+        if ($this->role && $this->role->relationLoaded('permissions')) {
+            return $this->role->permissions->map(function ($p) {
+                return strtolower($p->module?->name ?? 'unknown') . '-' . strtolower($p->action?->name ?? 'unknown');
+            });
+        }
 
-    // public function canAccessPanel(Panel $panel): bool
-    // {
-    //     // if ($panel->getId() === 'admin') {
-    //     //     return str_ends_with($this->email, '@yourdomain.com') && $this->hasVerifiedEmail();
-    //     // }
+        // Fallback to Spatie's standard methods
+        return $this->getAllPermissions()->load(['module', 'action'])->map(function ($p) {
+            return strtolower($p->module?->name ?? 'unknown') . '-' . strtolower($p->action?->name ?? 'unknown');
+        });
+    }
 
-
-    //     return $this->hasRole('Admin');
-
-    //     // return 1;
-
-    // }
-
+    public function getGuardNames(): \Illuminate\Support\Collection
+    {
+        return collect(['web', 'sanctum']);
+    }
 }
