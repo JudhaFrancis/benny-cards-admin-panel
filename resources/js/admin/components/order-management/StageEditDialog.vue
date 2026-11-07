@@ -1,5 +1,5 @@
 <template>
-  <InfoModal :is-open="isOpen" :title="`Edit Order ${orderData?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || ''}`" :icon="Pencil" max-width="xl"
+  <InfoModal :is-open="isOpen" :title="`Edit Order ${orderData?.order_number?.replace(/-(?:[A-Z]{3})\d{2}/, (m) => m.slice(0, 4)) || ''}${orderData?.branch?.name ? ' - ' + orderData.branch.name : ''}`" :icon="Pencil" max-width="xl"
     @close="$emit('close')">
     <template #header-extra>
       <span
@@ -306,7 +306,7 @@ const fetchStaff = async () => {
       const excludedRoles = ['user'];
       staffOptions.value = response.data.data.data
         .filter(u => u.role && !excludedRoles.includes(u.role.name.toLowerCase()))
-        .map(u => ({ label: u.name, value: u.name }));
+        .map(u => ({ label: u.name, value: u.name, branch_ids: u.branch_ids || [] }));
     }
   } catch (e) {
     console.error("Failed to fetch staff", e);

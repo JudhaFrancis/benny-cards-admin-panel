@@ -4,7 +4,7 @@
     <div v-if="showPackedBy" class="space-y-2">
       <label class="text-xs font-medium text-slate-700">Packed By <span class="text-red-500">*</span></label>
       <SearchableDropdown :model-value="packagingStatus.packed_by"
-        @update:model-value="(val) => updateSection('packed_by', val)" :options="staffOptions"
+        @update:model-value="(val) => updateSection('packed_by', val)" :options="staffForBranch(staffOptions, order?.branch_id, packagingStatus.packed_by)"
         placeholder="Select staff" :icon="UserIcon" />
     </div>
 
@@ -123,6 +123,7 @@ import {
   Package as PackageIcon,
   Check as CheckIcon
 } from "lucide-vue-next";
+import { staffForBranch } from "../../../../../utils/branchStaff";
 import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 
 

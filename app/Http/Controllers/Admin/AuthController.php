@@ -64,7 +64,7 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Login successful',
                 'data' => [
-                    'user' => $user,
+                    'user' => $user->withBranchAccess(),
                     'token' => $token,
                     'permissions' => $permissions,
                 ]
@@ -104,7 +104,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $user,
+                'user' => $user->withBranchAccess(),
                 'permissions' => $permissions,
             ]
         ]);
@@ -158,7 +158,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Profile updated successfully',
             'data' => [
-                'user' => $user,
+                'user' => $user->withBranchAccess(),
             ]
         ]);
     }

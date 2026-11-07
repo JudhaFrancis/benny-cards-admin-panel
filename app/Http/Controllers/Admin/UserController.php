@@ -85,13 +85,27 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role_id' => ['required', 'exists:roles,id'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'branch_ids' => ['nullable', 'array', function ($attr, $value, $fail) use ($request) {
+                if (!$this->isCustomerRole($request->input('role_id')) && empty($value)) {
+                    $fail('Select at least one branch.');
+                }
+            }],
+            'branch_ids.*' => 'integer|exists:branches,id',
         ]);
+        if (!$this->isCustomerRole($data['role_id']) && empty($data['branch_ids'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Select at least one branch.',
+                'errors' => ['branch_ids' => ['Select at least one branch.']],
+            ], 422);
+        }
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'role_id' => $data['role_id'],
+            'branch_ids' => $this->branchIdsFor($data),
             'status' => $data['status'],
         ]);
 
@@ -100,6 +114,26 @@ class UserController extends Controller
             'message' => 'User created successfully',
             'data' => $user
         ], 201);
+    }
+
+    /**
+     * Clean branch id list; the customer-facing User role never has branches.
+     */
+    protected function isCustomerRole($roleId): bool
+    {
+        $role = \App\Models\Role::find($roleId);
+
+        return $role && strtolower($role->name) === 'user';
+    }
+
+    protected function branchIdsFor(array $data): array
+    {
+        $role = \App\Models\Role::find($data['role_id']);
+        if ($role && strtolower($role->name) === 'user') {
+            return [];
+        }
+
+        return collect($data['branch_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
     }
 
     /**
@@ -124,12 +158,18 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'role_id' => ['required', 'exists:roles,id'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => 'integer|exists:branches,id',
         ]);
 
         $user->name = $data['name'];
         $user->email = $data['email'];
         $user->role_id = $data['role_id'];
         $user->status = $data['status'];
+        // Branch access is stored on the user; it only changes when branch_ids is sent
+        if ($request->has('branch_ids')) {
+            $user->branch_ids = $this->branchIdsFor($data);
+        }
 
         if (!empty($data['password'])) {
             $user->password = Hash::make($data['password']);

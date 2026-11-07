@@ -76,7 +76,7 @@
                       <div class="space-y-2">
                         <label
                           class="text-[11px] font-bold tracking-wider text-slate-500 uppercase ml-1"
-                          >Full Name</label
+                          >Full Name <span class="text-rose-500">*</span></label
                         >
                         <div class="relative group">
                           <UserIcon
@@ -97,7 +97,7 @@
                       <div class="space-y-2">
                         <label
                           class="text-[11px] font-bold tracking-wider text-slate-500 uppercase ml-1"
-                          >Email Address</label
+                          >Email Address <span class="text-rose-500">*</span></label
                         >
                         <div class="relative group">
                           <MailIcon
@@ -121,7 +121,7 @@
                     <div class="space-y-2">
                       <ContextDropdown
                         v-model="form.role_id"
-                        label="System Role"
+                        label="System Role *"
                         :icon="ShieldIcon"
                         :options="roleOptions"
                       />
@@ -135,6 +135,41 @@
                         :icon="ActivityIcon"
                         :options="statusOptions"
                       />
+                    </div>
+                  </InfoSection>
+
+                  <!-- Branch access: which branches' enquiries and orders this user sees -->
+                  <InfoSection v-if="!isCustomerRole" title="Branch Access" columns="1">
+                    <div class="space-y-3">
+                      <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-bold tracking-wider text-slate-500 uppercase ml-1">
+                          Assigned Branches
+                          <span v-if="!isEdit" class="text-rose-500">*</span>
+                          <span class="text-[10px] text-slate-400 ml-1 normal-case">({{ form.branch_ids.length }} of {{ branchOptions.length }})</span>
+                        </label>
+                        <button type="button" class="text-xs font-semibold text-primary hover:underline" @click="toggleAllBranches">
+                          {{ form.branch_ids.length === branchOptions.length ? "Clear all" : "Select all" }}
+                        </button>
+                      </div>
+                      <div class="flex flex-wrap gap-2">
+                        <button
+                          v-for="b in branchOptions"
+                          :key="b.value"
+                          type="button"
+                          @click="toggleBranch(b.value)"
+                          class="px-3.5 py-2 rounded-xl border text-sm font-semibold transition-all"
+                          :class="form.branch_ids.includes(b.value)
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : branchError
+                              ? 'bg-rose-50 text-slate-600 border-rose-300'
+                              : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'"
+                        >
+                          {{ b.label }}
+                        </button>
+                      </div>
+                      <p v-if="!form.branch_ids.length" class="text-xs text-rose-500 ml-1" :class="branchError ? 'font-semibold' : ''">
+                        {{ isEdit ? "No branch selected: this user will see no enquiries or orders." : "Select at least one branch." }}
+                      </p>
                     </div>
                   </InfoSection>
 
@@ -247,6 +282,11 @@ import axios from "axios";
 import InfoSection from "../../components/ui/display/InfoSection.vue";
 import ContextDropdown from "../../components/ui/dropdowns/ContextDropdown.vue";
 import { useToast } from "../../composables/useToast";
+import { useBranches } from "../../composables/useBranches";
+
+const { branchOptions: allBranchOptions, fetchBranches } = useBranches();
+// Ids as numbers so they match users.branch_ids
+const branchOptions = computed(() => allBranchOptions.value.map((b) => ({ ...b, value: Number(b.value) })));
 
 const props = defineProps({
   isOpen: Boolean,
@@ -259,6 +299,7 @@ const { success, error: toastError } = useToast();
 const loading = ref(false);
 const errors = ref(null);
 const isEdit = computed(() => !!props.editUser);
+const roleOptions = ref([]);
 
 const form = ref({
   name: "",
@@ -281,6 +322,7 @@ watch(
           email: props.editUser.email,
           role_id: props.editUser.role_id,
           status: props.editUser.status,
+          branch_ids: (props.editUser.branch_ids || []).map(Number),
           password: "",
           password_confirmation: "",
           photo: props.editUser.photo,
@@ -291,6 +333,7 @@ watch(
           email: "",
           role_id: null,
           status: "active",
+          branch_ids: [],
           password: "",
           password_confirmation: "",
           photo: null,
@@ -301,6 +344,34 @@ watch(
   { immediate: true },
 );
 
+const roleName = computed(() =>
+  (roleOptions.value.find((r) => r.value === form.value.role_id)?.label || "").toLowerCase(),
+);
+// The customer "User" role never has branches
+const isCustomerRole = computed(() => roleName.value === "user");
+
+// New user with Admin / Super-admin role: start with every branch selected (can still be changed).
+// Editing never changes branches on a role switch.
+watch(roleName, (name) => {
+  if (!isEdit.value && ["admin", "super-admin"].includes(name) && !form.value.branch_ids.length) {
+    form.value.branch_ids = branchOptions.value.map((b) => b.value);
+  }
+});
+
+const branchError = ref(false);
+watch(() => form.value.branch_ids.length, (n) => { if (n) branchError.value = false; });
+watch(() => props.isOpen, () => { branchError.value = false; });
+
+const toggleBranch = (id) => {
+  const ids = form.value.branch_ids;
+  form.value.branch_ids = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
+};
+const toggleAllBranches = () => {
+  form.value.branch_ids = form.value.branch_ids.length === branchOptions.value.length
+    ? []
+    : branchOptions.value.map((b) => b.value);
+};
+
 const handleClose = () => {
   if (!loading.value) {
     emit("close");
@@ -308,6 +379,21 @@ const handleClose = () => {
 };
 
 const handleSubmit = async () => {
+  if (!form.value.name?.trim() || !form.value.email?.trim()) {
+    toastError("Full name and email address are required.");
+    return;
+  }
+  if (!form.value.role_id) {
+    toastError("Select a system role.");
+    return;
+  }
+  // New users (except the customer "User" role) need at least one branch
+  if (!isEdit.value && !isCustomerRole.value && !form.value.branch_ids.length) {
+    branchError.value = true;
+    toastError("Select at least one branch.");
+    return;
+  }
+
   loading.value = true;
   errors.value = null;
 
@@ -338,8 +424,6 @@ const handleSubmit = async () => {
     loading.value = false;
   }
 };
-
-const roleOptions = ref([]);
 
 const fetchRoles = async () => {
   try {
@@ -390,7 +474,10 @@ const fetchRoles = async () => {
   }
 };
 
-onMounted(fetchRoles);
+onMounted(() => {
+  fetchRoles();
+  fetchBranches();
+});
 
 const statusOptions = [
   {

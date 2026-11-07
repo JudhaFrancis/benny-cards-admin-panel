@@ -68,6 +68,13 @@
         </span>
       </template>
 
+      <!-- Assigned branches (users.branch_ids) -->
+      <template #cell-branches="{ item: user }">
+        <span class="text-xs font-semibold" :class="userBranchLabel(user) === 'None' ? 'text-rose-500' : 'text-slate-600'">
+          {{ userBranchLabel(user) }}
+        </span>
+      </template>
+
       <!-- Custom Status Cell -->
       <template #cell-status="{ item: user }">
         <div class="flex items-center gap-2">
@@ -297,6 +304,7 @@ import InfoItem from "../../components/ui/display/InfoItem.vue";
 import PageHeader from "../../components/ui/layout/PageHeader.vue";
 import DataTable from "../../components/ui/data-table/DataTable.vue";
 import { usePermissions } from "../../composables/usePermissions";
+import { useBranches } from "../../composables/useBranches";
 import {
   User as UserIcon,
   Mail as MailIcon,
@@ -381,16 +389,38 @@ const columnFilters = ref({});
 const meta = ref({ from: 1 });
 const links = ref({});
 const { getModulePermissions } = usePermissions();
+
+const { branches: allBranches, fetchBranches } = useBranches();
+fetchBranches();
+const userBranchLabel = (user) => {
+  const ids = (user.branch_ids || []).map(Number);
+  if (!ids.length) return "None";
+  if (allBranches.value.length && allBranches.value.every((b) => ids.includes(Number(b.id)))) return "All";
+  return allBranches.value.filter((b) => ids.includes(Number(b.id))).map((b) => b.name).join(", ") || "None";
+};
 const { canAdd, canView, canEdit, canDelete } = getModulePermissions("User");
 
-const columns = [
+// Role filter is a dropdown of the roles from the database (filters by role_id).
+// DataTable adds its own "All Roles" entry, so the placeholder option is skipped here.
+const columns = computed(() => [
   { key: "sn", label: "S.No", width: "80px" },
   { key: "user", label: "User", align: "left", filterKey: "name" },
-  { key: "role", label: "Role", align: "left", filterKey: "role.name" },
+  {
+    key: "role",
+    label: "Role",
+    align: "left",
+    type: "select",
+    filterKey: "role_id",
+    placeholder: "All Roles",
+    options: roleFilterOptions.value
+      .filter((o) => o.value !== "")
+      .map((o) => ({ label: o.label, value: o.value })),
+  },
+  { key: "branches", label: "Branches", align: "left", filter: false, tooltip: "Branches whose enquiries and orders\nthis user can see" },
   { key: "status", label: "Status", align: "left" },
   { key: "joined", label: "Joined", align: "left", type: "date", filterKey: "created_at" },
   { key: "actions", label: "Actions", align: "right" },
-];
+]);
 
 const fetchUsers = async (url = "/api/v1/users") => {
   loading.value = true;

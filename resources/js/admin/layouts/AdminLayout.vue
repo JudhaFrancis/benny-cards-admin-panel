@@ -7,7 +7,8 @@
         <div class="p-8">
           <router-view v-slot="{ Component }">
             <transition name="page" mode="out-in">
-              <component :is="Component" />
+              <!-- Re-mounts (and re-fetches) the page when the header branch pick changes -->
+              <component :is="Component" :key="scopeVersion" />
             </transition>
           </router-view>
         </div>
@@ -22,6 +23,9 @@ import { onMounted } from "vue";
 import AppSidebar from "../components/layout/AppSidebar.vue";
 import AdminHeader from "../components/layout/AdminHeader.vue";
 import ToastContainer from "../components/notifications/ToastContainer.vue";
+import { useBranchScope } from "../composables/useBranchScope";
+
+const { scopeVersion } = useBranchScope();
 
 function cn(...classes) {
   return classes.filter(Boolean).join(" ");
