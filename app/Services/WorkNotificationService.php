@@ -38,6 +38,8 @@ class WorkNotificationService
             // Ensure parent order is active (not delivered or cancelled)
             $query->whereHas('order', function ($q) {
                 $q->whereNotIn('status', ['delivered', 'cancelled']);
+                // Header branch pick (limited to the user's assigned branches)
+                \App\Support\BranchScope::apply($q, 'orders.branch_id');
             });
 
             // Filter for regular staff (only assignments containing their user ID)

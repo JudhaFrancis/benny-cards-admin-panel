@@ -25,6 +25,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'branch_ids',
         'status',
     ];
 
@@ -54,7 +55,23 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'branch_ids' => 'array',
     ];
+
+    /** Attach branch access to the logged-in user's JSON (login / me): branches + all_branches. */
+    public function withBranchAccess(): static
+    {
+        $this->setAttribute('branches', $this->assignedBranches());
+        $this->setAttribute('all_branches', \App\Support\BranchScope::hasAllBranches($this));
+
+        return $this;
+    }
+
+    /** Branches this user may see ([{id, name}]), from users.branch_ids. */
+    public function assignedBranches()
+    {
+        return Branch::query()->whereIn('id', $this->branch_ids ?? [])->ordered()->get(['id', 'name', 'is_active']);
+    }
     /**
      * The accessors to append to the model's array form.
      *

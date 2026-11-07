@@ -705,6 +705,7 @@ import { BUDGET_TIER_OPTIONS } from "../../constants/orderBudgetTiers";
 import { formatDisplayNumber, hideYearInText } from "../../utils/displayNumber";
 import SearchableDropdown from "../ui/dropdowns/SearchableDropdown.vue";
 import { useBranches } from "../../composables/useBranches";
+import { useBranchScope } from "../../composables/useBranchScope";
 
 /**
  * Shared order form used by:
@@ -740,8 +741,12 @@ const isEdit = computed(() => isEnquiry.value && !!props.enquiry?.id);
 
 // Branch the order/enquiry belongs to (saved as branch_id). Separate from "Order Placed In".
 const { activeBranches, fetchBranches } = useBranches();
+// Only the branches assigned to the logged-in user
+const { allowedIds: myBranchIds, selectedIds: headerBranchIds } = useBranchScope();
 const branchOptions = computed(() => {
-  const options = activeBranches.value.map((b) => ({ value: b.id, label: b.name }));
+  const options = activeBranches.value
+    .filter((b) => myBranchIds.value.includes(Number(b.id)))
+    .map((b) => ({ value: b.id, label: b.name }));
   // Keep an edited enquiry's branch selectable even if it has since been deactivated
   const current = props.enquiry?.branch;
   if (isEdit.value && current && !options.some((o) => o.value === current.id)) {
@@ -752,7 +757,9 @@ const branchOptions = computed(() => {
 
 const dialogTitle = computed(() => {
   if (!isEnquiry.value) return "Create New Order";
-  return isEdit.value ? `Edit Enquiry ${formatDisplayNumber(props.enquiry.enquiry_number)}` : "New Order Enquiry";
+  if (!isEdit.value) return "New Order Enquiry";
+  const branch = props.enquiry.branch?.name;
+  return `Edit Enquiry ${formatDisplayNumber(props.enquiry.enquiry_number)}${branch ? ` - ${branch}` : ""}`;
 });
 const dialogSubtitle = computed(() =>
   isEnquiry.value
@@ -772,7 +779,8 @@ const emptyForm = () => ({
     address_1: "",
     address_2: "",
   },
-  branch_id: "",
+  // Default to the header branch when exactly one is picked
+  branch_id: headerBranchIds.value.length === 1 ? headerBranchIds.value[0] : "",
   budget_tier: "",
   items: [],
   discount: 0,

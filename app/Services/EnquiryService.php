@@ -55,9 +55,12 @@ class EnquiryService
     /**
      * Sales staff only see the enquiries they created; approvers see all.
      */
-    public function visibleQuery(?User $user)
+    public function visibleQuery(?User $user, bool $selectedBranchesOnly = false)
     {
         $query = OrderEnquiry::query();
+
+        // Branch access: lists use the header pick; single-record lookups allow any assigned branch
+        \App\Support\BranchScope::apply($query, 'order_enquiries.branch_id', $selectedBranchesOnly, $user);
 
         if (!$this->canApprove($user)) {
             $query->where('added_by', $user?->id ?? 0);
@@ -81,11 +84,13 @@ class EnquiryService
     {
         $user = $user ?? auth()->user();
 
-        $query = $this->visibleQuery($user)
+        $query = $this->visibleQuery($user, true)
             ->with(['items.product', 'branch:id,name', 'addedBy', 'modifiedBy', 'approvedBy', 'convertedOrder'])
+            // Newest first
+            ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc');
 
-        $base = fn () => $this->visibleQuery($user);
+        $base = fn () => $this->visibleQuery($user, true);
 
         $statusCounts = [
             'all' => $base()->count(),

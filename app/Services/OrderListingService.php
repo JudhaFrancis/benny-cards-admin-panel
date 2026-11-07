@@ -44,6 +44,8 @@ class OrderListingService
                 'printing.modifiedBy', 'packaging.modifiedBy', 'dispatchDelivery.modifiedBy',
                 'payments.addedBy', 'payments.modifiedBy'
             ])
+            // Branches picked in the top header (limited to the user's assigned branches)
+            ->tap(fn (Builder $q) => \App\Support\BranchScope::apply($q, 'orders.branch_id'))
             ->when(isset($filters['stage']), function (Builder $query) use ($filters, $isSuperAdmin, $isAdmin, $user) {
                 $stage = $filters['stage'];
                 $stageRelation = match ($stage) {
@@ -66,16 +68,7 @@ class OrderListingService
 
                 if ($stageTable) {
                     $query->leftJoin($stageTable, 'orders.id', '=', $stageTable . '.order_id')
-                          ->select('orders.*')
-                          ->orderByRaw("CASE 
-                                WHEN {$stageTable}.status = 'Pending' OR {$stageTable}.status IS NULL THEN 1 
-                                WHEN {$stageTable}.status = 'Process' THEN 2 
-                                ELSE 3 END")
-                          ->orderByRaw("CASE 
-                                WHEN orders.priority = 'P1' THEN 1
-                                WHEN orders.budget_tier IN ('Platinum', 'Gold', 'Silver') OR orders.priority = 'P2' THEN 2
-                                WHEN orders.priority = 'P3' THEN 3
-                                ELSE 4 END");
+                          ->select('orders.*');
                 }
 
                 if ($stageRelation) {
@@ -798,15 +791,9 @@ class OrderListingService
                     }
                 });
             })
-            ->when(!isset($filters['stage']), function ($q) {
-                $q->orderByRaw("CASE 
-                      WHEN orders.priority = 'P1' THEN 1
-                      WHEN orders.budget_tier IN ('Platinum', 'Gold', 'Silver') OR orders.priority = 'P2' THEN 2
-                      WHEN orders.priority = 'P3' THEN 3
-                      ELSE 4 END")
-                  ->orderBy('orders.created_at', 'desc');
-            })
-            ->when(isset($filters['stage']), fn($q) => $q->orderBy('orders.created_at', 'desc'));
+            // All order lists (Orders page and every stage table): newest first
+            ->orderBy('orders.created_at', 'desc')
+            ->orderBy('orders.id', 'desc');
 
         if (data_get($filters, 'return_builder')) {
             return $query;
@@ -959,7 +946,10 @@ class OrderListingService
             'coupon', 'clientInformation.modifiedBy', 'designing.modifiedBy',
             'printing.modifiedBy', 'packaging.modifiedBy', 'dispatchDelivery.modifiedBy',
             'payments.addedBy', 'payments.modifiedBy'
-        ])->findOrFail($id);
+        ])
+            // Only orders in the user's assigned branches (any of them, not just the header pick)
+            ->tap(fn ($q) => \App\Support\BranchScope::apply($q, 'orders.branch_id', false))
+            ->findOrFail($id);
     }
 
 }

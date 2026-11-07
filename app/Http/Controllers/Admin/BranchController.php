@@ -93,6 +93,15 @@ class BranchController extends Controller
             ]);
         }
 
+        // Super-admin and admin users keep seeing every branch: add the new one to them
+        \App\Models\User::query()
+            ->whereHas('role', fn ($q) => $q->whereIn(\DB::raw('LOWER(name)'), ['super-admin', 'admin']))
+            ->get()
+            ->each(function ($u) use ($branch) {
+                $ids = collect($u->branch_ids ?? [])->push($branch->id)->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
+                $u->forceFill(['branch_ids' => $ids])->saveQuietly();
+            });
+
         return response()->json([
             'success' => true,
             'message' => "Branch \"{$name}\" added.",
@@ -147,6 +156,12 @@ class BranchController extends Controller
 
         $branch->update(['modified_by' => $request->user()->id]);
         $branch->delete();
+
+        // Remove the deleted branch from every user's access list
+        \App\Models\User::withTrashed()->whereJsonContains('branch_ids', $branch->id)->get()
+            ->each(fn ($u) => $u->forceFill([
+                'branch_ids' => collect($u->branch_ids)->map(fn ($id) => (int) $id)->reject(fn ($id) => $id === $branch->id)->values()->all(),
+            ])->saveQuietly());
 
         return response()->json(['success' => true, 'message' => "Branch \"{$branch->name}\" deleted."]);
     }

@@ -124,8 +124,8 @@
           >
           <SearchableDropdown 
             :model-value="packagingLogistics.assigned_by_multiple || []"
-            @update:model-value="(val) => updateSection('assigned_by_multiple', val)" 
-            :options="staffOptions"
+            @update:model-value="(val) => updateSection('assigned_by_multiple', val)"
+            :options="staffForBranch(staffOptions, order?.branch_id, packagingLogistics.assigned_by_multiple)"
             placeholder="Select Staff" 
             :icon="UserIcon"
             multiple
@@ -138,8 +138,8 @@
           >
           <SearchableDropdown 
             :model-value="packagingLogistics.crafted_by_multiple || []"
-            @update:model-value="(val) => updateSection('crafted_by_multiple', val)" 
-            :options="staffOptions"
+            @update:model-value="(val) => updateSection('crafted_by_multiple', val)"
+            :options="staffForBranch(staffOptions, order?.branch_id, packagingLogistics.crafted_by_multiple)"
             placeholder="Select Staff" 
             :icon="UserCheckIcon" 
             multiple
@@ -395,6 +395,7 @@ import {
   UserCheck as UserCheckIcon,
   ChevronDown as ChevronDownIcon,
 } from "lucide-vue-next";
+import { staffForBranch } from "../../../../../utils/branchStaff";
 import SearchableDropdown from "../../../../ui/dropdowns/SearchableDropdown.vue";
 import DatePicker from "../../../../ui/pickers/DatePicker.vue";
 import TimePicker from "../../../../ui/pickers/TimePicker.vue";

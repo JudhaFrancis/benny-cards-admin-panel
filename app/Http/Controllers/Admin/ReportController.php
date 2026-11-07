@@ -16,7 +16,7 @@ class ReportController extends Controller
         $endDate = $request->query('endDate');
         $perPage = $request->query('per_page', 20);
 
-        $query = Order::with(['customerDetails']);
+        $query = \App\Support\BranchScope::apply(Order::with(['customerDetails']), 'orders.branch_id');
 
         if (!empty($startDate)) {
             $query->whereDate('created_at', '>=', $startDate);
@@ -62,7 +62,7 @@ class ReportController extends Controller
             ];
         });
 
-        $statsQuery = Order::query();
+        $statsQuery = \App\Support\BranchScope::apply(Order::query(), 'orders.branch_id');
         if (!empty($startDate)) $statsQuery->whereDate('created_at', '>=', $startDate);
         if (!empty($endDate)) $statsQuery->whereDate('created_at', '<=', $endDate);
 
@@ -92,7 +92,7 @@ class ReportController extends Controller
         $startDate = $request->query('startDate');
         $endDate = $request->query('endDate');
 
-        $query = Order::with(['customerDetails']);
+        $query = \App\Support\BranchScope::apply(Order::with(['customerDetails']), 'orders.branch_id');
 
         if (!empty($startDate)) {
             $query->whereDate('created_at', '>=', $startDate);
@@ -141,7 +141,7 @@ class ReportController extends Controller
         $endDate = $request->query('endDate');
         $perPage = $request->query('per_page', 20);
 
-        $query = Order::with(['customerDetails']);
+        $query = \App\Support\BranchScope::apply(Order::with(['customerDetails']), 'orders.branch_id');
 
         if (!empty($startDate)) {
             $query->whereDate('created_at', '>=', $startDate);
@@ -200,7 +200,7 @@ class ReportController extends Controller
             ];
         });
 
-        $allOrdersInRange = Order::whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate)->get();
+        $allOrdersInRange = \App\Support\BranchScope::apply(Order::query(), 'orders.branch_id')->whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate)->get();
         $allInvoices = $allOrdersInRange->map(function($order) {
             return [
                 'total_amount' => $order->total_amount,
@@ -234,7 +234,7 @@ class ReportController extends Controller
         $startDate = $request->query('startDate');
         $endDate = $request->query('endDate');
 
-        $query = Order::where('status', 'completed');
+        $query = \App\Support\BranchScope::apply(Order::query(), 'orders.branch_id')->where('status', 'completed');
 
         if (!empty($startDate)) {
             $query->whereDate('created_at', '>=', $startDate);

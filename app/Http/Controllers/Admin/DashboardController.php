@@ -15,8 +15,9 @@ class DashboardController extends Controller
             // ?branch_id=3 (current UI) or ?branch=NGL (older callers); empty / "All Branches" = no filter
             $branch = $request->query('branch_id') ?: $request->query('branch');
 
-            $orderQuery = Order::query();
-            $paymentQuery = Payment::query();
+            // Header branch pick (limited to the user's assigned branches)
+            $orderQuery = \App\Support\BranchScope::apply(Order::query(), 'orders.branch_id');
+            $paymentQuery = Payment::query()->whereHas('order', fn ($q) => \App\Support\BranchScope::apply($q, 'orders.branch_id'));
 
             if ($branch && !in_array(strtolower((string) $branch), ['all branches', 'all'], true)) {
                 $branchId = \App\Models\Branch::resolveId($branch) ?? 0;
